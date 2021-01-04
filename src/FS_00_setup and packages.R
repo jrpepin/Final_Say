@@ -22,9 +22,22 @@ if(!require(tidyr)){
   library(tidyr)
 }
 
+# to import spss data file with labels 
 if(!require(haven)){
   install.packages("haven")
   library(haven)
+}
+
+# To convert labels to factors
+if(!require(sjlabelled)){
+  install.packages("sjlabelled")
+  library(sjlabelled)
+}
+
+# To generate a codebook
+if(!require(sjPlot)){
+  install.packages("sjPlot")
+  library(sjPlot)
 }
 
 if(!require(tableone)){
@@ -67,7 +80,7 @@ if(!require(conflicted)){
   library(conflicted)
 }
 
-renv::init() # initialize a new project-local environment with a private R library
+# renv::init() # initialize a new project-local environment with a private R library
 renv::snapshot() # Save the state of the project library to the lockfile (called renv.lock)
 
 # Address any conflicts in the packages
@@ -84,7 +97,7 @@ conflict_prefer("ggsave", "cowplot")
 ## Data can be accessed here: http://tessexperiments.org/study/pepin791
 ## Data import code assumes the researcher downloaded the Stata data files.
 
-rawdata <- "TESS3_217_Pepin_Client.dta"           # Name of the data file downloaded
+rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downloaded
 
 #####################################################################################
 # Set-up the Directories
