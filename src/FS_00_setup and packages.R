@@ -12,19 +12,24 @@ if(!require(renv)){           # https://rstudio.github.io/renv/articles/renv.htm
   library(renv)
 }
 
-if(!require(tidyverse)){
-  install.packages("tidyverse")
-  library(tidyverse)
+if(!require(dplyr)){
+  install.packages("dplyr")
+  library(dplyr)
+}
+
+if(!require(tidyr)){
+  install.packages("tidyr")
+  library(tidyr)
+}
+
+if(!require(haven)){
+  install.packages("haven")
+  library(haven)
 }
 
 if(!require(tableone)){
   install.packages("tableone")
   library(tableone)
-}
-
-if(!require(readxl)){
-  install.packages("readxl")
-  library(readxl)
 }
 
 if(!require(cowplot)){
@@ -35,6 +40,11 @@ if(!require(cowplot)){
 if(!require(ggplot2)){
   install.packages("ggplot2")
   library(ggplot2)
+}
+
+if(!require(colorspace)){
+  install.packages("colorspace")
+  library(colorspace)
 }
 
 if(!require(ggrepel)){
@@ -57,6 +67,7 @@ if(!require(conflicted)){
   library(conflicted)
 }
 
+renv::init() # initialize a new project-local environment with a private R library
 renv::snapshot() # Save the state of the project library to the lockfile (called renv.lock)
 
 # Address any conflicts in the packages
@@ -65,13 +76,24 @@ conflict_prefer("remove", "base")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("ggsave", "cowplot")
 
+
+#####################################################################################
+# Download the data
+#####################################################################################
+## Public Perception of Money in Families
+## Data can be accessed here: http://tessexperiments.org/study/pepin791
+## Data import code assumes the researcher downloaded the Stata data files.
+
+rawdata <- "TESS3_217_Pepin_Client.dta"           # Name of the data file downloaded
+
 #####################################################################################
 # Set-up the Directories
 #####################################################################################
 
-projDir <- here()                                 # Filepath to this project's directory
+projDir <- here()                                 # File path to this project's directory
 dataDir <- "C:/Users/Joanna/Dropbox/Data/TESS"    # Name of folder where the TESS data was downloaded
 srcDir  <- "src"                                  # Name of the sub-folder where we will save our source code (R scripts)
+funDir  <- "src/functions"                        # File path where we will save our functions
 outDir  <- "output"                               # Name of the sub-folder where we will save results
 figDir  <- "figs"                                 # Name of the sub-folder where we will save generated figures
 
@@ -93,5 +115,14 @@ if (!dir.exists(here::here(figDir))){
 } else {
   print("Figure directory already exists!")
 }
+
+if (!dir.exists(here::here(funDir))){
+  dir.create(funDir)
+} else {
+  print("Functions directory already exists!")
+}
+
+## Set house color palette
+source(file.path(funDir, "jrp_colors.R"))
 
 message("End of FS_00_setup and packages") # Marks end of R Script
