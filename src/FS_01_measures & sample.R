@@ -25,7 +25,7 @@ data <- rename(data,
                age      = PPAGE,          gender    = PPGENDER,       educ       = PPEDUCAT,
                work     = PPWORK,         relate    =	PPMARIT,        income     = PPINCIMP,
                race     = PPETHM,         relfreq   = REL2,           religion   = REL1,
-               region   = PPREG4,         mar       = DOV_RELSTAT,  	parent     = DOV_PARENTST,
+               region   = PPREG4,         mar       = DOV_RELSTAT,  	child      = DOV_PARENTST,
                relinc   = DOV_EARNINGS,   dur       = DOV_RELDUR,     item       = DOV_ITEM,
                iperson  = DOV_PERSON_B04, iqual     = B05,            activity   = DOV_ACTIVITY,
                aperson  = DOV_PERSON_B06, aqual     = B07,            ifair      = B04,
@@ -44,7 +44,7 @@ data$gender %>% attr('labels') ### Viewing value labels
 ### Working with SPSS labels https://martinctc.github.io/blog/working-with-spss-labels-in-r/
 
 fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", "religion",
-          "region", "mar", "parent", "relinc", "dur", "item", "iperson", "activity", 
+          "region", "mar", "child", "relinc", "dur", "item", "iperson", "activity", 
            "aperson", "ifair", "afair", "organize", "DOV_B02_MaxValue", "DOV_B03_MaxValue")
 
 icols <- c("age", "PPT01", "PPT25", "PPT612", "PPT1317", 
@@ -221,4 +221,46 @@ table(data$parent)
 #####################################################################################
 # Prep the vignette variables for analysis
 #####################################################################################
+
+## relate/parent condition ----------------------------------------------------------
+table(data$mar, data$child)
+
+  data <- data %>%
+    mutate(
+      marpar = case_when(
+        mar  == "are married"   & child == "one child together" ~ "Married/Parent",
+        mar  == "are married"   & child == "no children"        ~ "Married/No kids",
+        mar  == "live together" & child == "one child together" ~ "Cohabit/Parent",
+        mar  == "live together" & child == "no children"        ~ "Cohabit/No kids",
+        TRUE                                                    ~  NA_character_ 
+      ))
+
+  data$marpar <- factor(data$marpar, levels = c("Cohabit/No kids", "Cohabit/Parent", 
+                                                "Married/No kids", "Married/Parent"), ordered = FALSE)
+table(data$marpar)
+  
+## relative earnings condition ------------------------------------------------------
+table(data$relinc)
+
+data$relinc <-data$relinc %>%
+  as.integer()
+
+data <- data %>%
+  mutate(
+    relinc = case_when(
+      relinc == 1          ~ "Man higher-earner",
+      relinc == 2          ~ "Woman higher-earner",
+      relinc == 3          ~ "Equal earners",
+      TRUE                 ~ NA_character_
+    ))
+
+data$relinc <- factor(data$relinc, levels = c("Man higher-earner", "Woman higher-earner", 
+                                              "Equal earners"), ordered = FALSE)
+table(data$relinc)
+
+#####################################################################################
+# Prep the power response variables for analysis
+#####################################################################################
+
+
 
