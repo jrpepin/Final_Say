@@ -11,7 +11,11 @@
 #####################################################################################
 
 ## Load the data --------------------------------------------------------------------
-data <- read_sav(file.path(dataDir, rawdata))
+data <- read_sav(file.path(dataDir, rawdata))   # load the raw data file
+qual <- read_dta(file.path(qualDir, qualdata))  # load the qualitative data file
+
+data <- merge(x = data, y = qual, by = "CaseID", all.x = TRUE) # Join the two data files
+remove(qual) # clean up the global enivronment
 
 ## Select the Variables -------------------------------------------------------------
 data <- select(data, CaseID, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIMP, PPETHM, 
@@ -262,5 +266,71 @@ table(data$relinc)
 # Prep the power response variables for analysis
 #####################################################################################
 
+### Come back to these -- will need to restructe data and combine columns after merge
 
+## item condition -------------------------------------------------------------------
+table(data$item)
 
+## activity condition ---------------------------------------------------------------
+table(data$activity)
+
+## item fairness --------------------------------------------------------------------
+table(data$ifair)
+
+  data$ifair[data$ifair == "Refused"]   <- NA
+  
+  data$ifair <-data$ifair %>%
+    droplevels()
+  
+table(data$ifair)
+
+## activity fairness ----------------------------------------------------------------
+table(data$afair)
+
+data$afair[data$afair == "Refused"]   <- NA
+
+data$afair <-data$afair %>%
+  droplevels()
+
+table(data$afair)
+
+## item person ----------------------------------------------------------------------
+table(data$iperson)
+
+## item person ----------------------------------------------------------------------
+table(data$aperson)
+
+#####################################################################################
+# Prep the qualitative coding variables for analysis
+#####################################################################################
+
+## reason ---------------------------------------------------------------------------
+data <- data %>%
+  mutate(
+    reason = case_when(
+      money    ==1              ~ "$ Talks",
+      equality ==1              ~ "Equality or Bust",
+      hoh      ==1 | wife==1    ~ "Gender Trumps All",
+      giving   ==1              ~ "Giving In",
+      hastobe  ==1              ~ "Has to be Made",
+      itemsp   ==1              ~ "Item Specific",
+      trades   ==1 | forfam==1  ~ "Other",
+      unclear  ==1 | noansw==1  ~ "Unclear/No Answer",
+      TRUE                      ~ NA_character_
+    ))
+
+table(data$reason)
+
+## sexism type ----------------------------------------------------------------------
+table(data$hoh)
+table(data$wife)
+
+  data <- data %>%
+    mutate(
+      sexism = case_when(
+        hoh  == 1         ~ "Head of household",
+        wife == 1         ~ "Happy wife",
+        TRUE              ~ NA_character_
+      ))
+
+table(data$sexism)

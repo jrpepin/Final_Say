@@ -99,6 +99,11 @@ conflict_prefer("ggsave", "cowplot")
 
 rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downloaded
 
+## Qualitative coding of the data is located in this repository (qualDir)
+## Data was coded by the primary investigator in NVivo and converted into a Stata file
+
+qualdata <- "Power_Coding Matrix_07-19-17.dta"    # Name of the datafile
+
 #####################################################################################
 # Set-up the Directories
 #####################################################################################
@@ -107,6 +112,7 @@ projDir <- here()                                 # File path to this project's 
 dataDir <- "C:/Users/Joanna/Dropbox/Data/TESS"    # Name of folder where the TESS data was downloaded
 srcDir  <- "src"                                  # Name of the sub-folder where we will save our source code (R scripts)
 funDir  <- "src/functions"                        # File path where we will save our functions
+qualDir <- "src/qual"                             # File path where saved qualitative coding results
 outDir  <- "output"                               # Name of the sub-folder where we will save results
 figDir  <- "figs"                                 # Name of the sub-folder where we will save generated figures
 
@@ -133,6 +139,12 @@ if (!dir.exists(here::here(funDir))){
   dir.create(funDir)
 } else {
   print("Functions directory already exists!")
+}
+
+if (!dir.exists(here::here(qualDir))){
+  dir.create(qualDir)
+} else {
+  print("Qualitative data directory already exists!")
 }
 
 ## Set house color palette
