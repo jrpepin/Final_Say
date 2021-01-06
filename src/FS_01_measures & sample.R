@@ -22,7 +22,8 @@ data <- select(data, CaseID, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIM
                REL2, REL1, PPREG4, PPT01, PPT25, PPT612, PPT1317,
                DOV_RELSTAT, DOV_PARENTST, DOV_EARNINGS, DOV_RELDUR, DOV_ITEM, DOV_PERSON_B04,
                B05, DOV_ACTIVITY, DOV_PERSON_B06, B07, B04, B06, B01, B02_Shared,
-               B03_Shared, B02_Individual, B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue)
+               B03_Shared, B02_Individual, B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue,
+               money, equality, hoh, wife, giving, hastobe, itemsp, trades, forfam, unclear, noansw)
 
 ## Rename variables -----------------------------------------------------------------
 data <- rename(data, 
@@ -177,7 +178,6 @@ table(data$relfreq)
   data$relfreq <- factor(data$relfreq, levels = c("Weekly plus", "Weekly", "Monthly", "Yearly", "Never", "Unknown"), ordered = FALSE)
 table(data$relfreq)
 
-
 ## religion -------------------------------------------------------------------
 table(data$religion)
 
@@ -197,14 +197,12 @@ table(data$religion)
                                                     "None", "Other Religion"), ordered = FALSE)
 table(data$religion)
   
-
 ## region -------------------------------------------------------------------
 table(data$region)
   data$region <-data$region %>%
     droplevels()
 table(data$region)
   
-
 ## parent -------------------------------------------------------------------
 table(data$PPT01)
 table(data$PPT25)
@@ -220,7 +218,6 @@ table(data$PPT1317)
       ))
 
 table(data$parent)
-
 
 #####################################################################################
 # Prep the vignette variables for analysis
@@ -319,6 +316,11 @@ data <- data %>%
       TRUE                      ~ NA_character_
     ))
 
+  data$reason <- factor(data$reason, levels = c("Equality or Bust", "$ Talks", 
+                                                "Gender Trumps All", "Giving In",
+                                                "Has to be Made", "Item Specific",
+                                                "Other","Unclear/No Answer" ), ordered = FALSE)
+
 table(data$reason)
 
 ## sexism type ----------------------------------------------------------------------
@@ -333,4 +335,11 @@ table(data$wife)
         TRUE              ~ NA_character_
       ))
 
+  data$sexism <- factor(data$sexism, levels = c("Head of household", 
+                                                "Happy wife"), ordered = FALSE)
+  
 table(data$sexism)
+
+## Generate a new codebook ---------------------------------------------------------
+sjPlot::view_df(data) # Load codebook in viewer pane
+sjPlot::view_df(data, file = file.path(outDir, "codebook_processed.html")) # Save codebook as html file
