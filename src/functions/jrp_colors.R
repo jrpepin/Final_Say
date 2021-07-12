@@ -90,8 +90,8 @@ jrp_palette <- function() {
     colour_indices <- 
       if (n == 1) { "green" }
       else if (n == 2) { c("green", "orange") }
-      else if (n == 3) { c("green", "orange", "blue") }
-      else if (n == 4) { c("green", "orange", "red", "blue") }
+      else if (n == 3) { c("blue", "red", "green" ) }
+      else if (n == 4) { c("green", "blue", "orange", "red") }
       # ... etc. etc.
       else if (n == 6) {
         c(

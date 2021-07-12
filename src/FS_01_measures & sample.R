@@ -15,11 +15,11 @@ data <- read_sav(file.path(dataDir, rawdata))   # load the raw data file
 qual <- read_dta(file.path(qualDir, qualdata))  # load the qualitative data file
 
 data <- merge(x = data, y = qual, by = "CaseID", all.x = TRUE) # Join the two data files
-remove(qual) # clean up the global enivronment
+remove(qual) # clean up the global environment
 
 ## Select the Variables -------------------------------------------------------------
-data <- select(data, CaseID, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIMP, PPETHM, 
-               REL2, REL1, PPREG4, PPT01, PPT25, PPT612, PPT1317,
+data <- select(data, CaseID, weight, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIMP, 
+               PPETHM, REL2, REL1, PPREG4, PPT01, PPT25, PPT612, PPT1317,
                DOV_RELSTAT, DOV_PARENTST, DOV_EARNINGS, DOV_RELDUR, DOV_ITEM, DOV_PERSON_B04,
                B05, DOV_ACTIVITY, DOV_PERSON_B06, B07, B04, B06, B01, B02_Shared,
                B03_Shared, B02_Individual, B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue,
@@ -259,6 +259,9 @@ data$relinc <- factor(data$relinc, levels = c("Man higher-earner", "Woman higher
                                               "Equal earners"), ordered = FALSE)
 table(data$relinc)
 
+## duration condition ------------------------------------------------------
+table(data$dur)
+
 #####################################################################################
 # Prep the power response variables for analysis
 #####################################################################################
@@ -281,6 +284,15 @@ table(data$ifair)
   
 table(data$ifair)
 
+### dummy var
+data <- data %>%
+  mutate(
+    idum = case_when(
+      ifair  == "Very fair"   | ifair == "Somewhat fair"          ~ 1,
+      ifair  == "Very unfair" | ifair == "Somewhat unfair"        ~ 0
+    ))
+data$idum <-as.integer(data$idum)
+
 ## activity fairness ----------------------------------------------------------------
 table(data$afair)
 
@@ -290,6 +302,16 @@ data$afair <-data$afair %>%
   droplevels()
 
 table(data$afair)
+
+### dummy var
+data <- data %>%
+  mutate(
+    adum = case_when(
+      afair  == "Very fair"   | afair == "Somewhat fair"          ~ 1,
+      afair  == "Very unfair" | afair == "Somewhat unfair"        ~ 0
+    ))
+data$adum <-as.integer(data$adum)
+
 
 ## item person ----------------------------------------------------------------------
 table(data$iperson)
