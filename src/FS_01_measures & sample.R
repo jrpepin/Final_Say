@@ -4,7 +4,7 @@
 # Joanna R. Pepin
 #------------------------------------------------------------------------------------
 
-# This file creates the variables for analysis.
+# This file creates the variables for analysis and then the analytic sample.
 
 #####################################################################################
 # Prep the data for analysis
@@ -263,10 +263,8 @@ table(data$relinc)
 table(data$dur)
 
 #####################################################################################
-# Prep the power response variables for analysis
+# Prep the vignette response variables for analysis
 #####################################################################################
-
-### Come back to these -- will need to restructe data and combine columns after merge
 
 ## item condition -------------------------------------------------------------------
 table(data$item)
@@ -319,6 +317,63 @@ table(data$iperson)
 ## item person ----------------------------------------------------------------------
 table(data$aperson)
 
+## organize -------------------------------------------------------------------------
+table(data$organize)
+
+data$organize[data$organize == "Refused"]   <- NA
+
+data$organize <-data$organize %>%
+  droplevels()
+
+
+data <- data %>%
+  mutate(
+    organize = case_when(
+      organize == "Have a shared account in which they both deposit all their earned income" ~ "Shared",
+      organize == "Keep all their earned income in separate, individual accounts"            ~ "Separate",
+      organize == "Have both a shared account and separate, individual accounts"             ~ "Both",
+      TRUE                                                                                   ~ NA_character_
+    ))
+
+data$organize <- factor(data$organize, levels = c("Shared", "Separate", "Both"), ordered = FALSE)
+table(data$organize)
+
+### Replace allocation range as missing if less than zero dollars
+
+data$herjoint[data$herjoint == -1]   <- NA
+data$hisjoint[data$hisjoint == -1]   <- NA
+data$herindv[data$herindv == -1]     <- NA
+data$hisindv[data$hisindv == -1]     <- NA
+
+data %>% # identify cases where selected both but allocation is all joint
+  filter(is.na(herindv) | is.na(hisindv)) %>%
+  filter(organize == "Both") %>%
+  select(CaseID, herindv, hisindv, herjoint, hisjoint)
+
+## will drop cases 902 & 1962
+
+data <- data %>% ## correct cases 1050 & 3866
+  mutate(
+    herjoint = replace(
+      herjoint,
+      is.na(herjoint) & organize == "Both" & CaseID != 902 & CaseID != 1962,
+      0),
+    hisindv = replace(
+      hisindv,
+      is.na(hisindv) & organize == "Both" & CaseID != 902 & CaseID != 1962,
+      0))
+
+
+# identify cases where selected both but allocation is only individual
+data$jointtot <- data$herjoint + data$hisjoint
+
+data %>%
+  filter(is.na(jointtot) & is.na(herjoint) & is.na(hisjoint) & organize == "Both") %>%
+  select(CaseID, herindv, hisindv, herjoint, hisjoint, jointtot)
+
+## will drop cases 1013
+
+
 #####################################################################################
 # Prep the qualitative coding variables for analysis
 #####################################################################################
@@ -361,6 +416,18 @@ table(data$wife)
                                                 "Happy wife"), ordered = FALSE)
   
 table(data$sexism)
+
+#####################################################################################
+# Create the analytic sample
+#####################################################################################
+
+## Three respondents selected a partial-pooling approach for the fictional couple 
+## but in a follow-up question divided the earnings into an all individual or an all shared approach. 
+## Because these respondents’ intentions cannot be discerned from their contradictory answers, 
+## they were dropped from the analysis.
+
+data <- data %>%
+  filter(CaseID != 902 & CaseID != 1962 & CaseID != 1013)
 
 ## Generate a new codebook ---------------------------------------------------------
 sjPlot::view_df(data) # Load codebook in viewer pane
