@@ -1,94 +1,83 @@
 #------------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_00_setup and packages.R
-# Joanna R. Pepin
+# Joanna R. Pepin & William J. Scarborough (https://github.com/WilliamScarborough)
 #------------------------------------------------------------------------------------
 
 #####################################################################################
 ## Install and load required packages
 #####################################################################################
-if(!require(renv)){           # https://rstudio.github.io/renv/articles/renv.html
-  install.packages("renv")
-  library(renv)
-}
+# install.packages("pacman")         # Install pacman package if not installed
+library("pacman")                  # Load pacman package
 
-if(!require(dplyr)){
-  install.packages("dplyr")
-  library(dplyr)
-}
-
-if(!require(tidyr)){
-  install.packages("tidyr")
-  library(tidyr)
-}
-
-# to import spss data file with labels 
-if(!require(haven)){
-  install.packages("haven")
-  library(haven)
-}
-
-# To convert labels to factors
-if(!require(sjlabelled)){
-  install.packages("sjlabelled")
-  library(sjlabelled)
-}
-
-# To generate a codebook
-if(!require(sjPlot)){
-  install.packages("sjPlot")
-  library(sjPlot)
-}
-
-if(!require(tableone)){
-  install.packages("tableone")
-  library(tableone)
-}
-
-if(!require(cowplot)){
-  install.packages("cowplot")
-  library(cowplot)
-}
-
-if(!require(ggplot2)){
-  install.packages("ggplot2")
-  library(ggplot2)
-}
-
-if(!require(colorspace)){
-  install.packages("colorspace")
-  library(colorspace)
-}
-
-if(!require(ggrepel)){
-  install.packages("ggrepel")
-  library(ggrepel)
-}
-
-if(!require(ggpubr)){
-  install.packages("ggpubr")
-  library(ggpubr)
-}
-
-if(!require(here)){
-  install.packages("here")
-  library(here)
-}
+# Install packages not yet installed & load them
+pacman::p_load(
+       here,       # relative file paths
+       dplyr, 
+       tidyr, 
+       haven,      # import spss data file with labels 
+       expss,      # add variable labels 
+       sjlabelled, # convert labels to factors
+       sjPlot,     # generate a codebook
+       survey,     # analyze survey data
+       srvyr,      # analyze survey data
+       gtsummary,  # make tables
+       kableExtra, # make tables
+       cowplot,    # graphing
+       ggplot2,    # graphing
+       sjmisc,
+       colorspace, 
+       ggrepel,    # graphing
+       ggpubr,
+       officer,    # producing word output
+       flextable,  # producing word output
+       tidytext,   # addressing spelling
+       hunspell,
+       stringi,
+       stringr,
+       # LDA Analysis
+       magrittr,
+       tm,
+       wordcloud,
+       RColorBrewer,
+       topicmodels,
+       plyr,
+       e1071,
+       foreign,
+       readxl,
+       writexl,
+       ldatuning,
+       textmineR,
+       stopwords,
+       foreach,
+       LDAvis,
+       gistr,
+       extrafont,
+       tagcloud, 
+       RJSONIO,
+       ggwordcloud
+       )
 
 if(!require(conflicted)){
   devtools::install_github("r-lib/conflicted")
   library(conflicted)
 }
 
-# renv::init() # initialize a new project-local environment with a private R library
-renv::snapshot() # Save the state of the project library to the lockfile (called renv.lock)
-
 # Address any conflicts in the packages
 conflict_scout() # Identify the conflicts
 conflict_prefer("remove", "base")
 conflict_prefer("filter", "dplyr")
+conflict_prefer("mutate", "dplyr")
+conflict_prefer("summarise", "dplyr")
+conflict_prefer("summarize", "dplyr")
+conflict_prefer("count", "dplyr")
+conflict_prefer("rename", "dplyr")
+conflict_prefer("arrange", "dplyr")
 conflict_prefer("ggsave", "cowplot")
-
+conflict_prefer("replace_na", "tidyr")
+conflict_prefer("here", "here")
+conflict_prefer("read_stata", "haven")
+conflict_prefer("vars", "ggplot2")
 
 #####################################################################################
 # Download the data
@@ -102,14 +91,14 @@ rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downlo
 ## Qualitative coding of the data is located in this repository (qualDir)
 ## Data was coded by the primary investigator in NVivo and converted into a Stata file
 
-qualdata <- "Power_Coding Matrix_07-19-17.dta"    # Name of the datafile
+# qualdata <- "Power_Coding Matrix_07-19-17.dta"    # Name of the datafile
 
 #####################################################################################
 # Set-up the Directories
 #####################################################################################
 
 projDir <- here()                                 # File path to this project's directory
-dataDir <- "C:/Users/Joanna/Dropbox/Data/TESS"    # Name of folder where the TESS data was downloaded
+dataDir <- here("../../Data/TESS")                # Name of folder where the TESS data was downloaded
 srcDir  <- "src"                                  # Name of the sub-folder where we will save our source code (R scripts)
 funDir  <- "src/functions"                        # File path where we will save our functions
 qualDir <- "src/qual"                             # File path where saved qualitative coding results
