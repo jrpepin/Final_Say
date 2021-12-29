@@ -13,18 +13,12 @@
 ## Load the data --------------------------------------------------------------------
 data <- read_sav(file.path(dataDir, rawdata))   # load the raw data file
 
-### to merge manually coded datafile
-# qual <- read_dta(file.path(qualDir, qualdata))  # load the qualitative data file
-# data <- merge(x = data, y = qual, by = "CaseID", all.x = TRUE) # Join the two data files
-# remove(qual) # clean up the global environment
-
 ## Select the Variables -------------------------------------------------------------
 data <- select(data, CaseID, weight, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIMP, 
                PPETHM, REL2, REL1, PPREG4, PPT01, PPT25, PPT612, PPT1317,
                DOV_RELSTAT, DOV_PARENTST, DOV_EARNINGS, DOV_RELDUR, DOV_ITEM, DOV_PERSON_B04,
                B05, DOV_ACTIVITY, DOV_PERSON_B06, B07, B04, B06, B01, B02_Shared,
                B03_Shared, B02_Individual, B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue)
-               # money, equality, hoh, wife, giving, hastobe, itemsp, trades, forfam, unclear, noansw)
 
 ## Rename variables -----------------------------------------------------------------
 data <- rename(data, 
@@ -374,51 +368,6 @@ data %>%
 
 ## will drop cases 1013
 
-
-#####################################################################################
-# Prep the qualitative coding variables for analysis
-#####################################################################################
-
-### this is code for the manually coded qual data
-# ## reason ---------------------------------------------------------------------------
-# data <- data %>%
-#   mutate(
-#     reason = case_when(
-#       money    ==1              ~ "$ Talks",
-#       equality ==1              ~ "Equality or Bust",
-#       hoh      ==1 | wife==1    ~ "Gender Trumps All",
-#       giving   ==1              ~ "Giving In",
-#       hastobe  ==1              ~ "Has to be Made",
-#       itemsp   ==1              ~ "Item Specific",
-#       trades   ==1 | forfam==1  ~ "Other",
-#       unclear  ==1 | noansw==1  ~ "Unclear/No Answer",
-#       TRUE                      ~ NA_character_
-#     ))
-# 
-#   data$reason <- factor(data$reason, levels = c("Equality or Bust", "$ Talks", 
-#                                                 "Gender Trumps All", "Giving In",
-#                                                 "Has to be Made", "Item Specific",
-#                                                 "Other","Unclear/No Answer" ), ordered = FALSE)
-# 
-# table(data$reason)
-# 
-# ## sexism type ----------------------------------------------------------------------
-# table(data$hoh)
-# table(data$wife)
-# 
-#   data <- data %>%
-#     mutate(
-#       sexism = case_when(
-#         hoh  == 1         ~ "Head of household",
-#         wife == 1         ~ "Happy wife",
-#         TRUE              ~ NA_character_
-#       ))
-# 
-#   data$sexism <- factor(data$sexism, levels = c("Head of household", 
-#                                                 "Happy wife"), ordered = FALSE)
-#   
-# table(data$sexism)
-
 #####################################################################################
 # Create the analytic sample
 #####################################################################################
@@ -444,11 +393,10 @@ data <- data %>%
 
 data <- data %>%
   select(CaseID, weight,
-         gender, relate, parent, raceeth, educ, employ, incdum, age,
+         gender, relate, parent, raceeth, educ, employ, incdum, age, religion, relfreq,
          mar, child, marpar, relinc, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
          item, activity, aperson, iperson, adum, afair, idum, ifair,
-         # reason, sexism, (manually coded qualitative variables)
          qual1, qual2)
 
 sjPlot::view_df(data) # Load codebook in viewer pane

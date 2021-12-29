@@ -5,108 +5,48 @@
 #------------------------------------------------------------------------------------
 
 # This file analyzes the decision making variables.
-safe <- data
-data <- safe
 
 #####################################################################################
-# Paper Tables
+# Paper Tables and Figures (quant)
 #####################################################################################
 
 # Table 1 ---------------------------------------------------------------------------
 ## Table 1. Hypotheses about Perceptions of Decision-making (No table generated.)
 
-
 # Table 2 ---------------------------------------------------------------------------
-## Weighted Descriptive Statistics of Respondent Characteristics
-
-## Create weighted data 
-tab2data <- data %>%
-  select("weight", "gender", "relate", "parent", "raceeth", 
-         "educ", "employ", "incdum", "age")
-
-tab2Svy <- svydesign(ids = ~1, weights = ~ weight, data = tab2data)
-
-tab2Svy %>%
-  tbl_svysummary(
-    label = list(gender  ~ "Women",
-                 relate  ~ "Relationship Status",
-                 parent  ~ "Parent",
-                 raceeth ~ "Respondent race/ethnicity",
-                 educ    ~ "Educational attainment",
-                 employ  ~ "Employment status",
-                 incdum  ~ "Household income > $50,000",
-                 age     ~ "Respondent age"),
-    type  = list(gender  ~ "dichotomous",
-                 parent  ~ "dichotomous",
-                 incdum  ~ "dichotomous"),
-    value = list(gender  = "Female",
-                 parent  = "Parent",
-                 incdum  = "> than $50,000"))  %>%
-  as_gt() %>%
-  gt::tab_source_note(gt::md("*Sample descriptives are weighted.*"))
-
-
-
-tab2 <- tab2Svy %>%
-  tbl_svysummary(
-    label = list(gender  ~ "Women",
-                 relate  ~ "Relationship Status",
-                 parent  ~ "Parent",
-                 raceeth ~ "Respondent race/ethnicity",
-                 educ    ~ "Educational attainment",
-                 employ  ~ "Employment status",
-                 incdum  ~ "Household income > $50,000",
-                 age     ~ "Respondent age"),
-    type  = list(gender  ~ "dichotomous",
-                 parent  ~ "dichotomous",
-                 incdum  ~ "dichotomous"),
-    value = list(gender  = "Female",
-                 parent  = "Parent",
-                 incdum  = "> than $50,000"))  %>%
-  as_flex_table() 
-
-## https://mran.microsoft.com/snapshot/2017-12-11/web/packages/officer/vignettes/word.html
-read_docx() %>% 
-  body_add_par("Table 02. Sample Characteristics") %>% 
-  body_add_flextable(value = tab2) %>% 
-  print(target = file.path(outDir, "finalsay_table02.docx"))
-
-
-# Table 3 ---------------------------------------------------------------------------
-
 ## Weighted Bi-variate Statistics of Perceptions of Fairness in Decision Making by Type of Decision
 
-data_long <- data %>%
+tab2data <- data %>%
+  # Create long data for item/activity vars
   pivot_longer(
     cols = c(idum, adum),
     names_to = "type",
-    values_to = "fairness"
-  )
-
-data_long <- data_long %>%
+    values_to = "fairness") %>%
+  # Add a gender of decider variable
   mutate(
     person = case_when(
       (type  == "idum"   &  iperson == "Michelle") |
       (type  == "adum"   &  aperson == "Michelle") ~ "Woman",
       (type  == "idum"   &  iperson == "Anthony")  |
-      (type  == "adum"   &  aperson == "Anthony")  ~ "Man",
-    ))
-
-data_long <- data_long %>%
+      (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
+  # Create long data for vignette manipulation
   pivot_longer(
     cols = c(relinc, person, organize, mar, child, dur),
     names_to = "variable",
-    values_to = "level"
-  )
-
-tab3data <- data_long %>%
+    values_to = "level") %>%
+  # Keep vignette variables
   select("CaseID", "weight", "type", "variable", "level", "fairness")
 
-tab3Svy <- tab3data %>% 
+## Re order variable manipulations
+tab2data$variable <- factor(tab2data$variable, 
+                            levels = c("relinc", "person", "organize",
+                                       "mar", "child", "dur"), ordered = FALSE)
+## Set as weighted survey data
+tab2Svy <- tab2data %>% 
   srvyr::as_survey_design(id = CaseID,
                           weights = weight)
-
-tab3sum <- tab3Svy %>%
+## Create summary data
+tab2sum <- tab2Svy %>%
   group_by(type, variable, level) %>%
   summarize(mean = survey_mean(fairness, na.rm = TRUE),
             sd = sd(fairness, na.rm = TRUE)) %>%
@@ -114,121 +54,410 @@ tab3sum <- tab3Svy %>%
   pivot_wider(names_from = type, values_from = c(mean, sd)) %>%
   select(level, mean_idum, sd_idum, mean_adum, sd_adum)
 
-tab3sum %>%
-  kbl(digits=2, col.names = c("Vignette Variables", "$M$", "$SD$", "$M$", "$SD$")) %>%
-  kable_styling() %>%
-  pack_rows("Parent", 1, 2) %>%
-  pack_rows("Duration", 3, 4) %>%
-  pack_rows("Marital Status", 5, 6) %>%
-  add_header_above(c(" " = 1, "Item" = 2, "Activity" = 2))
-  
-  
-# https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html#Row_indentation
-# https://haozhu233.github.io/kableExtra/awesome_table_in_html.html#Grouped_Columns__Rows
+tab2sum <- tab2sum %>%
+  mutate(
+    cat = case_when(
+      tab2sum$level == "Man higher-earner"     |
+        tab2sum$level == "Woman higher-earner" |
+        tab2sum$level == "Equal earners"       ~ "Relative Earnings",
+      tab2sum$level == "Woman"                 |
+        tab2sum$level == "Man"                 ~ "Gender of Decider",
+      tab2sum$level == "Shared"                |
+        tab2sum$level == "Separate"            |
+        tab2sum$level == "Both"                ~ "Financial Allocation Strategy",
+      tab2sum$level == "live together"         |
+        tab2sum$level == "are married"         ~ "Marital Status",
+      tab2sum$level == "no children"           |
+        tab2sum$level == "one child together"  ~ "Parental Status",
+      tab2sum$level == "3 years"               |
+        tab2sum$level == "7 years"             ~ "Relationship Duration"))
+
+## Create Flextable
+tab2sum <- as_grouped_data(x = tab2sum, groups = c("cat"), columns = NULL) # Group by vignette condition
+
+tab2 <- tab2sum %>%
+  flextable::as_flextable(hide_grouplabel = TRUE) %>%
+  add_header_row(values = c("", "Item", "Activity"), colwidths = c(1, 2, 2)) %>%
+  flextable::align(i = 1, align = "center", part = "header") %>%
+  colformat_double(digits = 2) %>%
+  set_header_labels(level = "Vignette Variables",
+                    mean_idum = "M",
+                    sd_idum   = "SD", 
+                    mean_adum = "M",
+                    sd_adum   = "SD" ) %>% 
+  autofit() %>%
+  padding(i=c(2:4,6:7,9:11,13:14,16:17,19:20), j=1, padding.left=25) %>%
+  add_footer(level = "Note: Descriptive statistics include survey weights.\n
+             Range is from 0 (not fair) to 1 (fair).") %>%
+  merge_at(j = 1:5, part = "footer")
+
+num <-nrow(data) #number of observations
+
+tab2 # show table
+
+read_docx() %>% 
+  body_add_par(paste("Table 02. Weighted Bivariate Statistics of Perceptions of Fairness in Decision Making 
+               by Type of Decision (N = ", num,")", sep="")) %>% 
+  body_add_flextable(value = tab2) %>% 
+  print(target = file.path(outDir, "finalsay_table02.docx"))
 
 
-# Figure 2. --------------------------------------------------------------------------
-
-## Create the multinomial models with ordinal year
-data$year <- as.factor(data$year) 
+# Table 3. --------------------------------------------------------------------------
 
 ## Specify reference levels
-data$racesex  <- relevel(data$racesex,  ref = "White men")
-data$momed    <- relevel(data$momed,    ref = "COMPLETED HIGH SCHOOL")
-data$momemp   <- relevel(data$momemp,   ref = "YES, ALL OR NEARLY ALL OF THE TIME")
-data$famstru  <- relevel(data$famstru,  ref = "Both Mother & Father")
-data$religion <- relevel(data$religion, ref = "RARELY")
-data$region   <- relevel(data$region,   ref = "Northeast")
+data$relate   <- relevel(data$relate,   ref = "Never married")
+data$raceeth  <- relevel(data$raceeth,  ref = "White")
+data$educ     <- relevel(data$educ,     ref = "High school")
+data$employ   <- relevel(data$employ,   ref = "Employed")
+data$incdum   <- relevel(data$incdum,   ref = "< than $50,000")
 
 ## Run the models
-library(nnet)
-library(ggeffects)
-m1 <- multinom(ifair ~ relinc + iperson + gender, data, weights = weight)
-m2 <- multinom(afair ~ relinc + aperson + gender, data, weights = weight)
 
-logit1 <- glm(idum ~ iperson + relinc + marpar + dur + 
-              gender + age + educ + employ + relate + incdum + raceeth + relfreq + religion + region + parent, 
+logit1 <- glm(idum ~ iperson + relinc + organize + mar + child + dur + 
+              gender+relate+parent+raceeth+educ+employ+incdum+age,
               data, weights = weight, family="binomial")
 
-logit2 <- glm(adum ~ aperson + relinc + marpar + dur + 
-              gender + age + educ + employ + relate + incdum + raceeth + relfreq + religion + region + parent, 
+logit2 <- glm(adum ~ aperson + relinc + organize + mar + child + dur + 
+              gender+relate+parent+raceeth+educ+employ+incdum+age,
               data, weights = weight, family="binomial")
+
+logit3 <- glm(idum ~ iperson * relinc + organize + mar + child + dur + 
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              data, weights = weight, family="binomial")
+
+logit4 <- glm(adum ~ aperson * relinc + organize + mar + child + dur + 
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              data, weights = weight, family="binomial")
+
+
+## Average marginal effects
+### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
+### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
+
+## Panel A ------------------------------------------------------------------------------------
+AME_log1 <- summary(margins(logit1, variables = c("iperson", "relinc", "organize")))
+AME_log2 <- summary(margins(logit2, variables = c("aperson", "relinc", "organize")))
+
+# test equality of coefficients
+z_gender <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / (AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)^(1/2)
+z_both   <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / (AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)^(2/2)
+z_sep    <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / (AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)^(2/2)
+z_equal  <- (AME_log1[[4,2]] - AME_log2[[4,2]]) / (AME_log1[[4,3]]^2 + AME_log2[[4,3]]^2)^(2/2)
+z_fmore  <- (AME_log1[[5,2]] - AME_log2[[5,2]]) / (AME_log1[[5,3]]^2 + AME_log2[[5,3]]^2)^(2/2)
+
+p_gender <- 2*pnorm(-abs(z_gender)) 
+p_both   <- 2*pnorm(-abs(z_both)) 
+p_sep    <- 2*pnorm(-abs(z_sep)) 
+p_equal  <- 2*pnorm(-abs(z_equal)) 
+p_fmore  <- 2*pnorm(-abs(z_fmore)) 
+
+AME_log1
+AME_log2
+
+print(paste("Gender test of equality: p =", round(p_gender, digits = 3)))
+print(paste("Woman Higher-Earner test of equality: p =", round(p_fmore, digits = 3)))
+print(paste("Equal test of equality: p =", round(p_equal, digits = 3)))
+print(paste("Separate test of equality: p =", round(p_sep, digits = 3)))
+print(paste("Both test of equality: p =", round(p_both, digits = 3)))
+
+##  alternative test -- test coefficients instead of marginal effects
+    # coef_log1 <- coef(summary(logit1))[[2,1]] ## gender coefficients
+    # sd_log1   <- coef(summary(logit1))[[2,2]]
+    # coef_log2 <- coef(summary(logit2))[[2,1]] ## gender standard errors
+    # sd_log2   <- coef(summary(logit2))[[2,2]]
+    # 
+    # z_gend_coef <- (coef_log1 - coef_log2) / (sd_log1^2 + sd_log2^2)^(1/2)
+    # p_gend_coef <- 2*pnorm(-abs(z_gend_coef)) 
+    # p_gend_coef
+
+
+## Panel B ------------------------------------------------------------------------------------
+AME_log3 <- summary(margins(logit3, 
+                            variables = c("iperson"), 
+                            at = list(relinc = c("Man higher-earner", "Woman higher-earner", "Equal earners"))))
+
+AME_log4 <- summary(margins(logit4, 
+                            variables = c("aperson"), 
+                            at = list(relinc = c("Man higher-earner", "Woman higher-earner", "Equal earners"))))
+
+# test equality of coefficients
+z_mmoreA <- (AME_log3[[1,3]] - AME_log4[[1,3]]) / (AME_log3[[1,4]]^2 + AME_log4[[1,4]]^2)^(1/2)
+z_fmoreA <- (AME_log3[[2,3]] - AME_log4[[2,3]]) / (AME_log3[[2,4]]^2 + AME_log4[[2,4]]^2)^(2/2)
+z_equalA <- (AME_log3[[3,3]] - AME_log4[[3,3]]) / (AME_log3[[3,4]]^2 + AME_log4[[3,4]]^2)^(3/2)
+
+
+p_mmoreA <- 2*pnorm(-abs(z_mmoreA)) 
+p_fmoreA <- 2*pnorm(-abs(z_fmoreA)) 
+p_equalA <- 2*pnorm(-abs(z_equalA)) 
+
+AME_log3
+AME_log4
+
+print(paste("Anthony * Man Higher-Earner test of equality: p =", round(p_mmoreA, digits = 3)))
+print(paste("Anthony * Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
+print(paste("Anthony * Equal Earners test of equality: p =", round(p_equalA, digits = 3)))
+
+# Figure 1. --------------------------------------------------------------------------
+
+logit5 <- glm(idum ~ iperson * relinc * organize + mar + child + dur + 
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              data, weights = weight, family="binomial")
+
+logit6 <- glm(adum ~ aperson * relinc * organize + mar + child + dur + 
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              data, weights = weight, family="binomial")
+
+
+pp5   <- ggeffect(logit5, terms = c("iperson", "relinc", "organize"))
+pp6   <- ggeffect(logit6, terms = c("aperson", "relinc", "organize"))
+
+pp5$type <- "item"
+pp6$type <- "activity"
+
+data_fig1 = merge(pp5, pp6, all = TRUE)
+head(data_fig1)
+
+levels(data_fig1$x)[levels(data_fig1$x)=="Michelle"] <- "She decided"
+levels(data_fig1$x)[levels(data_fig1$x)=="Anthony"]  <- "He decided"
+data_fig1$x <- factor(data_fig1$x, levels = c("He decided", "She decided"), ordered = FALSE)
+data_fig1$type <- factor(data_fig1$type, levels = c("item", "activity"), ordered = FALSE)
+data_fig1$group <- factor(data_fig1$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+
+
+fig1 <- data_fig1 %>%
+  ggplot(aes(x = x, y = predicted, fill = group)) +
+  geom_col(width = 0.6, position = position_dodge(0.7)) +
+  facet_grid(type ~ facet) +
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
+                stat="identity", position=position_dodge(.7), color="#ADB5BD") +
+  coord_flip() +
+  geom_text(position = position_dodge(width = .7),
+            hjust = 1.5,
+            aes(label=sprintf("%1.0f%%", predicted*100)),
+            colour = "white",
+            size = 3) +
+  scale_fill_jrp() +
+  theme_minimal() +
+  theme(legend.position    = "bottom",
+        panel.grid.major.x = element_blank(),
+        plot.title       = element_text(face = "bold"),
+        plot.subtitle    = element_text(face = "italic", color = "#707070"),
+        plot.caption     = element_text(face = "italic", color = "#707070")) +
+  scale_y_continuous(labels=percent, limits = c(0, .85)) +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Perceptions of fairness about item and activity decisions \n by gender, relative earnings, and allocation system",
+        subtitle = "Adjusted predicted % who said the decision as somewhat or very fair...",
+        caption  = "Predicted percentages adjust for other vignette manipulations\nand respondent demographic characteristics.") +
+  guides(fill = guide_legend(reverse = TRUE))
+
+fig1
+
+ggsave(filename = file.path(figDir, "fig1.png"), fig1, width=6, height=6, units="in", dpi=300)
+
+#####################################################################################
+# Appendix Tables and Figures (quant)
+#####################################################################################
+
+# Table A ---------------------------------------------------------------------------
+## Weighted Descriptive Statistics of Respondent Characteristics
+
+## Create weighted data 
+tabAdata <- data %>%
+  select("weight", "gender", "relate", "parent", "raceeth", 
+         "educ", "employ", "incdum", "age")
+
+tabASvy <- svydesign(ids = ~1, weights = ~ weight, data = tabAdata)
+
+tabA <- tabASvy %>%
+  tbl_svysummary(
+    label = list(gender  ~ "Women",
+                 relate  ~ "Relationship Status",
+                 parent  ~ "Parent",
+                 raceeth ~ "Respondent race/ethnicity",
+                 educ    ~ "Educational attainment",
+                 employ  ~ "Employment status",
+                 incdum  ~ "Household income > $50,000",
+                 age     ~ "Respondent age"),
+    type  = list(gender  ~ "dichotomous",
+                 parent  ~ "dichotomous",
+                 incdum  ~ "dichotomous"),
+    value = list(gender  = "Female",
+                 parent  = "Parent",
+                 incdum  = "> than $50,000"))  %>%
+  modify_header(
+    update = list(
+      label ~ "**Variable**",
+      stat_0 ~ "**Overall** N = {N_unweighted}")) %>%
+  as_flex_table() 
+
+tabA # show table
+
+## https://mran.microsoft.com/snapshot/2017-12-11/web/packages/officer/vignettes/word.html
+read_docx() %>% 
+  body_add_par("Table A. Weighted Sample Characteristics") %>% 
+  body_add_flextable(value = tabA) %>% 
+  print(target = file.path(outDir, "finalsay_tableA.docx"))
+
+# Appendix Figure A. --------------------------------------------------------------------------
+## Experimental Design (No figure generated)
+
+# Appendix Figure B. --------------------------------------------------------------------------
+## Fairness Evaluation by Item/Activity Presented to Respondent
+
+data_figB <- data %>%
+  select("CaseID", "item", "activity", "ifair", "afair") %>%
+  # Create long data for item/activity fairness vars
+  pivot_longer(
+    cols = c(ifair, afair),
+    names_to = "drop",
+    values_to = "fairness") %>%
+  # Create long data for item/activity decision vars
+  pivot_longer(
+    cols = c(item, activity),
+    names_to = "type",
+    values_to = "category") %>%
+  # remove duplicates
+  filter((drop == "ifair" & type == "item") |
+         (drop == "afair" & type == "activity")) %>%
+  select(-c("drop")) %>%
+  # create percentage data
+  group_by(type, category) %>%
+  count(category = factor(category), fairness = factor(fairness)) %>% 
+  mutate(pct = prop.table(n)) %>%
+  ungroup()
+
+data_figB$type <- factor(data_figB$type, levels = c("item", "activity"), ordered = FALSE)
+
+
+figB <- data_figB %>%
+ggplot(aes(x = category, y = pct, fill = fairness)) +
+  geom_col(position = "fill",
+           width = 0.6) +
+  facet_grid(type ~ .,
+             scales="free",
+             space = "free",
+             switch = "y") +
+  geom_text(aes(label=sprintf("%1.0f%%", pct*100)),
+            position=position_stack(vjust=0.5),
+            colour = "white",
+            size = 3) +
+  coord_flip()+
+  scale_fill_jrp() +
+  theme_minimal() +
+  theme(legend.position      = "top",
+        legend.justification = c(1, 0),
+        panel.grid.major.x   = element_blank(),
+        strip.placement      = 'outside',
+        strip.text.y         = element_text(face = "bold"),
+        strip.text.y.left    = element_text(angle = 0),
+        plot.title           = element_text(face = "bold"),
+        plot.title.position  = "plot",
+        plot.subtitle       = element_text(face = "italic", color = "#707070"),
+        plot.caption        = element_text(face = "italic", color = "#707070")) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Fairness evaluation by item & activity presented to respondent",
+        subtitle = "How fair do you think the decision was?")
+  
+figB   
+  
+ggsave(filename = file.path(figDir, "figB.png"), figB, width=6, height=4, units="in", dpi=300)
+
+
+# Appendix Figure C. --------------------------------------------------------------------------
 
 ## Create predicted probabilities datesets
-pm1   <- ggeffect(logit1, terms = c("iperson", "relinc"))
-pm2   <- ggeffect(logit2, terms = c("aperson", "relinc"))
+pp1   <- ggeffect(logit1, terms = "iperson")
+pp2   <- ggeffect(logit2, terms = "aperson")
 
-pm1$type <- "item"
-pm2$type <- "activity"
+# https://github.com/easystats/insight/issues/451 <- delta??
 
-mdata = merge(pm1, pm2, all = TRUE)
-head(mdata)
+pp1$type <- "item"
+pp2$type <- "activity"
 
-levels(mdata$x)[levels(mdata$x)=="Michelle"] <- "She decided"
-levels(mdata$x)[levels(mdata$x)=="Anthony"]  <- "He decided"
+data_figC = merge(pp1, pp2, all = TRUE)
+head(data_figC)
 
-fig2 <- mdata %>%
-  filter(type == "item") %>%
-  ggplot(aes(x = x, y = predicted, fill = group)) +
+levels(data_figC$x)[levels(data_figC$x)=="Michelle"] <- "She decided"
+levels(data_figC$x)[levels(data_figC$x)=="Anthony"]  <- "He decided"
+data_figC$type <- factor(data_figC$type, levels = c("item", "activity"), ordered = FALSE)
+
+
+figC <- data_figC %>%
+  ggplot(aes(x = x, y = predicted, fill = x)) +
   geom_col(width = 0.6, position = position_dodge(0.7)) +
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#ADB5BD") +
   geom_text(position = position_dodge(width = .7),
-            vjust = -0.5, 
-            size=5,
+            vjust = -0.5,
             aes(label=sprintf("%1.0f%%", predicted*100))) +
+  facet_wrap(~ type) +
   scale_fill_jrp() +
   theme_minimal() +
-  theme(legend.position    = "bottom",
+  theme(legend.position    = "top",
         panel.grid.major.x = element_blank(),
-        plot.title       = element_text(size = 26, face = "bold"),
-        plot.subtitle    = element_text(size = 22, face = "italic", color = "#707070"),
-        axis.text.x      = element_text(size = 20),
-        axis.text.y      = element_text(size = 20),
-        legend.text      = element_text(size = 20),
-        plot.caption     = element_text(size = 16, face = "italic", color = "#707070")) +
-  scale_y_continuous(labels=percent, limits = c(0, .8)) +
+        plot.title       = element_text(face = "bold"),
+        plot.subtitle    = element_text(face = "italic", color = "#707070"),
+        plot.caption     = element_text(face = "italic", color = "#707070")) +
+  scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Women's 'final say' on life items were more likely to be\nviewed as fair.",
+        title    = "Gender differences in perceptions of fairness \nin decision-making for items and activities.",
         subtitle = "% of respondents who said the decision was somewhat or very fair...",
         caption  = "Predicted percentages adjust for other vignette manipulations and respondent demographic characteristics.") 
 
-fig2
+figC
 
-ggsave(filename = file.path(figDir, "fig2.png"), fig2, width=11, height=6, units="in", dpi=300)
+ggsave(filename = file.path(figDir, "figC.png"), figC, width=6, height=6, units="in", dpi=300)
+
+# Appendix Figure D. --------------------------------------------------------------------------
+
+## Create predicted probabilities datesets
+pp3   <- ggeffect(logit3, terms = c("iperson", "relinc"))
+pp4   <- ggeffect(logit4, terms = c("aperson", "relinc"))
+
+# https://github.com/easystats/insight/issues/451 <- delta??
+
+pp3$type <- "item"
+pp4$type <- "activity"
+
+data_figD = merge(pp3, pp4, all = TRUE)
+head(data_figD)
+
+levels(data_figD$x)[levels(data_figD$x)=="Michelle"] <- "She decided"
+levels(data_figD$x)[levels(data_figD$x)=="Anthony"]  <- "He decided"
+data_figD$type <- factor(data_figD$type, levels = c("item", "activity"), ordered = FALSE)
 
 
-fig3 <- mdata %>%
-  filter(type == "activity") %>%
-  ggplot(aes(x = x, y = predicted, fill = group)) +
+figD <- data_figD %>%
+  ggplot(aes(x = x, y = predicted, fill = x)) +
   geom_col(width = 0.6, position = position_dodge(0.7)) +
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#ADB5BD") +
   geom_text(position = position_dodge(width = .7),
-            vjust = -0.5, 
-            size=5,
+            vjust = -0.5,
             aes(label=sprintf("%1.0f%%", predicted*100))) +
+  facet_grid(type~group) +
   scale_fill_jrp() +
   theme_minimal() +
-  theme(legend.position    = "bottom",
+  theme(legend.position    = "none",
         panel.grid.major.x = element_blank(),
-        plot.title       = element_text(size = 26, face = "bold"),
-        plot.subtitle    = element_text(size = 22, face = "italic", color = "#707070"),
-        axis.text.x      = element_text(size = 20),
-        axis.text.y      = element_text(size = 20),
-        legend.text      = element_text(size = 20),
-        plot.caption     = element_text(size = 16, face = "italic", color = "#707070")) +
-  scale_y_continuous(labels=percent, limits = c(0, .8)) +
+        plot.title       = element_text(face = "bold"),
+        plot.subtitle    = element_text(face = "italic", color = "#707070"),
+        plot.caption     = element_text(face = "italic", color = "#707070")) +
+  scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Men's 'final say' on leisure activities were more likely to be\nviewed as fair.",
-        subtitle = "% of respondents who said the decision was somewhat or very fair...",
-        caption  = "Predicted percentages adjust for other vignette manipulations and respondent demographic characteristics.") 
+        title    = "Gender differences in perceptions of fairness in \ndecision-making for items and activities.",
+        subtitle = "% of respondents who said the decision was somewhat or very fair",
+        caption  = "Predicted percentages adjust for vignette manipulations and respondent demographic characteristics.") 
 
-fig3
+figD
 
-ggsave(filename = file.path(figDir, "fig3.png"), fig3, width=11, height=6, units="in", dpi=300)
-
+ggsave(filename = file.path(figDir, "figD.png"), figD, width=6, height=6, units="in", dpi=300)

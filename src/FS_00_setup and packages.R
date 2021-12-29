@@ -23,12 +23,15 @@ pacman::p_load(
        srvyr,      # analyze survey data
        gtsummary,  # make tables
        kableExtra, # make tables
+       margins,    # average marginal effects
        cowplot,    # graphing
        ggplot2,    # graphing
+       ggeffects,  # predicted probabilities
        sjmisc,
        colorspace, 
        ggrepel,    # graphing
        ggpubr,
+       scales,     # percentages for ggplots axes
        officer,    # producing word output
        flextable,  # producing word output
        tidytext,   # addressing spelling
@@ -87,11 +90,6 @@ conflict_prefer("vars", "ggplot2")
 ## Data import code assumes the researcher downloaded the Stata data files.
 
 rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downloaded
-
-## Qualitative coding of the data is located in this repository (qualDir)
-## Data was coded by the primary investigator in NVivo and converted into a Stata file
-
-# qualdata <- "Power_Coding Matrix_07-19-17.dta"    # Name of the datafile
 
 #####################################################################################
 # Set-up the Directories
