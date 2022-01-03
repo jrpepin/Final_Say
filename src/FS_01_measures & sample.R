@@ -377,11 +377,11 @@ data %>%
 ## Because these respondents’ intentions cannot be discerned from their contradictory answers, 
 ## they were dropped from the analysis.
 
-data <- data %>%
+quantdata <- data %>%
   filter(CaseID != 902 & CaseID != 1962 & CaseID != 1013)
 
 ## list-wise deletion -- resulting in 42 additional deleted observations
-data <- data %>%
+quantdata <- quantdata %>%
   filter(!is.na(organize) & 
          !is.na(afair) &
          !is.na(ifair))
@@ -391,7 +391,7 @@ data <- data %>%
 
 ## keep only variables needed for analyses
 
-data <- data %>%
+quantdata <- quantdata %>%
   select(CaseID, weight,
          gender, relate, parent, raceeth, educ, employ, incdum, age, religion, relfreq,
          mar, child, marpar, relinc, dur, organize, 
@@ -399,15 +399,15 @@ data <- data %>%
          item, activity, aperson, iperson, adum, afair, idum, ifair,
          qual1, qual2)
 
-sjPlot::view_df(data) # Load codebook in viewer pane
-sjPlot::view_df(data, file = file.path(outDir, "codebook_processed.html")) # Save codebook as html file
+sjPlot::view_df(quantdata) # Load codebook in viewer pane
+sjPlot::view_df(quantdata, file = file.path(outDir, "codebook_processed.html")) # Save codebook as html file
 
 
 #####################################################################################
 # Qualitative Dataset prep
 #####################################################################################
 
-qualdata <- data %>% # create long format dataset
+qualdata <- quantdata %>% # create long format dataset
   select(CaseID, qual1, qual2) %>%
   pivot_longer(
     cols = c(qual1, qual2),
@@ -548,6 +548,8 @@ freq.word$sugg.words[freq.word$word == "decession"]       <- "decision"
 freq.word$sugg.words[freq.word$word == "decied"]          <- "decided"
 freq.word$sugg.words[freq.word$word == "headofhousehold"] <- "head of household"
 freq.word$sugg.words[freq.word$word == "heres"]           <- "hers"
+freq.word$sugg.words[freq.word$word == "milkshakes"]      <- "michelle"
+freq.word$sugg.words[freq.word$word == "soot"]            <- "so"
 
 freq.word$sugg.words  <- freq.word$sugg.words %>% 
   replace_na("unknown") # replacing missing sugg.words
@@ -563,14 +565,14 @@ qualdata$qual <- stringr::str_replace_all(qualdata$qual, vect.corpus)
 
 # Removing invalid responses (FILE "exclusion criteria qual data' IDENTIFIES INVALID RESPONSES)
 
-## Don't know responses
+## Don't know responses 
 
 dk <- qualdata$longid %in% 
   c(  1401,   1402,  24202,  28102,  31501,  31502,  52701,  57201, 
      57202,  60302,  64401,  64402,  69202, 102001, 102002, 111901, 
     112301, 112302, 112802, 119301, 159702, 180302, 187501, 188802,
     195402, 201202, 221601, 225902, 268102, 306001, 306002, 317001, 
-    317002, 330601, 346001, 346102, 362102, 391201, 424402)
+    317002, 330601, 346001, 346102, 362102, 391201, 413102, 424402)
 
 refused <- qualdata$longid %in%
   c(  1501,	  1502,	  1601,	  1602,	  1802,	 2202,	  4401,	 16501,	
@@ -634,7 +636,7 @@ fairdata <- data %>% # create long format dataset
   mutate(longid = as_numeric(CaseID)*100+row_number()) %>%
   ungroup()
 
-qualdata <- left_join(qualdata, fairdata)
+qualdata <- left_join(qualdata, fairdata) 
 
 # -- clean up global environment
 remove(fairdata)
@@ -649,9 +651,9 @@ remove(freq.word)
 
 qualdata <- qualdata %>%
   filter(fair == 1) %>% # n = 4,798
-  filter(sample == "sample") # n = 4,689
-
+  filter(sample == "sample") %>% # n = 4,689
+  filter(wN > 0) # 4539
 
 ## Sample sizes
-length(unique(data[["CaseID"]])) #3975
-length(unique(qualdata[["CaseID"]])) #2972
+length(unique(data[["CaseID"]])) #4020
+length(unique(qualdata[["CaseID"]])) #2891

@@ -21,6 +21,7 @@ pacman::p_load(
        sjPlot,     # generate a codebook
        survey,     # analyze survey data
        srvyr,      # analyze survey data
+       nnet,       # multinomial models
        gtsummary,  # make tables
        kableExtra, # make tables
        margins,    # average marginal effects
@@ -31,6 +32,7 @@ pacman::p_load(
        colorspace, 
        ggrepel,    # graphing
        ggpubr,
+       ggtext,     # Color labels in ggtitle
        scales,     # percentages for ggplots axes
        officer,    # producing word output
        flextable,  # producing word output
@@ -122,19 +124,10 @@ if (!dir.exists(here::here(figDir))){
   print("Figure directory already exists!")
 }
 
-if (!dir.exists(here::here(funDir))){
-  dir.create(funDir)
-} else {
-  print("Functions directory already exists!")
-}
-
 if (!dir.exists(here::here(qualDir))){
   dir.create(qualDir)
 } else {
   print("Qualitative data directory already exists!")
 }
-
-## Set house color palette
-source(file.path(funDir, "jrp_colors.R"))
 
 message("End of FS_00_setup and packages") # Marks end of R Script
