@@ -147,28 +147,25 @@ topterms         <- data.frame(model$top_terms)
 topterms         <- tibble::rownames_to_column(topterms, "rank") 
 topterms$rank    <- as_numeric(topterms$rank)
 
-# topterms <- topterms %>%
-#   select(rank, t_3, t_6, t_2, t_5, t_1 ,t_4) %>%
-#   rename(topterms, 
-#           "Taking Turns"           = "t_3",
-#           "Money Matters"          = "t_6",
-#           "Give & Take"            = "t_2",
-#           "Some's Gotta Choose"    = "t_5",
-#           "Man has Final Say"      = "t_1",
-#           "Happy Wife, Happy Life" = "t_4")
+topterms <- topterms %>%
+  rename("Happy Wife, Happy Life" = "t_1",
+         "Money Matters"          = "t_2",
+         "Gender Essentialism"    = "t_3",
+         "Equality or Bust"       = "t_4",
+         "Communication"          = "t_5")
 
-write_xlsx(topterms,  path = file.path(outDir, "Table04_topterms9topicfair.xlsx"))
+write_xlsx(topterms,  path = file.path(outDir, "Table04_topterms5topicfair.xlsx"))
 
 # Figure 3. Word Cloud  -----------------------------------------------------------
 
 ## Table of Phi, which is where top words come from. Used to plot words in word clouds or dot plots
 phi<-model$phi
 phi<-data.frame(phi)
-write_xlsx(phi,  path = file.path(outDir, "phi6topicfair.xlsx"))
+write_xlsx(phi,  path = file.path(outDir, "phi5topicfair.xlsx"))
 
 ## Combine topterms and phi values
 df1 <- topterms %>%
-  pivot_longer(cols = starts_with("t_"), names_to = "topic", values_to = "word")
+  pivot_longer(cols = -rank, names_to = "topic", values_to = "word")
 
 df2 <- data.frame(t(phi[-1]))
 df2 <- tibble::rownames_to_column(df2, "word")
@@ -176,28 +173,35 @@ df2 <- tibble::rownames_to_column(df2, "word")
 df2 <- df2 %>%
   pivot_longer(!word, names_to = "topic", values_to = "phi")
 
+df2 <- df2 %>%
+  mutate(
+    topic = case_when(
+      topic == "t_1"    ~ "Happy Wife, Happy Life",
+      topic == "t_2"    ~ "Money Matters",
+      topic == "t_3"    ~ "Gender Essentialism",
+      topic == "t_4"    ~ "Equality or Bust",
+      topic == "t_5"    ~ "Communication",
+      TRUE              ~  NA_character_ 
+    ))
+
 clouddata <- left_join(df1, df2) %>%
   dplyr::arrange(desc(phi))
 
-
 ## Clean dataset
-# clouddata <- clouddata %>% # label topics
-#   mutate(topic = case_when(
-#      topic == "t_1" ~ "Topic 5: Man has Final Say",
-#      topic == "t_2" ~ "Topic 3: Give & Take",
-#      topic == "t_3" ~ "Topic 1: Taking Turns",
-#      topic == "t_4" ~ "Topic 6: Happy Wife, Happy Life",
-#      topic == "t_5" ~ "Topic 4: Some's Gotta Choose",
-#      topic == "t_6" ~ "Topic 2: Money Matters",
-#   ))
-# 
-# clouddata$topic <- factor(clouddata$topic, 
-#                           levels = c("Topic 1: Taking Turns", 
-#                                      "Topic 2: Money Matters", 
-#                                      "Topic 3: Give & Take",
-#                                      "Topic 4: Some's Gotta Choose",
-#                                      "Topic 5: Man has Final Say",
-#                                      "Topic 6: Happy Wife, Happy Life"), ordered = FALSE)
+clouddata <- clouddata %>% # label topics
+   mutate(topic = case_when(
+      topic == "Happy Wife, Happy Life" ~ "Topic 1: Happy Wife, Happy Life",
+      topic == "Money Matters"          ~ "Topic 2: Money Matters",
+      topic == "Gender Essentialism"    ~ "Topic 3: Gender Essentialism",
+      topic == "Equality or Bust"       ~ "Topic 4: Equality or Bust",
+      topic == "Communication"          ~ "Topic 5: Communication"))
+
+clouddata$topic <- factor(clouddata$topic, 
+                           levels = c("Topic 1: Happy Wife, Happy Life", 
+                                      "Topic 2: Money Matters", 
+                                      "Topic 3: Gender Essentialism",
+                                      "Topic 4: Equality or Bust",
+                                      "Topic 5: Communication"), ordered = FALSE)
 
 clouddata <- clouddata %>% # top 5 indicator
   mutate(top5 = case_when(
@@ -249,7 +253,7 @@ head(assignments)
 ## create wide data
 assign <- left_join(qualdata, assignments) %>%
   select(-c(qual, wN, same, topic, fair, longid)) %>%
-  pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9))
+  pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4, t_5))
 
 colnames(assign) <- sub("_qual1", "_item", colnames(assign))
 colnames(assign) <- sub("_qual2", "_act", colnames(assign))
@@ -301,11 +305,11 @@ lcadata <- left_join(assign, data) ## Join tables
 # MULTI-NOMIAL REGRESSIONS --------------------------------------------------------
 
 ## Assign topics
-groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", "t_5_item", "t_6_item", "t_7_item", "t_8_item", "t_9_item")
+groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", "t_5_item")
 lcadata$top_i <- max.col(lcadata[groups_i], "first") #tie breakers go to first class
 lcadata$top_i <- as.factor(lcadata$top_i)
 
-groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", "t_5_act", "t_6_act", "t_7_act", "t_8_act", "t_9_act")
+groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", "t_5_act")
 lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers go to first class
 lcadata$top_a <- as.factor(lcadata$top_a)
 

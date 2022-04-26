@@ -254,6 +254,19 @@ data$relinc <- factor(data$relinc, levels = c("Man higher-earner", "Woman higher
                                               "Equal earners"), ordered = FALSE)
 table(data$relinc)
 
+## a non-gendered earner identifier
+data <- data %>%
+  mutate(
+    earner = case_when(
+      (relinc  == "Man higher-earner"   & iperson == "Anthony")  |
+      (relinc  == "Woman higher-earner" & iperson == "Michelle") ~ "Higher earner",
+      (relinc  == "Woman higher-earner" & iperson == "Anthony")  |
+      (relinc  == "Man higher-earner"   & iperson == "Michelle") ~ "Lower earner",
+      TRUE                                                       ~ "Equal earners"))
+
+data$earner <- factor(data$earner, levels = c("Higher earner", "Lower earner", 
+                                              "Equal earners"), ordered = FALSE)
+
 ## duration condition ------------------------------------------------------
 table(data$dur)
 
@@ -394,7 +407,7 @@ quantdata <- quantdata %>%
 quantdata <- quantdata %>%
   select(CaseID, weight,
          gender, relate, parent, raceeth, educ, employ, incdum, age, religion, relfreq,
-         mar, child, marpar, relinc, dur, organize, 
+         mar, child, marpar, relinc, earner, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
          item, activity, aperson, iperson, adum, afair, idum, ifair,
          qual1, qual2)
@@ -550,6 +563,7 @@ freq.word$sugg.words[freq.word$word == "headofhousehold"] <- "head of household"
 freq.word$sugg.words[freq.word$word == "heres"]           <- "hers"
 freq.word$sugg.words[freq.word$word == "milkshakes"]      <- "michelle"
 freq.word$sugg.words[freq.word$word == "soot"]            <- "so"
+freq.word$sugg.words[freq.word$word == "heelles"]         <- "michelle"
 
 freq.word$sugg.words  <- freq.word$sugg.words %>% 
   replace_na("unknown") # replacing missing sugg.words

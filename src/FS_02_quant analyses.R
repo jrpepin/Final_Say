@@ -110,6 +110,10 @@ quantdata$raceeth  <- relevel(quantdata$raceeth,  ref = "White")
 quantdata$educ     <- relevel(quantdata$educ,     ref = "High school")
 quantdata$employ   <- relevel(quantdata$employ,   ref = "Employed")
 quantdata$incdum   <- relevel(quantdata$incdum,   ref = "< than $50,000")
+quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
+quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") # create dummy variables
+quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy variables
+
 
 ## Run the models
 
@@ -121,12 +125,12 @@ logit2 <- glm(adum ~ aperson + relinc + organize + mar + child + dur +
               gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit3 <- glm(idum ~ iperson * relinc + organize + mar + child + dur + 
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit3 <- glm(idum ~ perI * earner + organize + mar + child + dur + 
+              gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit4 <- glm(adum ~ aperson * relinc + organize + mar + child + dur + 
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit4 <- glm(adum ~ perA * earner + organize + mar + child + dur + 
+              gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
 
@@ -135,30 +139,31 @@ logit4 <- glm(adum ~ aperson * relinc + organize + mar + child + dur +
 ### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
 
 ## Panel A ------------------------------------------------------------------------------------
-AME_log1 <- summary(margins(logit1, variables = c("iperson", "relinc", "organize")))
-AME_log2 <- summary(margins(logit2, variables = c("aperson", "relinc", "organize")))
+AME_log1 <- summary(margins(logit1, variables = c("iperson", "relinc")))
+AME_log2 <- summary(margins(logit2, variables = c("aperson", "relinc")))
 
-# test equality of coefficients
-z_gender <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / (AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)^(1/2)
-# z_both   <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / (AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)^(2/2)
-# z_sep    <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / (AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)^(2/2)
-z_equal  <- (AME_log1[[4,2]] - AME_log2[[4,2]]) / (AME_log1[[4,3]]^2 + AME_log2[[4,3]]^2)^(2/2)
-z_fmore  <- (AME_log1[[5,2]] - AME_log2[[5,2]]) / (AME_log1[[5,3]]^2 + AME_log2[[5,3]]^2)^(2/2)
+# test equality of coefficients between Item & Activity
+# https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
+z_genderA <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / sqrt(AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)
+# z_bothA   <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / sqrt(AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)
+# z_sepA    <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / sqrt(AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)
+z_equalA  <- (AME_log1[[4,2]] - AME_log2[[4,2]]) / sqrt(AME_log1[[4,3]]^2 + AME_log2[[4,3]]^2)
+z_fmoreA  <- (AME_log1[[5,2]] - AME_log2[[5,2]]) / sqrt(AME_log1[[5,3]]^2 + AME_log2[[5,3]]^2)
 
-p_gender <- 2*pnorm(-abs(z_gender)) 
-# p_both   <- 2*pnorm(-abs(z_both)) 
-# p_sep    <- 2*pnorm(-abs(z_sep)) 
-p_equal  <- 2*pnorm(-abs(z_equal)) 
-p_fmore  <- 2*pnorm(-abs(z_fmore)) 
+p_genderA <- 2*pnorm(-abs(z_genderA)) 
+# p_bothA   <- 2*pnorm(-abs(z_bothA)) 
+# p_sepA    <- 2*pnorm(-abs(z_sepA)) 
+p_equalA  <- 2*pnorm(-abs(z_equalA)) 
+p_fmoreA  <- 2*pnorm(-abs(z_fmoreA)) 
 
 AME_log1
 AME_log2
 
-print(paste("Gender test of equality: p =", round(p_gender, digits = 3)))
-print(paste("Woman Higher-Earner test of equality: p =", round(p_fmore, digits = 3)))
-print(paste("Equal test of equality: p =", round(p_equal, digits = 3)))
-# print(paste("Separate test of equality: p =", round(p_sep, digits = 3)))
-# print(paste("Both test of equality: p =", round(p_both, digits = 3)))
+print(paste("Gender test of equality: p =", round(p_genderA, digits = 3)))
+print(paste("Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
+print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
+# print(paste("Separate test of equality: p =", round(p_sepA, digits = 3)))
+# print(paste("Both test of equality: p =", round(p_bothA, digits = 3)))
 
 ##  alternative test -- test coefficients instead of marginal effects
     # coef_log1 <- coef(summary(logit1))[[2,1]] ## gender coefficients
@@ -172,38 +177,93 @@ print(paste("Equal test of equality: p =", round(p_equal, digits = 3)))
 
 
 ## Panel B ------------------------------------------------------------------------------------
-AME_log3 <- summary(margins(logit3, 
-                            variables = c("iperson"), 
-                            at = list(relinc = c("Man higher-earner", "Woman higher-earner", "Equal earners"))))
+### Activity **********************************************************************************
+AME3 <- summary(margins(logit3, 
+                variables = "perI",
+                 at = list(perI = 0:1, 
+                           earner = c("Higher earner", "Lower earner", "Equal earners"))))
 
-AME_log4 <- summary(margins(logit4, 
-                            variables = c("aperson"), 
-                            at = list(relinc = c("Man higher-earner", "Woman higher-earner", "Equal earners"))))
+## test difference between coefficients
+### create Z scores
+z_higherI <- (AME3[[1,4]] - AME3[[4,4]]) / sqrt(AME3[[1,5]]^2 + AME3[[4,5]]^2)
+z_lowerI  <- (AME3[[2,4]] - AME3[[5,4]]) / sqrt(AME3[[2,5]]^2 + AME3[[5,5]]^2)
+z_equalI  <- (AME3[[3,4]] - AME3[[6,4]]) / sqrt(AME3[[3,5]]^2 + AME3[[6,5]]^2)
 
-# test equality of coefficients
-z_mmoreA <- (AME_log3[[1,3]] - AME_log4[[1,3]]) / (AME_log3[[1,4]]^2 + AME_log4[[1,4]]^2)^(1/2)
-z_fmoreA <- (AME_log3[[2,3]] - AME_log4[[2,3]]) / (AME_log3[[2,4]]^2 + AME_log4[[2,4]]^2)^(2/2)
-z_equalA <- (AME_log3[[3,3]] - AME_log4[[3,3]]) / (AME_log3[[3,4]]^2 + AME_log4[[3,4]]^2)^(3/2)
+### create p values
+p_higherI <- 2*pnorm(-abs(z_higherI))
+p_lowerI  <- 2*pnorm(-abs(z_lowerI))
+p_equalI  <- 2*pnorm(-abs(z_equalI))
+
+### report p values
+print(paste("(ITEM) test of equality-- Higher-Earner * gender: p =", round(p_higherI, digits = 3)))
+print(paste("(ITEM) test of equality-- Lower-Earner * gender: p =", round(p_lowerI, digits = 3)))
+print(paste("(ITEM) test of equality-- Equal Earners * gender: p =", round(p_equalI, digits = 3)))
 
 
-p_mmoreA <- 2*pnorm(-abs(z_mmoreA)) 
-p_fmoreA <- 2*pnorm(-abs(z_fmoreA)) 
-p_equalA <- 2*pnorm(-abs(z_equalA)) 
+### Item **********************************************************************************
+AME4 <- summary(margins(logit4, 
+                variables = "perA",
+                at = list(perA = 0:1, 
+                          earner = c("Higher earner", "Lower earner", "Equal earners"))))
 
-AME_log3
-AME_log4
+## test difference between coefficients
+### create Z scores
+z_higherA <- (AME4[[1,4]] - AME4[[4,4]]) / sqrt(AME4[[1,5]]^2 + AME4[[4,5]]^2)
+z_lowerA  <- (AME4[[2,4]] - AME4[[5,4]]) / sqrt(AME4[[2,5]]^2 + AME4[[5,5]]^2)
+z_equalA  <- (AME4[[3,4]] - AME4[[6,4]]) / sqrt(AME4[[3,5]]^2 + AME4[[6,5]]^2)
 
-print(paste("Anthony * Man Higher-Earner test of equality: p =", round(p_mmoreA, digits = 3)))
-print(paste("Anthony * Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
-print(paste("Anthony * Equal Earners test of equality: p =", round(p_equalA, digits = 3)))
+### create p values
+p_higherA <- 2*pnorm(-abs(z_higherA))
+p_lowerA  <- 2*pnorm(-abs(z_lowerA))
+p_equalA  <- 2*pnorm(-abs(z_equalA))
+
+### report p values
+print(paste("(ACTIVITY) test of equality-- Higher-Earner * gender: p =", round(p_higherA, digits = 3)))
+print(paste("(ACTIVITY) test of equality-- Lower-Earner * gender: p =", round(p_lowerA, digits = 3)))
+print(paste("(ACTIVITY) test of equality-- Equal Earners * gender: p =", round(p_equalA, digits = 3)))
+
+
+### test equality of coefficients between Item & Activity **********************************************************************************
+
+## Z scores
+z_higher_MAN_AB <- (AME3[[1,4]] - AME4[[1,4]]) / sqrt(AME3[[1,5]]^2 + AME4[[1,5]]^2)
+z_lower_MAN_AB  <- (AME3[[2,4]] - AME4[[2,4]]) / sqrt(AME3[[2,5]]^2 + AME4[[2,5]]^2)
+z_equal_MAN_AB  <- (AME3[[3,4]] - AME4[[3,4]]) / sqrt(AME3[[3,5]]^2 + AME4[[3,5]]^2)
+
+z_higher_FEM_AB <- (AME3[[4,4]] - AME4[[4,4]]) / sqrt(AME3[[4,5]]^2 + AME4[[4,5]]^2)
+z_lower_FEM_AB  <- (AME3[[5,4]] - AME4[[5,4]]) / sqrt(AME3[[5,5]]^2 + AME4[[5,5]]^2)
+z_equal_FEM_AB  <- (AME3[[6,4]] - AME4[[6,4]]) / sqrt(AME3[[6,5]]^2 + AME4[[6,5]]^2)
+
+## p values
+p_higher_MAN_AB <- 2*pnorm(-abs(z_higher_MAN_AB)) 
+p_lower_MAN_AB  <- 2*pnorm(-abs(z_lower_MAN_AB)) 
+p_equal_MAN_AB  <- 2*pnorm(-abs(z_equal_MAN_AB)) 
+
+p_higher_FEM_AB <- 2*pnorm(-abs(z_higher_FEM_AB)) 
+p_lower_FEM_AB  <- 2*pnorm(-abs(z_lower_FEM_AB)) 
+p_equal_FEM_AB  <- 2*pnorm(-abs(z_equal_FEM_AB)) 
+
+print(paste("(ITEM VS ACT) Man * Higher-Earner test of equality: p =", round(p_higher_MAN_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Man * Lower-Earner test of equality: p =", round(p_lower_MAN_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Man * Equal Earners test of equality: p =", round(p_equal_MAN_AB, digits = 3)))
+
+print(paste("(ITEM VS ACT) Female * Higher-Earner test of equality: p =", round(p_higher_FEM_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", round(p_lower_FEM_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Female * Equal Earners test of equality: p =", round(p_equal_FEM_AB, digits = 3)))
+
 
 # Figure 1. --------------------------------------------------------------------------
+### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
+### https://github.com/easystats/insight/issues/451 <- delta??
+### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
 
 ## Create predicted probabilities datesets
-pp3   <- ggeffect(logit3, terms = c("iperson", "relinc"))
-pp4   <- ggeffect(logit4, terms = c("aperson", "relinc"))
+pp3   <- ggeffect(logit3, terms = c("perI", "relinc"))
+pp4   <- ggeffect(logit4, terms = c("perA", "relinc"))
 
-# https://github.com/easystats/insight/issues/451 <- delta??
+mydf <- ggpredict(logit3, terms = c("perI", "relinc"))  #?#?#?# Effect or predict??
+
+
 
 pp3$type <- "item"
 pp4$type <- "activity"
