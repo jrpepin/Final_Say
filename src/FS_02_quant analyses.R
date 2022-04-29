@@ -258,12 +258,8 @@ print(paste("(ITEM VS ACT) Female * Equal Earners test of equality: p =", round(
 ### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
 
 ## Create predicted probabilities datesets
-pp3   <- ggeffect(logit3, terms = c("perI", "relinc"))
-pp4   <- ggeffect(logit4, terms = c("perA", "relinc"))
-
-mydf <- ggpredict(logit3, terms = c("perI", "relinc"))  #?#?#?# Effect or predict??
-
-
+pp3   <- ggeffect(logit3, terms = c("perI", "earner"))
+pp4   <- ggeffect(logit4, terms = c("perA", "earner"))
 
 pp3$type <- "item"
 pp4$type <- "activity"
@@ -271,8 +267,11 @@ pp4$type <- "activity"
 data_fig1 = merge(pp3, pp4, all = TRUE)
 head(data_fig1)
 
-levels(data_fig1$x)[levels(data_fig1$x)=="Michelle"] <- "She decided"
-levels(data_fig1$x)[levels(data_fig1$x)=="Anthony"]  <- "He decided"
+data_fig1$x <-factor(data_fig1$x)
+levels(data_fig1$x)[levels(data_fig1$x)=="1"] <- "She decided"
+levels(data_fig1$x)[levels(data_fig1$x)=="0"] <- "He decided"
+
+data_fig1$x    <- factor(data_fig1$x, levels = c("She decided", "He decided"), ordered = FALSE)
 data_fig1$type <- factor(data_fig1$type, levels = c("item", "activity"), ordered = FALSE)
 
 fig1 <- data_fig1 %>%
@@ -474,67 +473,69 @@ ggsave(filename = file.path(figDir, "figC.png"), figC, width=5, height=5, units=
 
 
 # Appendix Figure D. --------------------------------------------------------------------------
-logit5 <- glm(idum ~ iperson * relinc * organize + mar + child + dur + 
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
 
-logit6 <- glm(adum ~ aperson * relinc * organize + mar + child + dur + 
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
-
-
-pp5   <- ggeffect(logit5, terms = c("iperson", "relinc", "organize"))
-pp6   <- ggeffect(logit6, terms = c("aperson", "relinc", "organize"))
-
-pp5$type <- "item"
-pp6$type <- "activity"
-
-data_figD = merge(pp5, pp6, all = TRUE)
-head(data_figD)
-
-levels(data_figD$x)[levels(data_figD$x)=="Michelle"] <- "She decided"
-levels(data_figD$x)[levels(data_figD$x)=="Anthony"]  <- "He decided"
-data_figD$x <- factor(data_figD$x, levels = c("He decided", "She decided"), ordered = FALSE)
-data_figD$type <- factor(data_figD$type, levels = c("item", "activity"), ordered = FALSE)
-data_figD$group <- factor(data_figD$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
-
-
-figD <- data_figD %>%
-  ggplot(aes(x = x, y = predicted, fill = group)) +
-  geom_col(width = 0.6, position = position_dodge(0.7)) +
-  facet_grid(type ~ facet) +
-  facet_grid(type ~ facet,
-             scales="free",
-             space = "free",
-             switch = "y") +
-  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
-                stat="identity", position=position_dodge(.7), color="#ADB5BD") +
-  coord_flip() +
-  geom_text(position = position_dodge(width = .7),
-            hjust = 1.5,
-            aes(label=sprintf("%1.0f%%", predicted*100)),
-            colour = "white",
-            size = 3) +
-  scale_fill_manual(values = c("#18BC9C", "#E74C3C", "#3498DB")) +
-  theme_minimal() +
-  theme(legend.position     = "bottom",
-        panel.grid.major.x  = element_blank(),
-        plot.title          = element_text(face = "bold"),
-        plot.title.position = "plot",
-        plot.subtitle       = element_text(face = "italic", color = "#707070"),
-        plot.caption        = element_text(face = "italic", color = "#707070"),
-        strip.text          = element_text(face = "bold"),
-        strip.text.y.left   = element_text(angle = 0),
-        strip.placement     = "outside") +
-  scale_y_continuous(labels = percent, limits = c(0, .85)) +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Perceptions of fairness about item and activity decisions \n by gender, relative earnings, and allocation system",
-        subtitle = "Adjusted predicted % who said the decision was somewhat or very fair...",
-        caption  = "Predicted percentages adjust for other vignette manipulations\nand respondent demographic characteristics.") +
-  guides(fill = guide_legend(reverse = TRUE))
-
-figD
-
-ggsave(filename = file.path(figDir, "figD.png"), figD, width=6, height=6, units="in", dpi=300)
+##  DROPPED FROM STUDY ENTIRELY
+# logit5 <- glm(idum ~ iperson * relinc * organize + mar + child + dur + 
+#                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+#               quantdata, weights = weight, family="binomial")
+# 
+# logit6 <- glm(adum ~ aperson * relinc * organize + mar + child + dur + 
+#                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+#               quantdata, weights = weight, family="binomial")
+# 
+# 
+# pp5   <- ggeffect(logit5, terms = c("iperson", "relinc", "organize"))
+# pp6   <- ggeffect(logit6, terms = c("aperson", "relinc", "organize"))
+# 
+# pp5$type <- "item"
+# pp6$type <- "activity"
+# 
+# data_figD = merge(pp5, pp6, all = TRUE)
+# head(data_figD)
+# 
+# levels(data_figD$x)[levels(data_figD$x)=="Michelle"] <- "She decided"
+# levels(data_figD$x)[levels(data_figD$x)=="Anthony"]  <- "He decided"
+# data_figD$x <- factor(data_figD$x, levels = c("He decided", "She decided"), ordered = FALSE)
+# data_figD$type <- factor(data_figD$type, levels = c("item", "activity"), ordered = FALSE)
+# data_figD$group <- factor(data_figD$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+# 
+# 
+# figD <- data_figD %>%
+#   ggplot(aes(x = x, y = predicted, fill = group)) +
+#   geom_col(width = 0.6, position = position_dodge(0.7)) +
+#   facet_grid(type ~ facet) +
+#   facet_grid(type ~ facet,
+#              scales="free",
+#              space = "free",
+#              switch = "y") +
+#   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
+#                 stat="identity", position=position_dodge(.7), color="#ADB5BD") +
+#   coord_flip() +
+#   geom_text(position = position_dodge(width = .7),
+#             hjust = 1.5,
+#             aes(label=sprintf("%1.0f%%", predicted*100)),
+#             colour = "white",
+#             size = 3) +
+#   scale_fill_manual(values = c("#18BC9C", "#E74C3C", "#3498DB")) +
+#   theme_minimal() +
+#   theme(legend.position     = "bottom",
+#         panel.grid.major.x  = element_blank(),
+#         plot.title          = element_text(face = "bold"),
+#         plot.title.position = "plot",
+#         plot.subtitle       = element_text(face = "italic", color = "#707070"),
+#         plot.caption        = element_text(face = "italic", color = "#707070"),
+#         strip.text          = element_text(face = "bold"),
+#         strip.text.y.left   = element_text(angle = 0),
+#         strip.placement     = "outside") +
+#   scale_y_continuous(labels = percent, limits = c(0, .85)) +
+#   labs( x        = " ", 
+#         y        = " ", 
+#         fill     = " ",
+#         title    = "Perceptions of fairness about item and activity decisions \n by gender, relative earnings, and allocation system",
+#         subtitle = "Adjusted predicted % who said the decision was somewhat or very fair...",
+#         caption  = "Predicted percentages adjust for other vignette manipulations\nand respondent demographic characteristics.") +
+#   guides(fill = guide_legend(reverse = TRUE))
+# 
+# figD
+# 
+# ggsave(filename = file.path(figDir, "figD.png"), figD, width=6, height=6, units="in", dpi=300)
