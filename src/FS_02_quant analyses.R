@@ -114,14 +114,13 @@ quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
 quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") # create dummy variables
 quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy variables
 
-
 ## Run the models
 
-logit1 <- glm(idum ~ iperson + relinc + organize + mar + child + dur + 
+logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + 
               gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit2 <- glm(adum ~ aperson + relinc + organize + mar + child + dur + 
+logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur + 
               gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
@@ -139,14 +138,14 @@ logit4 <- glm(adum ~ perA * earner + organize + mar + child + dur +
 ### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
 
 ## Panel A ------------------------------------------------------------------------------------
-AME_log1 <- summary(margins(logit1, variables = c("iperson", "relinc")))
+AME_log1 <- summary(margins(logit1, variables = c("perI", "relinc")))
 AME_log2 <- summary(margins(logit2, variables = c("aperson", "relinc")))
 
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
 z_genderA <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / sqrt(AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)
-# z_bothA   <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / sqrt(AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)
-# z_sepA    <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / sqrt(AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)
+# z_bothA <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / sqrt(AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)
+# z_sepA  <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / sqrt(AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)
 z_equalA  <- (AME_log1[[4,2]] - AME_log2[[4,2]]) / sqrt(AME_log1[[4,3]]^2 + AME_log2[[4,3]]^2)
 z_fmoreA  <- (AME_log1[[5,2]] - AME_log2[[5,2]]) / sqrt(AME_log1[[5,3]]^2 + AME_log2[[5,3]]^2)
 

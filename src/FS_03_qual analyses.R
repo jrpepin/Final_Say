@@ -145,18 +145,16 @@ model$top_terms  <- GetTopTerms(phi = model$phi, M = 50)
 t(model$top_terms)
 topterms         <- data.frame(model$top_terms)
 topterms         <- tibble::rownames_to_column(topterms, "rank") 
-topterms$rank    <- as_numeric(topterms$rank)
 
-topterms <- topterms %>%
-  select(rank, t_3, t_2, t_5, t_1 ,t_4) %>%
-  rename(topterms,
-          "Gender Essentialism"    = "t_3",
-          "Money Matters"          = "t_2",
-          "Communication"          = "t_5",
-          "Equality or Bust"       = "t_4",
-          "Happy Wife, Happy Life" = "t_1")
+top5terms <- topterms %>%
+  select(rank, t_3, t_2, t_5, t_1 ,t_4) %>% 
+  rename("Gender Essentialism"    = "t_3",
+         "Money Matters"          = "t_2",
+         "Communication"          = "t_5",
+         "Equality or Bust"       = "t_4",
+         "Happy Wife, Happy Life" = "t_1")
 
-write_xlsx(topterms,  path = file.path(outDir, "Table04_topterms5topicfair.xlsx"))
+write_xlsx(top5terms,  path = file.path(outDir, "Table04_topterms5topicfair.xlsx"))
 
 # Figure 3. Word Cloud  -----------------------------------------------------------
 
@@ -226,7 +224,7 @@ ggsave(file.path(figDir, "fig3.png"), fig3, height = 9, width = 6, units="in",dp
 # Topic Modeling Regression Tables
 #####################################################################################
 
-## Assigning docs to topics with probabilities
+## Assigning observations probabilities of topics
 set.seed(376)
 assign <- predict(model, mSTEMMED,
                   iterations = 1000, 
@@ -256,36 +254,36 @@ lcadata <- left_join(assign, data) ## Join tables
 # lcaSvy <- svydesign(ids = ~1, weights = ~ weight, data = lcadata)
 # 
 # ## item regressions
-# happy_i  <- svyglm(t_1_item ~ iperson + relinc + organize + mar + child + dur + 
+# happy_i  <- svyglm(t_1_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# money_i  <- svyglm(t_2_item ~ iperson + relinc + organize + mar + child + dur + 
+# money_i  <- svyglm(t_2_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# gender_i <- svyglm(t_3_item ~ iperson + relinc + organize + mar + child + dur + 
+# gender_i <- svyglm(t_3_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# equal_i  <- svyglm(t_4_item ~ iperson + relinc + organize + mar + child + dur + 
+# equal_i  <- svyglm(t_4_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# turns_i  <- svyglm(t_5_item ~ iperson + relinc + organize + mar + child + dur + 
+# turns_i  <- svyglm(t_5_item ~ iperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
 # ## activity regressions
 # 
-# happy_a  <- svyglm(t_1_act ~ aperson + relinc + organize + mar + child + dur + 
+# happy_a  <- svyglm(t_1_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# money_a  <- svyglm(t_2_act ~ aperson + relinc + organize + mar + child + dur + 
+# money_a  <- svyglm(t_2_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# gender_a <- svyglm(t_3_act ~ aperson + relinc + organize + mar + child + dur + 
+# gender_a <- svyglm(t_3_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# equal_a <- svyglm(t_4_act ~ aperson + relinc + organize + mar + child + dur + 
+# equal_a <- svyglm(t_4_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# turns_a <- svyglm(t_5_act ~ aperson + relinc + organize + mar + child + dur + 
+# turns_a <- svyglm(t_5_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 
 
@@ -306,12 +304,6 @@ lcadata <- lcadata %>%
 table(lcadata$top_i)  # frequency of each topic for items
 table(lcadata$top_a)  # frequency of each topic for activities
 
-# topic == "t_1" ~ "Topic 5: Happy Wife, Happy Life"
-# topic == "t_2" ~ "Topic 3: Money Matters"
-# topic == "t_3" ~ "Topic 1: Gender Essentialism"
-# topic == "t_4" ~ "Topic 4: Equality or Bust"
-# topic == "t_5" ~ "Topic 2: Communication"
-
 # Rename topics
 levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Happy Wife, Happy Life"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Money Matters"
@@ -328,7 +320,6 @@ levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Equality or Bust"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="5"] <- "Communication"
 lcadata$top_a <- factor(lcadata$top_a, levels = c("Equality or Bust", "Money Matters", "Gender Essentialism",
                                                   "Happy Wife, Happy Life", "Communication"))
-
 
 mn_item <- multinom(top_i ~ iperson * earner + organize + mar + child + dur + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
