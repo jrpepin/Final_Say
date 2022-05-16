@@ -44,7 +44,7 @@ data$gender %>% attr('labels') ### Viewing value labels
 ### Working with SPSS labels https://martinctc.github.io/blog/working-with-spss-labels-in-r/
 
 fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", "religion",
-          "region", "mar", "child", "relinc", "dur", "item", "iperson", "activity", 
+           "region", "mar", "child", "relinc", "dur", "item", "iperson", "activity", 
            "aperson", "ifair", "afair", "organize", "DOV_B02_MaxValue", "DOV_B03_MaxValue")
 
 icols <- c("age", "PPT01", "PPT25", "PPT612", "PPT1317", 
@@ -65,150 +65,150 @@ summary(data$age)
 
 ## gender --------------------------------------------------------------------------
 table(data$gender)
-  data$gender <-data$gender %>%
-    droplevels()
+data$gender <-data$gender %>%
+  droplevels()
 table(data$gender)
 
 ## education -----------------------------------------------------------------------
 table(data$educ)
-  data$educ <-data$educ %>%
-    droplevels()
+data$educ <-data$educ %>%
+  droplevels()
 table(data$educ)
 
 ## work ----------------------------------------------------------------------------
 table(data$work)
-  data$work <-data$work %>%
-    droplevels()
+data$work <-data$work %>%
+  droplevels()
 
-  data <- data %>%
-    mutate(
-      employ = case_when(
-        work == "Working - as a paid employee"                  | 
+data <- data %>%
+  mutate(
+    employ = case_when(
+      work == "Working - as a paid employee"                  | 
         work == "Working - self-employed"                       ~ "Employed",
-        work == "Not working - on temporary layoff from a job"  |
+      work == "Not working - on temporary layoff from a job"  |
         work == "Not working - looking for work"                ~ "Unemployed",
-        work == "Not working - retired"                         |
-        work == "Not working - disabled"                        |
+      work == "Not working - retired"                         |
+      work == "Not working - disabled"                        |
         work == "Not working - other"                           ~ "Not in labor force",
-        TRUE                                                    ~  NA_character_ 
-      ))
-  
-  data$employ <- factor(data$employ, levels = c("Employed", "Unemployed", "Not in labor force"), ordered = FALSE)
+      TRUE                                                      ~  NA_character_ 
+    ))
+
+data$employ <- factor(data$employ, levels = c("Employed", "Unemployed", "Not in labor force"), ordered = FALSE)
 table(data$employ)
 
 ## relate -------------------------------------------------------------------------
 table(data$relate)
-  data$relate <-data$relate %>%
-    droplevels()
+data$relate <-data$relate %>%
+  droplevels()
 
-  data <- data %>%
-    mutate(
-      relate = case_when(
-        relate == "Married"                       ~ "Married",
-        relate == "Living with partner"           ~ "Cohabit",
-        relate == "Never married"                 ~ "Never married",
-        relate == "Divorced"                        |
-        relate == "Separated"                       |
-        relate == "Widowed"                       ~ "Divorced/Sep./Widow",
-        TRUE                                      ~  NA_character_ 
-      ))
+data <- data %>%
+  mutate(
+    relate = case_when(
+      relate == "Married"                       ~ "Married",
+      relate == "Living with partner"           ~ "Cohabit",
+      relate == "Never married"                 ~ "Never married",
+      relate == "Divorced"                        |
+      relate == "Separated"                       |
+      relate == "Widowed"                       ~ "Divorced/Sep./Widow",
+      TRUE                                      ~  NA_character_ 
+    ))
 
-  data$relate <- factor(data$relate, levels = c("Married", "Cohabit", "Never married", "Divorced/Sep./Widow"), ordered = FALSE)
+data$relate <- factor(data$relate, levels = c("Married", "Cohabit", "Never married", "Divorced/Sep./Widow"), ordered = FALSE)
 table(data$relate)
 
 ## income -------------------------------------------------------------------------
 table(data$income)
-  data$income <-data$income %>%
-    droplevels() %>%
-    as.integer()
-  
-  data <- data %>%
-    mutate(
-      incdum = case_when(
-        income <= 11          ~ "< than $50,000",
-        income >= 12          ~ "> than $50,000",
-        TRUE                  ~  NA_character_ 
-      ))
-  
-  data$incdum <- factor(data$incdum, levels = c("< than $50,000", "> than $50,000"), ordered = FALSE)
+data$income <-data$income %>%
+  droplevels() %>%
+  as.integer()
+
+data <- data %>%
+  mutate(
+    incdum = case_when(
+      income <= 11          ~ "< than $50,000",
+      income >= 12          ~ "> than $50,000",
+      TRUE                  ~  NA_character_ 
+    ))
+
+data$incdum <- factor(data$incdum, levels = c("< than $50,000", "> than $50,000"), ordered = FALSE)
 table(data$incdum)
-  
+
 ## race/eth ----------------------------------------------------------------------
 table(data$race)
-  data$race <-data$race %>%
-    droplevels()
+data$race <-data$race %>%
+  droplevels()
 
-  data <- data %>%
-    mutate(
-      raceeth = case_when(
-        race == "White, Non-Hispanic"           ~ "White",
-        race == "Black, Non-Hispanic"           ~ "Black",
-        race == "Hispanic"                      ~ "Hispanic",
-        race == "Other, Non-Hispanic"              |
-        race == "2+ Races, Non-Hispanic"        ~ "Other",
-        TRUE                                    ~  NA_character_ 
-      ))
-  
-  data$raceeth <- factor(data$raceeth, levels = c("White", "Black", "Hispanic", "Other"), ordered = FALSE)
+data <- data %>%
+  mutate(
+    raceeth = case_when(
+      race == "White, Non-Hispanic"           ~ "White",
+      race == "Black, Non-Hispanic"           ~ "Black",
+      race == "Hispanic"                      ~ "Hispanic",
+      race == "Other, Non-Hispanic"              |
+      race == "2+ Races, Non-Hispanic"        ~ "Other",
+      TRUE                                    ~  NA_character_ 
+    ))
+
+data$raceeth <- factor(data$raceeth, levels = c("White", "Black", "Hispanic", "Other"), ordered = FALSE)
 table(data$raceeth)
 
 ## religion freq ----------------------------------------------------------------
 table(data$relfreq)
 
-  data <- data %>%
-    mutate(
-      relfreq = case_when(
-        relfreq == "More than once a week"           ~ "Weekly plus",
-        relfreq == "Once a week"                     ~ "Weekly",
-        relfreq == "Once or twice a month"           ~ "Monthly",
-        relfreq == "A few times a year"              |
-        relfreq == "Once a year or less"             ~ "Yearly",
-        relfreq == "Never"                           ~ "Never",
-        relfreq == "Refused"                         ~ "Unknown",
-        TRUE                                         ~  NA_character_ 
-      ))
+data <- data %>%
+  mutate(
+    relfreq = case_when(
+      relfreq == "More than once a week"           ~ "Weekly plus",
+      relfreq == "Once a week"                     ~ "Weekly",
+      relfreq == "Once or twice a month"           ~ "Monthly",
+      relfreq == "A few times a year"                 |
+      relfreq == "Once a year or less"             ~ "Yearly",
+      relfreq == "Never"                           ~ "Never",
+      relfreq == "Refused"                         ~ "Unknown",
+      TRUE                                         ~  NA_character_ 
+    ))
 
-  data$relfreq <- factor(data$relfreq, levels = c("Weekly plus", "Weekly", "Monthly", "Yearly", "Never", "Unknown"), ordered = FALSE)
+data$relfreq <- factor(data$relfreq, levels = c("Weekly plus", "Weekly", "Monthly", "Yearly", "Never", "Unknown"), ordered = FALSE)
 table(data$relfreq)
 
 ## religion -------------------------------------------------------------------
 table(data$religion)
 
-  data$religion <-data$religion %>%
-    as.integer()
-  
-  data <- data %>%
-    mutate(
-      religion = case_when(
-        religion == 1          ~ "Catholic",
-        religion == 2          ~ "Evangelical or Portestant Christian",
-        religion == 13         ~ "None",
-        TRUE                   ~ "Other Religion"
-      ))
+data$religion <-data$religion %>%
+  as.integer()
 
-  data$religion <- factor(data$religion, levels = c("Evangelical or Portestant Christian", "Catholic", 
-                                                    "None", "Other Religion"), ordered = FALSE)
+data <- data %>%
+  mutate(
+    religion = case_when(
+      religion == 1          ~ "Catholic",
+      religion == 2          ~ "Evangelical or Portestant Christian",
+      religion == 13         ~ "None",
+      TRUE                   ~ "Other Religion"
+    ))
+
+data$religion <- factor(data$religion, levels = c("Evangelical or Portestant Christian", "Catholic", 
+                                                  "None", "Other Religion"), ordered = FALSE)
 table(data$religion)
-  
+
 ## region -------------------------------------------------------------------
 table(data$region)
-  data$region <-data$region %>%
-    droplevels()
+data$region <-data$region %>%
+  droplevels()
 table(data$region)
-  
+
 ## parent -------------------------------------------------------------------
 table(data$PPT01)
 table(data$PPT25)
 table(data$PPT612)
 table(data$PPT1317)
 
-  data <- data %>%
-    mutate(
-      parent = case_when(
-        PPT01  >= 1 |  PPT25  >= 1 | 
-        PPT612 >= 1 | PPT1317 >= 1  ~ "Parent",
-        TRUE                        ~ "Not a parent"
-      ))
+data <- data %>%
+  mutate(
+    parent = case_when(
+      PPT01  >= 1 |  PPT25  >= 1 | 
+      PPT612 >= 1 | PPT1317 >= 1  ~ "Parent",
+      TRUE                        ~ "Not a parent"
+    ))
 
 table(data$parent)
 
@@ -221,20 +221,20 @@ data$parent <- factor(data$parent, levels = c("Not a parent", "Parent"), ordered
 ## relate/parent condition ----------------------------------------------------------
 table(data$mar, data$child)
 
-  data <- data %>%
-    mutate(
-      marpar = case_when(
-        mar  == "are married"   & child == "one child together" ~ "Married/Parent",
-        mar  == "are married"   & child == "no children"        ~ "Married/No kids",
-        mar  == "live together" & child == "one child together" ~ "Cohabit/Parent",
-        mar  == "live together" & child == "no children"        ~ "Cohabit/No kids",
-        TRUE                                                    ~  NA_character_ 
-      ))
+data <- data %>%
+  mutate(
+    marpar = case_when(
+      mar  == "are married"   & child == "one child together" ~ "Married/Parent",
+      mar  == "are married"   & child == "no children"        ~ "Married/No kids",
+      mar  == "live together" & child == "one child together" ~ "Cohabit/Parent",
+      mar  == "live together" & child == "no children"        ~ "Cohabit/No kids",
+      TRUE                                                    ~  NA_character_ 
+    ))
 
-  data$marpar <- factor(data$marpar, levels = c("Cohabit/No kids", "Cohabit/Parent", 
-                                                "Married/No kids", "Married/Parent"), ordered = FALSE)
+data$marpar <- factor(data$marpar, levels = c("Cohabit/No kids", "Cohabit/Parent", 
+                                              "Married/No kids", "Married/Parent"), ordered = FALSE)
 table(data$marpar)
-  
+
 ## relative earnings condition ------------------------------------------------------
 table(data$relinc)
 
@@ -283,11 +283,11 @@ table(data$activity)
 ## item fairness --------------------------------------------------------------------
 table(data$ifair)
 
-  data$ifair[data$ifair == "Refused"]   <- NA
-  
-  data$ifair <-data$ifair %>%
-    droplevels()
-  
+data$ifair[data$ifair == "Refused"]   <- NA
+
+data$ifair <-data$ifair %>%
+  droplevels()
+
 table(data$ifair)
 
 ### dummy var
@@ -371,6 +371,8 @@ data <- data %>% ## correct cases 1050 & 3866
       is.na(hisindv) & organize == "Both" & CaseID != 902 & CaseID != 1962,
       0))
 
+data$herjoint
+
 
 # identify cases where selected both but allocation is only individual
 data$jointtot <- data$herjoint + data$hisjoint
@@ -385,20 +387,22 @@ data %>%
 # Create the analytic sample
 #####################################################################################
 
-## Three respondents selected a partial-pooling approach for the fictional couple 
-## but in a follow-up question divided the earnings into an all individual or an all shared approach. 
-## Because these respondents’ intentions cannot be discerned from their contradictory answers, 
-## they were dropped from the analysis.
+quantdata <- data
 
-quantdata <- data %>%
-  filter(CaseID != 902 & CaseID != 1962 & CaseID != 1013)
+# NOTE, WE NO LONGER FOUCS ON FINANCIAL ORGANIZATION SO NOT REMOVING THESE CASES ANYMORE
+  # quantdata <- data %>%
+  # filter(CaseID != 902 & CaseID != 1962 & CaseID != 1013) 
 
-## list-wise deletion -- resulting in 42 additional deleted observations
+nrow(data)
+nrow(quantdata)
+
+## list-wise deletion -- resulting in 42 deleted observations
 quantdata <- quantdata %>%
   filter(!is.na(organize) & 
-         !is.na(afair) &
-         !is.na(ifair))
-
+           !is.na(afair) &
+           !is.na(ifair))
+nrow(data)
+nrow(quantdata)
 
 ## Generate a new codebook ---------------------------------------------------------
 
@@ -415,6 +419,8 @@ quantdata <- quantdata %>%
 sjPlot::view_df(quantdata) # Load codebook in viewer pane
 sjPlot::view_df(quantdata, file = file.path(outDir, "codebook_processed.html")) # Save codebook as html file
 
+nrow(quantdata)
+
 
 #####################################################################################
 # Qualitative Dataset prep
@@ -429,7 +435,7 @@ qualdata <- quantdata %>% # create long format dataset
   group_by(CaseID) %>%  # create a long format id
   mutate(longid = as_numeric(CaseID)*100+row_number()) %>%
   ungroup()
-
+nrow(qualdata)
 qualdata$qual <- tolower(qualdata$qual) # make text all lower case
 qualdata$qual <- gsub("[[:punct:]]", "", qualdata$qual) # remove special characters
 
@@ -448,9 +454,9 @@ qualdata <- qualdata %>%
                       "sincetheybothputmoneyontherevacationtheybothshouldhaveasayin",
                       "wheretheygo", sep = "") #longid 3201
       ~ paste("baecause maybe michelle would not enjoy the place that anthony",
-      "decided on and since they care so much about each other I think it is only",
-      "fair and since they both put money on there vacation they both should have",
-      "a say in where they go", sep = ""),
+              "decided on and since they care so much about each other I think it is only",
+              "fair and since they both put money on there vacation they both should have",
+              "a say in where they go", sep = ""),
       qual   == paste("itsoundstomelikemichelleisgiveingintoanthonysohewontgetupset",
                       "evenifshedoesntlikethemovieanthonypickedtogoandseesometimesif",
                       "peoplecareabouttherepartertheywilldowhattheywantsothereparter",
@@ -501,7 +507,7 @@ freq.word <- count(qual.tm, word)
 freq.word <- inner_join(freq.word, word.list, by = c(word = "bad.words"))
 
 freq.word <- freq.word %>%
- arrange(desc(n))
+  arrange(desc(n))
 
 freq.word$sugg.words <- tolower(freq.word$sugg.words) # make text all lower case
 freq.word$sugg.words <- gsub("[[:punct:]]", "", freq.word$sugg.words) # remove special characters
@@ -582,30 +588,30 @@ qualdata$qual <- stringr::str_replace_all(qualdata$qual, vect.corpus)
 ## Don't know responses 
 
 dk <- qualdata$longid %in% 
-  c(  1401,   1402,  24202,  28102,  31501,  31502,  52701,  57201, 
-     57202,  60302,  64401,  64402,  69202, 102001, 102002, 111901, 
-    112301, 112302, 112802, 119301, 159702, 180302, 187501, 188802,
-    195402, 201202, 221601, 225902, 268102, 306001, 306002, 317001, 
-    317002, 330601, 346001, 346102, 362102, 391201, 413102, 424402)
+  c(   1401,   1402,  24202,  28102,  31501,  31502,  52701,  57201, 
+      57202,  60302,  64401,  64402,  69202, 102001, 102002, 111901, 
+      112301, 112302, 112802, 119301, 159702, 180302, 187501, 188802,
+      195402, 201202, 221601, 225902, 268102, 306001, 306002, 317001, 
+      317002, 330601, 346001, 346102, 362102, 391201, 413102, 424402)
 
 refused <- qualdata$longid %in%
-  c(  1501,	  1502,	  1601,	  1602,	  1802,	 2202,	  4401,	 16501,	
-     16502,	 17901,  17902,	 21801,	 21802,	 24802,	 29202,	 31301,	
-     31701,	 31702,  32202,	 32301,	 32402,	 39302,	 40901,	 40902,	
-     44301,	 44302,  56802,	 59202,	 67902,	 68601,	 68602,  83801,	
-     85802,	 90001,  90002,	 91002,	 91301,	 91302,	 95301,	 95302,	
-     97202,  98102,	 98401,	105401,	114602,	114901,	117402,	120602,	
-    127002,	129302,	135702,	140202,	141501,	141502,	144502,	145202,	
-    158702,	165301,	165302,	175301,	175302,	187501,	187801,	187802,	
-    195402,	196201,	196202,	203501,	204502,	210701,	224101,	224102,	
-    225901,	225902,	237702,	255502,	258302,	262501,	262502,	265602,	
-    266802,	275501,	275502,	277902,	278801,	280402,	284301,	284302,	
-    286702,	297101,	297102,	310902,	324002,	324101,	324601,	324602,	
-    332301,	344901,	347601,	347602,	347902,	348701,	348702,	348901,	
-    348902,	349001,	349901,	349902,	350102,	359501,	368402,	377601,	
-    377602,	382602,	382802,	383601,	384302,	390602,	391202,	391402,	
-    399801,	399802,	408201,	408202,	408301,	408302,	409301,	409302,	
-    410201,	410202)
+  c(   1501,	  1502,	  1601,	  1602,	  1802,	 2202,	  4401,	 16501,	
+      16502,	 17901,  17902,	 21801,	 21802,	 24802,	 29202,	 31301,	
+      31701,	 31702,  32202,	 32301,	 32402,	 39302,	 40901,	 40902,	
+      44301,	 44302,  56802,	 59202,	 67902,	 68601,	 68602,  83801,	
+      85802,	 90001,  90002,	 91002,	 91301,	 91302,	 95301,	 95302,	
+      97202,   98102,	 98401,	105401,	114602,	114901,	117402,	120602,	
+      127002,	129302,	135702,	140202,	141501,	141502,	144502,	145202,	
+      158702,	165301,	165302,	175301,	175302,	187501,	187801,	187802,	
+      195402,	196201,	196202,	203501,	204502,	210701,	224101,	224102,	
+      225901,	225902,	237702,	255502,	258302,	262501,	262502,	265602,	
+      266802,	275501,	275502,	277902,	278801,	280402,	284301,	284302,	
+      286702,	297101,	297102,	310902,	324002,	324101,	324601,	324602,	
+      332301,	344901,	347601,	347602,	347902,	348701,	348702,	348901,	
+      348902,	349001,	349901,	349902,	350102,	359501,	368402,	377601,	
+      377602,	382602,	382802,	383601,	384302,	390602,	391202,	391402,	
+      399801,	399802,	408201,	408202,	408301,	408302,	409301,	409302,	
+      410201,	410202)
 
 qualdata$sample          <-"sample"
 qualdata$sample[dk]      <- "dont know"
@@ -613,13 +619,13 @@ qualdata$sample[refused] <- "refused"
 
 ## Response says the response is the same as the last one
 same <- qualdata$longid %in%
-  c(  3502,	  3602,  13102,	 15702,	 21202,	 29602,	 31302,	 38502,
-     39502,	 52202,	 63602,	 63702,	 79702,	 85002,	 89202,	 90802,
-     92102,	 94902,  98102,	103902,	107002,	111902,	115802,	135002,	
-    140802, 167402,	177602,	184402,	185102,	187502,	195702,	200302,	
-    201402,	203302,	211802,	213002,	214702,	222302,	233002,	243802,	
-    252702,	258202,	260802,	269002,	269702,	273002,	275302,	295102,	
-    300802,	316602,	332602,	370302,	393002,	410902,	412002)
+  c(   3502,	  3602,  13102,	 15702,	 21202,	 29602,	 31302,	 38502,
+      39502,	 52202,	 63602,	 63702,	 79702,	 85002,	 89202,	 90802,
+      92102,	 94902,  98102,	103902,	107002,	111902,	115802,	135002,	
+      140802, 167402,	177602,	184402,	185102,	187502,	195702,	200302,	
+      201402,	203302,	211802,	213002,	214702,	222302,	233002,	243802,	
+      252702,	258202,	260802,	269002,	269702,	273002,	275302,	295102,	
+      300802,	316602,	332602,	370302,	393002,	410902,	412002)
 
 qualdata$same        <- 0
 qualdata$same[same]  <- 1
@@ -633,7 +639,7 @@ qualdata <- qualdata %>%
   ungroup() %>%
   mutate(qual = ifelse(same == 1, qual2, qual)) %>%
   select(-qual2)
-  
+
 # Ensuring consistent coding for "50/50" which came up sometimes
 qualdata$qual <- str_replace(qualdata$qual, "50 50", "5050")
 qualdata$qual <- str_replace(qualdata$qual, "50  50", "5050")
@@ -669,5 +675,5 @@ qualdata <- qualdata %>%
   filter(wN > 0) # 4539
 
 ## Sample sizes
-length(unique(data[["CaseID"]])) #4020
-length(unique(qualdata[["CaseID"]])) #2891
+length(unique(quantdata[["CaseID"]])) #3978
+length(unique(qualdata[["CaseID"]]))  #2891
