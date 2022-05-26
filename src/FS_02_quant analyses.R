@@ -32,11 +32,11 @@ logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit3 <- glm(idum ~ perI * earner + organize + mar + child + dur + 
+logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + 
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit4 <- glm(adum ~ perA * earner + organize + mar + child + dur + 
+logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + 
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
@@ -71,42 +71,43 @@ print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
 
 ### Item **************************************************************************************
 AME3 <- summary(margins(logit3, 
-                        variables = "earner",
+                        variables = "relinc",
                         at = list(perI = 0:1)))
 AME3
 ## test difference between coefficients
 ### create Z scores
 z_equalI <- (AME3[[1,3]] - AME3[[3,3]]) / sqrt(AME3[[1,4]]^2 + AME3[[3,4]]^2)
-z_lowerI <- (AME3[[2,3]] - AME3[[4,3]]) / sqrt(AME3[[2,4]]^2 + AME3[[4,4]]^2)
+z_womanI <- (AME3[[2,3]] - AME3[[4,3]]) / sqrt(AME3[[2,4]]^2 + AME3[[4,4]]^2)
 z_equalI
-z_lowerI
+z_womanI
 ### create p values
 p_equalI  <- 2*pnorm(-abs(z_equalI))
-p_lowerI  <- 2*pnorm(-abs(z_lowerI))
+p_womanI  <- 2*pnorm(-abs(z_womanI))
 
 ### report p values
 print(paste("(ITEM) test of equality-- Equal Earners * gender: p =", round(p_equalI, digits = 3)))
-print(paste("(ITEM) test of equality-- Lower-Earner * gender: p =", round(p_lowerI, digits = 3)))
+print(paste("(ITEM) test of equality-- Woman Higher-Earner * gender: p =", round(p_womanI, digits = 3)))
 
 
 ### Activity **********************************************************************************
 AME4 <- summary(margins(logit4, 
-                        variables = "earner",
+                        variables = "relinc",
                         at = list(perA = 0:1)))
 AME4
 ## test difference between coefficients
 ### create Z scores
 z_equalA <- (AME4[[1,3]] - AME4[[3,3]]) / sqrt(AME4[[1,4]]^2 + AME4[[3,4]]^2)
-z_lowerA  <- (AME4[[2,3]] - AME4[[4,3]]) / sqrt(AME4[[2,4]]^2 + AME4[[4,4]]^2)
+z_womanA  <- (AME4[[2,3]] - AME4[[4,3]]) / sqrt(AME4[[2,4]]^2 + AME4[[4,4]]^2)
+z_equalA
+z_womanA
 
 ### create p values
-p_higherA <- 2*pnorm(-abs(z_higherA))
-p_lowerA  <- 2*pnorm(-abs(z_lowerA))
 p_equalA  <- 2*pnorm(-abs(z_equalA))
+p_womanA  <- 2*pnorm(-abs(z_womanA))
 
 ### report p values
-print(paste("(ACTIVITY) test of equality-- Lower-Earner * gender: p =", round(p_lowerA, digits = 3)))
 print(paste("(ACTIVITY) test of equality-- Equal Earners * gender: p =", round(p_equalA, digits = 3)))
+print(paste("(ACTIVITY) test of equality-- Woman Higher-Earner * gender: p =", round(p_womanA, digits = 3)))
 
 
 ### test equality of coefficients between Item & Activity ************************************
