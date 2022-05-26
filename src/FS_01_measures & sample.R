@@ -6,6 +6,9 @@
 
 # This file creates the variables for analysis and then the analytic sample.
 
+# Table 01 --------------------------------------------------------------------------
+## Experimental Design (No table generated)
+
 #####################################################################################
 # Prep the data for analysis
 #####################################################################################
