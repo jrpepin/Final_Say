@@ -60,7 +60,9 @@ pacman::p_load(
        extrafont,
        tagcloud, 
        RJSONIO,
-       ggwordcloud
+       ggwordcloud,
+       weights, # drop leading 0 in geom_text labels
+       colorspace #color palettes of figures
        )
 
 if(!require(conflicted)){
