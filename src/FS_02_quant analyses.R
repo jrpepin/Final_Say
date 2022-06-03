@@ -145,8 +145,8 @@ print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", round(p
 ### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
 
 ## Create predicted probabilities datesets
-pp3   <- ggeffect(logit3, terms = c("perI", "earner"))
-pp4   <- ggeffect(logit4, terms = c("perA", "earner"))
+pp3   <- ggeffect(logit3, terms = c("perI", "relinc"))
+pp4   <- ggeffect(logit4, terms = c("perA", "relinc"))
 
 pp3$type <- "item"
 pp4$type <- "activity"
