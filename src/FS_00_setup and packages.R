@@ -7,12 +7,13 @@
 #####################################################################################
 ## Install and load required packages
 #####################################################################################
-# install.packages("pacman")         # Install pacman package if not installed
+# install.packages("pacman")       # Install pacman package if not installed
 library("pacman")                  # Load pacman package
 
 # Install packages not yet installed & load them
 pacman::p_load(
        here,       # relative file paths
+       devtools,   # loading github packages
        dplyr, 
        tidyr, 
        haven,      # import spss data file with labels 
@@ -28,6 +29,7 @@ pacman::p_load(
        cowplot,    # graphing
        ggplot2,    # graphing
        ggeffects,  # predicted probabilities
+       effects,    # required for ggeffects
        sjmisc,
        colorspace, 
        ggrepel,    # graphing
@@ -37,6 +39,8 @@ pacman::p_load(
        officer,    # producing word output
        flextable,  # producing word output
        tidytext,   # addressing spelling
+       weights,    # drop leading 0 in geom_text labels
+       colorspace, # color palettes of figures
        hunspell,
        stringi,
        stringr,
@@ -60,15 +64,15 @@ pacman::p_load(
        extrafont,
        tagcloud, 
        RJSONIO,
-       ggwordcloud,
-       weights, # drop leading 0 in geom_text labels
-       colorspace #color palettes of figures
+       ggwordcloud
        )
 
 if(!require(conflicted)){
   devtools::install_github("r-lib/conflicted")
   library(conflicted)
 }
+
+sessionInfo()
 
 # Address any conflicts in the packages
 conflict_scout() # Identify the conflicts
