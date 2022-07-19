@@ -33,7 +33,6 @@ FS_02_quant analyses
 * Appendix Table A  
 * Appendix Table B  
 * Appendix Figure A  
-* Appendix Figure B  
   
 FS_03_qual analyses  
   
@@ -42,3 +41,4 @@ FS_03_qual analyses
 * Figure 03  
 * Figure 04  
 * Figure 05  
+* Figure 06  

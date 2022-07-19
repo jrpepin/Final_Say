@@ -105,7 +105,7 @@ fig1 <- coherence_mat %>%
   ggplot(aes(x = k, y = coherence)) +
   geom_line() +
   geom_point() +
-  geom_point(data=coherence_mat %>% filter(k == 6),
+  geom_point(data=coherence_mat %>% filter(k == 4),
              pch=21,
              size=4) +
   theme_minimal() +
@@ -116,18 +116,18 @@ fig1 <- coherence_mat %>%
         y        = "Coherence", 
         title    = "Probabilistic average coherence for 1-20 topics",
         caption  = "Note: The circled point represents the selected LDA model with five topics.") 
-  
+
 fig1
 
 ggsave(filename = file.path(figDir, "fig1.png"), fig1, width=6, height=4, units="in", dpi=300)
 
 
 #####################################################################################
-# Selected 5 Topic Model
+# Selected 4 Topic Model
 #####################################################################################
 set.seed(376)
 model <- FitLdaModel(dtm             = mSTEMMED, 
-                     k               = 6,    
+                     k               = 4,    
                      iterations      = 1000, 
                      burnin          = 100,
                      optimize_alpha  = TRUE,
@@ -148,23 +148,21 @@ t(model$top_terms)
 topterms         <- data.frame(model$top_terms)
 topterms         <- tibble::rownames_to_column(topterms, "rank") 
 
-top6terms <- topterms %>%
-  select(rank, t_2, t_5, t_1,t_6, t_4, t_3) %>% 
-  rename("Equality or Bust"       = "t_2",
-         "Money Matters"          = "t_5",
-         "Gender Essentialism"    = "t_1",
-         "Happy Wife, Happy Life" = "t_6",
-         "Communication"          = "t_4",
-         "Taking Turns"           = "t_3")
+top4terms <- topterms %>%
+  select(rank, t_1, t_3, t_4, t_2) %>% 
+  rename("Equality or Bust"       = "t_1",
+         "Man Has Final Say"      = "t_3",
+         "Money Matters"          = "t_4",
+         "Happy Wife, Happy Life" = "t_2")
 
-write_xlsx(top6terms,  path = file.path(outDir, "Table03_topterms6topicfair.xlsx"))
+write_xlsx(top4terms,  path = file.path(outDir, "Table03_topterms4topicfair.xlsx"))
 
 # Figure 3. Word Cloud  -----------------------------------------------------------
 
 ## Table of Phi, which is where top words come from. Used to plot words in word clouds or dot plots
 phi<-model$phi
 phi<-data.frame(phi)
-write_xlsx(phi,  path = file.path(outDir, "phi5topicfair.xlsx"))
+write_xlsx(phi,  path = file.path(outDir, "phi4topicfair.xlsx"))
 
 ## Combine topterms and phi values
 df1 <- topterms %>%
@@ -182,20 +180,17 @@ clouddata <- left_join(df1, df2) %>%
 # Clean dataset
 clouddata <- clouddata %>% # label topics
   mutate(topic = case_when(
-    topic == "t_2" ~ "Topic 1: Equality or Bust",
-    topic == "t_1" ~ "Topic 2: Gender Essentialism",
-    topic == "t_5" ~ "Topic 3: Money Matters",
-    topic == "t_3" ~ "Topic 4: Taking Turns",
-    topic == "t_4" ~ "Topic 5: Communication",
-    topic == "t_6" ~ "Topic 6: Happy Wife, Happy Life"))
+    topic == "t_1" ~ "Topic 1: Equality or Bust",
+    topic == "t_3" ~ "Topic 2: Man Has Final Say",
+    topic == "t_4" ~ "Topic 3: Money Matters",
+    topic == "t_2" ~ "Topic 4: Happy Wife, Happy Life"))
+
 
 clouddata$topic <- factor(clouddata$topic,
                           levels = c("Topic 1: Equality or Bust",
-                                     "Topic 2: Gender Essentialism",
+                                     "Topic 2: Man Has Final Say",
                                      "Topic 3: Money Matters",
-                                     "Topic 4: Taking Turns",
-                                     "Topic 5: Communication",
-                                     "Topic 6: Happy Wife, Happy Life"), 
+                                     "Topic 4: Happy Wife, Happy Life"), 
                           ordered = FALSE)
 
 clouddata$rank <- as.numeric(clouddata$rank)
@@ -204,11 +199,11 @@ clouddata <- clouddata %>% # top 5 indicator
   mutate(top5 = case_when(
     rank <= 5 ~ "yes",
     TRUE      ~ "no"))
-    
+
 ## Create wordcloud
 
 fig3 <- clouddata %>%
-ggplot(aes(label = word, size = phi, color = top5)) + 
+  ggplot(aes(label = word, size = phi, color = top5)) + 
   geom_text_wordcloud(rm_outside = TRUE, 
                       max_steps = 1,
                       grid_size = 1, 
@@ -224,7 +219,7 @@ ggplot(aes(label = word, size = phi, color = top5)) +
 
 fig3
 
-ggsave(file.path(figDir, "fig3.png"), fig3, height = 9, width = 6, units="in",dpi = 300)
+ggsave(file.path(figDir, "fig3.png"), fig3, height = 6, width = 6, units="in",dpi = 300)
 
 
 #####################################################################################
@@ -245,12 +240,13 @@ assignments <- tibble::rownames_to_column(assignments, "longid")
 assignments$longid <- as_numeric(assignments$longid)
 str(assignments )
 head(assignments)
+write_xlsx(assignments,  path = file.path(outDir, "assignments.xlsx"))
 
 
 ## create wide data
 assign <- left_join(qualdata, assignments) %>%
   select(-c(qual, wN, same, topic, fair, longid)) %>%
-  pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4, t_5, t_6))
+  pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4))
 
 colnames(assign) <- sub("_qual1", "_item", colnames(assign))
 colnames(assign) <- sub("_qual2", "_act", colnames(assign))
@@ -261,47 +257,44 @@ lcadata <- left_join(assign, data) ## Join tables
 # lcaSvy <- svydesign(ids = ~1, weights = ~ weight, data = lcadata)
 # 
 # ## item regressions
-# happy_i  <- svyglm(t_1_item ~ iperson + earner + organize + mar + child + dur + 
+# equal_i  <- svyglm(t_1_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# money_i  <- svyglm(t_2_item ~ iperson + earner + organize + mar + child + dur + 
+# happy_i  <- svyglm(t_2_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
 # gender_i <- svyglm(t_3_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# equal_i  <- svyglm(t_4_item ~ iperson + earner + organize + mar + child + dur + 
+# money_i  <- svyglm(t_4_item ~ iperson + earner + organize + mar + child + dur + 
 #                   gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# turns_i  <- svyglm(t_5_item ~ iperson + earner + organize + mar + child + dur + 
-#                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
 # ## activity regressions
 # 
-# happy_a  <- svyglm(t_1_act ~ aperson + earner + organize + mar + child + dur + 
+# equal_a  <- svyglm(t_1_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# money_a  <- svyglm(t_2_act ~ aperson + earner + organize + mar + child + dur + 
+# happy_a  <- svyglm(t_2_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
 # gender_a <- svyglm(t_3_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# equal_a <- svyglm(t_4_act ~ aperson + earner + organize + mar + child + dur + 
+# money_a <- svyglm(t_4_act ~ aperson + earner + organize + mar + child + dur + 
 #                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
 # 
-# turns_a <- svyglm(t_5_act ~ aperson + earner + organize + mar + child + dur + 
-#                     gender+relate+parent+raceeth+educ+employ+incdum+age, lcaSvy)
+
 
 
 # MULTI-NOMIAL REGRESSIONS --------------------------------------------------------
 
 ## Assign topics
-groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", "t_5_item", "t_6_item")
+groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item")
 lcadata$top_i <- max.col(lcadata[groups_i], "first") #tie breakers go to first class
 lcadata$top_i <- as.factor(lcadata$top_i)
 
-groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", "t_5_act", "t_6_act")
+groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act")
 lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers go to first class
 lcadata$top_a <- as.factor(lcadata$top_a)
 
@@ -312,28 +305,25 @@ table(lcadata$top_i)  # frequency of each topic for items
 table(lcadata$top_a)  # frequency of each topic for activities
 
 # Rename topics
-levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Gender\nEssentialism"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Equality or Bust"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Taking Turns"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="4"] <- "Communication"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="5"] <- "Money Matters"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="6"] <- "Happy Wife\nHappy Life"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Equality or Bust"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Man Has\nFinal Say"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="4"] <- "Money Matters"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Happy Wife\nHappy Life"
 
-lcadata$top_i <- factor(lcadata$top_i, levels = c("Equality or Bust", "Gender\nEssentialism", "Money Matters", 
-                                                  "Taking Turns", "Communication", "Happy Wife\nHappy Life"))
 
-levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Gender\nEssentialism"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Equality or Bust"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Taking Turns"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Communication"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="5"] <- "Money Matters"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="6"] <- "Happy Wife\nHappy Life"
+lcadata$top_i <- factor(lcadata$top_i, levels = c("Equality or Bust", "Man Has\nFinal Say", "Money Matters",  "Happy Wife\nHappy Life"))
 
-lcadata$top_a <- factor(lcadata$top_a, levels = c("Equality or Bust", "Gender\nEssentialism", "Money Matters", 
-                                                  "Taking Turns", "Communication", "Happy Wife\nHappy Life"))
+
+levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Equality or Bust"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Man Has\nFinal Say"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Money Matters"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Happy Wife\nHappy Life"
+
+
+lcadata$top_a <- factor(lcadata$top_a, levels = c("Equality or Bust", "Man Has\nFinal Say", "Money Matters",  "Happy Wife\nHappy Life"))
 
 ## FIGURE 4 -------------------------------------------------------------------------------------------------
-table(lcadata$top_i)  # frequency of each topic for items
+table(lcadata$top_i)  # frequency of each topic for purchases
 table(lcadata$top_a)  # frequency of each topic for activities
 
 data_fig4 <- lcadata %>%
@@ -344,11 +334,11 @@ data_fig4 <- lcadata %>%
   summarise(n = n()) %>%
   mutate(prop = n / sum(n))
 
-data_fig4$decision[data_fig4$decision == "top_i"] <- "Item to Purchase"
-data_fig4$decision[data_fig4$decision == "top_a"] <- "Shared Activity"
+data_fig4$decision[data_fig4$decision == "top_i"] <- "Purchase"
+data_fig4$decision[data_fig4$decision == "top_a"] <- "Activity"
 
 fig4 <- data_fig4 %>%
-  ggplot(aes(fill=topic, y=reorder(decision, desc(decision)), x=prop)) + 
+  ggplot(aes(fill=topic, y=decision, x=prop)) + 
   geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
   geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5)) +
   theme_minimal() +
@@ -372,35 +362,32 @@ mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur +
 mn_act  <- multinom(top_a ~ iperson * relinc + organize + mar + child + dur + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-item.pp <- ggeffect(mn_item , terms = c("iperson", "relinc"))
+pur.pp <- ggeffect(mn_item , terms = c("iperson", "relinc"))
 act.pp  <- ggeffect(mn_act , terms = c("iperson", "relinc"))
 
-item.pp$type <- "item"
+pur.pp$type <- "purchase"
 act.pp$type <- "activity"
 
-data_fig5 <- rbind(item.pp, act.pp)
+data_fig56 <- rbind(pur.pp, act.pp)
 
-levels(data_fig5$x)[levels(data_fig5$x)=="Michelle"] <- "She decided"
-levels(data_fig5$x)[levels(data_fig5$x)=="Anthony"]  <- "He decided"
-data_fig5$x <- factor(data_fig5$x, levels = c("She decided", "He decided"), ordered = FALSE)
-data_fig5$type <- factor(data_fig5$type, levels = c("item", "activity"), ordered = FALSE)
+levels(data_fig56$x)[levels(data_fig56$x)=="Michelle"] <- "She decided"
+levels(data_fig56$x)[levels(data_fig56$x)=="Anthony"]  <- "He decided"
+data_fig56$x <- factor(data_fig56$x, levels = c("She decided", "He decided"), ordered = FALSE)
+data_fig56$type <- factor(data_fig56$type, levels = c("purchase", "activity"), ordered = FALSE)
 
-data_fig5$earnings <- factor(data_fig5$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+data_fig56$earnings <- factor(data_fig56$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
 
 ## Pretty topic labels
-data_fig5$response.level[data_fig5$response.level == "Equality.or.Bust"]        <- "Equality or Bust"
-data_fig5$response.level[data_fig5$response.level == "Gender.Essentialism"]     <- "Gender\nEssentialism"
-data_fig5$response.level[data_fig5$response.level == "Money.Matters"]           <- "Money Matters"
-data_fig5$response.level[data_fig5$response.level == "Taking.Turns"]            <- "Taking Turns"
-data_fig5$response.level[data_fig5$response.level == "Communication"]           <- "Communication"
-data_fig5$response.level[data_fig5$response.level == "Happy.Wife.Happy.Life"]   <- "Happy Wife\nHappy Life"
+data_fig56$response.level[data_fig56$response.level == "Equality.or.Bust"]        <- "Equality or Bust"
+data_fig56$response.level[data_fig56$response.level == "Man.Has.Final.Say"]     <- "Man Has\nFinal Say"
+data_fig56$response.level[data_fig56$response.level == "Money.Matters"]           <- "Money Matters"
+data_fig56$response.level[data_fig56$response.level == "Happy.Wife.Happy.Life"]   <- "Happy Wife\nHappy Life"
 
-data_fig5$response.level <- factor(data_fig5$response.level, 
-                                   levels = c("Equality or Bust", "Gender\nEssentialism", "Money Matters", 
-                                              "Taking Turns", "Communication", "Happy Wife\nHappy Life", ordered = FALSE))
+data_fig56$response.level <- factor(data_fig56$response.level, 
+                                   levels = c("Equality or Bust", "Man Has\nFinal Say", "Money Matters",  "Happy Wife\nHappy Life", ordered = FALSE))
 
-fig5 <- data_fig5 %>%
-  filter(type == "item") %>% # exclude activity because all CI overlap
+fig5 <- data_fig56 %>%
+  filter(type == "purchase") %>% # exclude activity because all CI overlap
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
   geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
   geom_point(size = 3.5, shape=21, alpha = 0.9) +
@@ -426,17 +413,16 @@ fig5 <- data_fig5 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Topic Prevalence Among Perceived Fair Decisions of Items",
+        title    = "Topic Prevalence Among Perceived Fair Decisions on Purchases",
         subtitle = "by vignette gender and relative earnings")
 
 fig5
 
 ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300)
 
-# Appendix Figure B. --------------------------------------------------------------------------
-## Topic Prevalence Among Perceived Fair Decisions of Activities
+## FIGURE 6 -------------------------------------------------------------------------------------------------
 
-figB <- data_fig5 %>%
+fig6 <- data_fig56 %>%
   filter(type == "activity") %>% # change to activities
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
   geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
@@ -463,9 +449,9 @@ figB <- data_fig5 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Topic Prevalence Among Perceived Fair Decisions of Shared Activities",
+        title    = "Topic Prevalence Among Perceived Fair Decisions on Activities",
         subtitle = "by vignette gender and relative earnings")
 
-figB
+fig6
 
-ggsave(filename = file.path(figDir, "figB.png"), figB, width=6.5, height=8, units="in", dpi=300)
+ggsave(filename = file.path(figDir, "fig6.png"), fig6, width=6.5, height=8, units="in", dpi=300)

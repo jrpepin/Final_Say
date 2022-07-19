@@ -148,7 +148,7 @@ print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", round(p
 pp3   <- ggeffect(logit3, terms = c("perI", "relinc"))
 pp4   <- ggeffect(logit4, terms = c("perA", "relinc"))
 
-pp3$type <- "item"
+pp3$type <- "purchase"
 pp4$type <- "activity"
 
 data_fig1 = merge(pp3, pp4, all = TRUE)
@@ -159,7 +159,7 @@ levels(data_fig1$x)[levels(data_fig1$x)=="1"] <- "She decided"
 levels(data_fig1$x)[levels(data_fig1$x)=="0"] <- "He decided"
 
 data_fig1$x    <- factor(data_fig1$x, levels = c("She decided", "He decided"), ordered = FALSE)
-data_fig1$type <- factor(data_fig1$type, levels = c("item", "activity"), ordered = FALSE)
+data_fig1$type <- factor(data_fig1$type, levels = c("purchase", "activity"), ordered = FALSE)
 
 qualitative_hcl(4, palette = "Dark 3") # show color hex codes
 
@@ -185,14 +185,14 @@ fig2 <- data_fig1 %>%
         axis.ticks.y        = element_blank(),  #remove y axis ticks
         plot.subtitle       = element_text(face = "italic", color = "#707070"),
         plot.caption        = element_text(face = "italic", color = "#707070"),
-        plot.title          = element_markdown(face = "bold"),
+        plot.title          = ggtext::element_markdown(),
         plot.title.position = "plot") +
   scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
         title    = "Perceptions of <span style = 'color: #E16A86;'>women's</span> and <span style = 'color: #00AD9A;'>men's</span> 
-        decision-making about <p>items and activities.",
+        decision-making about <p>purchases and activities.",
         subtitle = "% of respondents who said the decision was somewhat or very fair",
         caption  = "Predicted percentages adjust for vignette manipulations and respondent demographic characteristics.") 
 
@@ -310,7 +310,7 @@ tabBsum <- as_grouped_data(x = tabBsum, groups = c("cat"), columns = NULL) # Gro
 
 tabB <- tabBsum %>%
   flextable::as_flextable(hide_grouplabel = TRUE) %>%
-  add_header_row(values = c("", "Item", "Activity"), colwidths = c(1, 2, 2)) %>%
+  add_header_row(values = c("", "Purchase", "Activity"), colwidths = c(1, 2, 2)) %>%
   flextable::align(i = 1, align = "center", part = "header") %>%
   colformat_double(digits = 2) %>%
   set_header_labels(level = "Vignette Variables",
@@ -360,7 +360,8 @@ data_figA <- quantdata %>%
   mutate(pct = prop.table(n)) %>%
   ungroup()
 
-data_figA$type <- factor(data_figA$type, levels = c("item", "activity"), ordered = FALSE)
+data_figA$type[data_figA$type == "item"] <-"purchase"
+data_figA$type <- factor(data_figA$type, levels = c("purchase", "activity"), ordered = FALSE)
 
 
 figA <- data_figA %>%
@@ -392,7 +393,7 @@ figA <- data_figA %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Fairness evaluation by item & activity presented to respondent",
+        title    = "Fairness evaluation by purchase & activity presented to respondent",
         subtitle = "How fair do you think the decision was?")
 
 figA   
