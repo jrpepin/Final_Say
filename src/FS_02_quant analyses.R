@@ -19,6 +19,7 @@ quantdata$educ     <- relevel(quantdata$educ,     ref = "High school")
 quantdata$employ   <- relevel(quantdata$employ,   ref = "Employed")
 quantdata$incdum   <- relevel(quantdata$incdum,   ref = "< than $50,000")
 quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
+quantdata$order    <- relevel(quantdata$order,    ref = "Same")
 quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") # create dummy variables
 quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy variables
 
@@ -40,14 +41,13 @@ logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-
 ## Average marginal effects
 ### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
 ### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
 
 ## Panel A ------------------------------------------------------------------------------------
-AME_log1 <- summary(margins(logit1, variables = c("perI", "relinc")))
-AME_log2 <- summary(margins(logit2, variables = c("perA", "relinc")))
+AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc")))
+AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc")))
 
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
@@ -66,6 +66,13 @@ print(paste("Gender test of equality: p =", round(p_genderA, digits = 3)))
 print(paste("Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
 print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
 
+### -- sensitivity test -- include order of decider
+logit2o <- glm(adum ~ perA * order + relinc + organize + mar + child + dur + 
+                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+               quantdata, weights = weight, family="binomial")
+
+summary(logit2o)
+ppo   <- ggeffect(logit2o, terms = c("perA", "order"))
 
 ## Panel B ------------------------------------------------------------------------------------
 

@@ -277,7 +277,7 @@ table(data$dur)
 # Prep the vignette response variables for analysis
 #####################################################################################
 
-## item condition -------------------------------------------------------------------
+## purchase (item) condition --------------------------------------------------------
 table(data$item)
 
 ## activity condition ---------------------------------------------------------------
@@ -328,6 +328,18 @@ table(data$iperson)
 ## item person ----------------------------------------------------------------------
 table(data$aperson)
 
+## repeat decider -------------------------------------------------------------------
+data <- data %>%
+  mutate(
+    order = case_when(
+      iperson == "Anthony"   & aperson == "Anthony"  ~"Same",
+      iperson == "Michelle"  & aperson == "Michelle" ~"Same",
+      iperson == "Michelle"  & aperson == "Anthony"  ~"Mixed",
+      iperson == "Anthony"   & aperson == "Michelle" ~"Mixed"
+    ))
+
+data$order <- factor(data$order, levels = c("Same", "Mixed"), ordered = FALSE)
+
 ## organize -------------------------------------------------------------------------
 table(data$organize)
 
@@ -361,7 +373,7 @@ data %>% # identify cases where selected both but allocation is all joint
   filter(organize == "Both") %>%
   select(CaseID, herindv, hisindv, herjoint, hisjoint)
 
-## will drop cases 902 & 1962
+## consider dropping cases 902 & 1962
 
 data <- data %>% ## correct cases 1050 & 3866
   mutate(
@@ -416,7 +428,7 @@ quantdata <- quantdata %>%
          gender, relate, parent, raceeth, educ, employ, incdum, age, religion, relfreq,
          mar, child, marpar, relinc, earner, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
-         item, activity, aperson, iperson, adum, afair, idum, ifair,
+         item, activity, aperson, iperson, order, adum, afair, idum, ifair,
          qual1, qual2)
 
 sjPlot::view_df(quantdata) # Load codebook in viewer pane
