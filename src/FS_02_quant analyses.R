@@ -284,7 +284,7 @@ tabBdata <- quantdata %>%
         (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
   # Create long data for vignette manipulation
   pivot_longer(
-    cols = c(relinc, person, organize, mar, child, dur),
+    cols = c(relinc, person, mar, child, dur),
     names_to = "variable",
     values_to = "level") %>%
   # Keep vignette variables
