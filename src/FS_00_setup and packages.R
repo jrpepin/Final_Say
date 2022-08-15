@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_00_setup and packages.R
-# Joanna R. Pepin & William J. Scarborough (https://github.com/WilliamScarborough)
+# Joanna R. Pepin & William J. Scarborough
 #------------------------------------------------------------------------------------
 
 #####################################################################################

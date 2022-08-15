@@ -25,19 +25,19 @@ quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy
 
 ## Run the models
 
-logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + 
+logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + item +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur + 
+logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur + order + activity +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + 
+logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + item +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
-logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + 
+logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + activity +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
               quantdata, weights = weight, family="binomial")
 
@@ -66,13 +66,26 @@ print(paste("Gender test of equality: p =", round(p_genderA, digits = 3)))
 print(paste("Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
 print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
 
-### -- sensitivity test -- include order of decider
-logit2o <- glm(adum ~ perA * order + relinc + organize + mar + child + dur + 
+### -- sensitivity test -- include order of decider*gender of decider
+quantdata <- quantdata %>%
+  mutate(orderN= case_when (order == "Same" ~ 0,
+                            order=="Mixed" ~1))
+
+logit1o <- glm(idum ~ perI * orderN + relinc + organize + mar + child + dur + item + 
+                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+               quantdata, weights = weight, family="binomial")
+logit2o <- glm(adum ~ perA * orderN + relinc + organize + mar + child + dur + activity +
                  gender+relate+parent+raceeth+educ+employ+incdum+age,
                quantdata, weights = weight, family="binomial")
 
-summary(logit2o)
-ppo   <- ggeffect(logit2o, terms = c("perA", "order"))
+AME1o <- summary(margins(logit1o, 
+                         variables = "perI",
+                         at = list(orderN= 0:1)))
+AME2o <- summary(margins(logit2o, 
+                         variables = "perA",
+                         at = list(orderN= 0:1)))
+AME1o 
+AME2o
 
 ## Panel B ------------------------------------------------------------------------------------
 
@@ -83,8 +96,8 @@ AME3 <- summary(margins(logit3,
 AME3
 ## test difference between coefficients
 ### create Z scores
-z_equalI <- (AME3[[1,3]] - AME3[[3,3]]) / sqrt(AME3[[1,4]]^2 + AME3[[3,4]]^2)
-z_womanI <- (AME3[[2,3]] - AME3[[4,3]]) / sqrt(AME3[[2,4]]^2 + AME3[[4,4]]^2)
+z_equalI <- (AME3[[1,3]] - AME3[[2,3]]) / sqrt(AME3[[1,4]]^2 + AME3[[2,4]]^2)
+z_womanI <- (AME3[[3,3]] - AME3[[4,3]]) / sqrt(AME3[[3,4]]^2 + AME3[[4,4]]^2)
 z_equalI
 z_womanI
 ### create p values
@@ -103,8 +116,8 @@ AME4 <- summary(margins(logit4,
 AME4
 ## test difference between coefficients
 ### create Z scores
-z_equalA <- (AME4[[1,3]] - AME4[[3,3]]) / sqrt(AME4[[1,4]]^2 + AME4[[3,4]]^2)
-z_womanA  <- (AME4[[2,3]] - AME4[[4,3]]) / sqrt(AME4[[2,4]]^2 + AME4[[4,4]]^2)
+z_equalA <- (AME4[[1,3]] - AME4[[2,3]]) / sqrt(AME4[[1,4]]^2 + AME4[[2,4]]^2)
+z_womanA  <- (AME4[[3,3]] - AME4[[4,3]]) / sqrt(AME4[[3,4]]^2 + AME4[[4,4]]^2)
 z_equalA
 z_womanA
 
@@ -201,7 +214,7 @@ fig2 <- data_fig1 %>%
         title    = "Perceptions of <span style = 'color: #E16A86;'>women's</span> and <span style = 'color: #00AD9A;'>men's</span> 
         decision-making about <p>purchases and activities.",
         subtitle = "% of respondents who said the decision was somewhat or very fair",
-        caption  = "Predicted percentages adjust for vignette manipulations and respondent demographic characteristics.") 
+        caption  = "Predicted percentages calculated from logistic regression models reported in Table 2, Panel B.") 
 
 fig2
 

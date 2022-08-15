@@ -114,8 +114,8 @@ fig1 <- coherence_mat %>%
         panel.grid.minor.x = element_blank()) +
   labs( x        = "Number of Topics", 
         y        = "Coherence", 
-        title    = "Probabilistic average coherence for 1-20 topics",
-        caption  = "Note: The circled point represents the selected LDA model with five topics.") 
+        title    = "Average probabilistic coherence for 1-20 topics",
+        caption  = "Note: The circled point represents the selected LDA model with four topics.") 
 
 fig1
 
@@ -356,10 +356,10 @@ fig4
 ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300)
 
 ## FIGURE 5 -------------------------------------------------------------------------------------------------
-mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + 
+mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-mn_act  <- multinom(top_a ~ iperson * relinc + organize + mar + child + dur + 
+mn_act  <- multinom(top_a ~ iperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
 pur.pp <- ggeffect(mn_item , terms = c("iperson", "relinc"))
@@ -384,7 +384,7 @@ data_fig56$response.level[data_fig56$response.level == "Money.Matters"]         
 data_fig56$response.level[data_fig56$response.level == "Happy.Wife.Happy.Life"]   <- "Happy Wife\nHappy Life"
 
 data_fig56$response.level <- factor(data_fig56$response.level, 
-                                   levels = c("Equality or Bust", "Man Has\nFinal Say", "Money Matters",  "Happy Wife\nHappy Life", ordered = FALSE))
+                                    levels = c("Equality or Bust", "Man Has\nFinal Say", "Money Matters",  "Happy Wife\nHappy Life", ordered = FALSE))
 
 fig5 <- data_fig56 %>%
   filter(type == "purchase") %>% # exclude activity because all CI overlap
