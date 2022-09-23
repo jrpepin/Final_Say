@@ -349,7 +349,7 @@ fig4 <- data_fig4 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Topic prevalence by decision type")
+        title    = "Topic probability by decision type")
 
 fig4
 
@@ -413,7 +413,7 @@ fig5 <- data_fig56 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Topic Prevalence Among Perceived Fair Decisions on Purchases",
+        title    = "Topic probability among perceived fair decisions on purchases",
         subtitle = "by vignette gender and relative earnings")
 
 fig5
@@ -449,7 +449,7 @@ fig6 <- data_fig56 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Topic Prevalence Among Perceived Fair Decisions on Activities",
+        title    = "Topic probability among perceived fair decisions on activities",
         subtitle = "by vignette gender and relative earnings")
 
 fig6
