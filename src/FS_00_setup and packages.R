@@ -16,7 +16,7 @@ pacman::p_load(
        devtools,   # loading github packages
        dplyr, 
        tidyr, 
-       haven,      # import spss data file with labels 
+       haven,      # import spss data with labels & export Stata data
        expss,      # add variable labels 
        sjlabelled, # convert labels to factors
        sjPlot,     # generate a codebook

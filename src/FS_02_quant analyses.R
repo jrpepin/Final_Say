@@ -23,6 +23,15 @@ quantdata$order    <- relevel(quantdata$order,    ref = "Same")
 quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") # create dummy variables
 quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy variables
 
+
+### export to stata for FE models (Table C)
+femodels <- quantdata %>%
+  select(CaseID, idum, adum, perI, perA, 
+         relinc, organize, mar, child, dur, item, gender, relate, parent, 
+         raceeth, educ, employ, incdum, age, activity, order, weight)
+
+write_dta(femodels , path = file.path(outDir, "femodels.dta")) 
+
 ## Run the models
 
 logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + item +
@@ -284,7 +293,7 @@ tabBdata <- quantdata %>%
         (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
   # Create long data for vignette manipulation
   pivot_longer(
-    cols = c(relinc, person, mar, child, dur),
+    cols = c(relinc, person, organize, mar, child, dur),
     names_to = "variable",
     values_to = "level") %>%
   # Keep vignette variables
