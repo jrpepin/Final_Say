@@ -359,11 +359,11 @@ ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units=
 mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-mn_act  <- multinom(top_a ~ iperson * relinc + organize + mar + child + dur + order + activity + 
+mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-pur.pp <- ggeffect(mn_item , terms = c("iperson", "relinc"))
-act.pp  <- ggeffect(mn_act , terms = c("iperson", "relinc"))
+pur.pp  <- ggeffect(mn_item , terms = c("iperson", "relinc"))
+act.pp  <- ggeffect(mn_act ,  terms = c("aperson", "relinc"))
 
 pur.pp$type <- "purchase"
 act.pp$type <- "activity"
