@@ -168,7 +168,7 @@ print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", round(p
 
 
 # Figure 2. --------------------------------------------------------------------------
-# (*Figure 1 is the coeherence plot generated in FS_03_qual analyses)
+# (*Figure 1 is the coherence plot generated in FS_03_qual analyses)
 ### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
 ### https://github.com/easystats/insight/issues/451 <- delta??
 ### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
@@ -261,9 +261,8 @@ tabA <- tabASvy %>%
                  parent  = "Parent",
                  incdum  = "> than $50,000"))  %>%
   modify_header(
-    update = list(
-      label ~ "**Variable**",
-      stat_0 ~ "**Overall** N = {N_unweighted}")) %>%
+    update = label ~ "**Variable**",
+        stat_0 ~ "**Overall** N = {N_unweighted}") %>%
   as_flex_table() 
 
 tabA # show table

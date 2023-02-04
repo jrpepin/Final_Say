@@ -23,7 +23,6 @@ pacman::p_load(
        survey,     # analyze survey data
        srvyr,      # analyze survey data
        nnet,       # multinomial models
-       gtsummary,  # make tables
        kableExtra, # make tables
        margins,    # average marginal effects
        cowplot,    # graphing
@@ -66,6 +65,9 @@ pacman::p_load(
        RJSONIO,
        ggwordcloud
        )
+
+# remotes::install_github("ddsjoberg/gtsummary")
+library(gtsummary) # tables with unweighted Ns
 
 if(!require(conflicted)){
   devtools::install_github("r-lib/conflicted")
