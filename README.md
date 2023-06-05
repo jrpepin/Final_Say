@@ -9,10 +9,10 @@ Data can be accessed here: http://tessexperiments.org/study/pepin791
   
 ## Software requirements  
   
-R version 4.2.0 (2022-04-22 ucrt)  
+R version 4.3.0 (2023-04-21 ucrt)  
   
 Install the pacman package if not already installed [ install.packages("pacman") ].  
-This is required to download and install of the other packages used in this repository.  
+This is required to download and install most of the other packages used in this repository.  
   
 Download and install Rtools 4.2 from https://cran.r-project.org/bin/windows/Rtools/ or https://www.r-project.org/nosvn/winutf8/ucrt3/.  
 This is required to use the conflicted package.  

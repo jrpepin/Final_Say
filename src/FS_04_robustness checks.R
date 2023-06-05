@@ -35,7 +35,7 @@ AME3robust <- summary(margins(logit3robust,
 AME3robust 
 
 
-#------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 #Topic model analysis
 #Checking if similar topics emerge when vacation is omitted
 #Summary: same topics emerge. But a five-topic model now fits the data better here.

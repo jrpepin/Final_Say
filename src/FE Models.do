@@ -20,7 +20,7 @@ use "$outDir/femodels.dta"
 	esttab, se r2 compress nogap
 
 				
-// Confirming models if we just do vacay versus weekend activyt
+// Confirming models if we just do vacay versus weekend activity
 preserve
 	keep if item==3 & activity==1
 	eststo clear

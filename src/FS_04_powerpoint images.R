@@ -87,6 +87,61 @@ fig3_pp1
 
 ggsave(file.path(figDir, "fig3_pp1.png"), fig3_pp1, height = 6, width = 6, units="in",dpi = 300)
 
+fig3_pp2 <- clouddata %>%
+  filter(topic == "Topic 2: Man Has Final Say") %>%
+  ggplot(aes(label = word, size = phi, color = top5)) + 
+  geom_text_wordcloud(rm_outside = TRUE, 
+                      max_steps = 1,
+                      grid_size = 1, 
+                      eccentricity = .9) +
+  scale_size_area(max_size = 14) +
+  scale_colour_manual(values = c("#566472", "#F27575")) +
+  theme_minimal() +
+  theme(strip.text.x         = element_text(face="bold.italic"),
+        panel.spacing        = unit(1.1, "lines")) +
+  labs(title    = "Topic 2: Man Has Final Say")
+
+fig3_pp2
+
+ggsave(file.path(figDir, "fig3_pp2.png"), fig3_pp2, height = 6, width = 6, units="in",dpi = 300)
+
+fig3_pp3 <- clouddata %>%
+  filter(topic == "Topic 3: Money Matters") %>%
+  ggplot(aes(label = word, size = phi, color = top5)) + 
+  geom_text_wordcloud(rm_outside = TRUE, 
+                      max_steps = 1,
+                      grid_size = 1, 
+                      eccentricity = .9) +
+  scale_size_area(max_size = 14) +
+  scale_colour_manual(values = c("#566472", "#F27575")) +
+  theme_minimal() +
+  theme(strip.text.x         = element_text(face="bold.italic"),
+        panel.spacing        = unit(1.1, "lines")) +
+  labs(title    = "Topic 3: Money Matters")
+
+fig3_pp3
+
+ggsave(file.path(figDir, "fig3_pp3.png"), fig3_pp3, height = 6, width = 6, units="in",dpi = 300)
+
+
+fig3_pp4 <- clouddata %>%
+  filter(topic == "Topic 4: Happy Wife, Happy Life") %>%
+  ggplot(aes(label = word, size = phi, color = top5)) + 
+  geom_text_wordcloud(rm_outside = TRUE, 
+                      max_steps = 1,
+                      grid_size = 1, 
+                      eccentricity = .9) +
+  scale_size_area(max_size = 14) +
+  scale_colour_manual(values = c("#566472", "#F27575")) +
+  theme_minimal() +
+  theme(strip.text.x         = element_text(face="bold.italic"),
+        panel.spacing        = unit(1.1, "lines")) +
+  labs(title    = "Topic 4: Happy Wife, Happy Life")
+
+fig3_pp4
+
+ggsave(file.path(figDir, "fig3_pp4.png"), fig3_pp4, height = 6, width = 6, units="in",dpi = 300)
+
 
 fig3_pp2 <- clouddata %>%
   ggplot(aes(label = word, size = phi, color = top5)) + 

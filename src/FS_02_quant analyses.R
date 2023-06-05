@@ -58,6 +58,9 @@ logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + acti
 AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc")))
 AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc")))
 
+summary(margins(logit1, variables = c("gender", "relate", "raceeth", "incdum")))
+summary(margins(logit2, variables = c("gender", "relate", "raceeth", "order")))
+
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
 z_genderA <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / sqrt(AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)
@@ -77,8 +80,8 @@ print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
 
 ### -- sensitivity test -- include order of decider*gender of decider
 quantdata <- quantdata %>%
-  mutate(orderN= case_when (order == "Same" ~ 0,
-                            order=="Mixed" ~1))
+  mutate(orderN= case_when (order == "Same"  ~ 0,
+                            order == "Mixed" ~ 1))
 
 logit1o <- glm(idum ~ perI * orderN + relinc + organize + mar + child + dur + item + 
                  gender+relate+parent+raceeth+educ+employ+incdum+age,
@@ -261,8 +264,8 @@ tabA <- tabASvy %>%
                  parent  = "Parent",
                  incdum  = "> than $50,000"))  %>%
   modify_header(
-    update = label ~ "**Variable**",
-        stat_0 ~ "**Overall** N = {N_unweighted}") %>%
+   label = '**Variable**',
+   stat_0 = '**N = 3,978**') %>%
   as_flex_table() 
 
 tabA # show table
