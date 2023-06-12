@@ -58,8 +58,8 @@ logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + acti
 AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc")))
 AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc")))
 
-summary(margins(logit1, variables = c("gender", "relate", "raceeth", "incdum")))
-summary(margins(logit2, variables = c("gender", "relate", "raceeth", "order")))
+summary(margins(logit1, variables = c("gender", "relate", "parent", "raceeth", "educ", "incdum", "age")))
+summary(margins(logit2, variables = c("gender", "relate", "parent", "raceeth", "educ", "incdum", "age", "order")))
 
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
