@@ -105,7 +105,7 @@ fig1 <- coherence_mat %>%
   ggplot(aes(x = k, y = coherence)) +
   geom_line() +
   geom_point() +
-  geom_point(data=coherence_mat %>% filter(k == 4),
+  geom_point(data=coherence_mat %>% filter(k == 7),
              pch=21,
              size=4) +
   theme_minimal() +
@@ -115,11 +115,11 @@ fig1 <- coherence_mat %>%
   labs( x        = "Number of Topics", 
         y        = "Coherence", 
         title    = "Average probabilistic coherence for 1-20 topics",
-        caption  = "Note: The circled point represents the selected LDA model with four topics.") 
+        caption  = "Note: The circled point represents the selected LDA model with seven topics.") 
 
 fig1
 
-ggsave(filename = file.path(figDir, "fig1.png"), fig1, width=6, height=4, units="in", dpi=300)
+ggsave(filename = file.path(figDir, "fig1.png"), fig1, width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
 #####################################################################################
@@ -142,7 +142,9 @@ coherence
 names(model)
 mean(model$coherence)
 
-# Table 03. Top Words ---------------------------------------------------------------
+# Figure 3. Word Cloud  -----------------------------------------------------------
+
+## Table of top words
 model$top_terms  <- GetTopTerms(phi = model$phi, M = 50)
 t(model$top_terms)
 topterms         <- data.frame(model$top_terms)
@@ -153,18 +155,16 @@ topterms
 
 top7terms <- topterms %>%
   select(rank, t_1, t_2, t_3, t_4, t_5, t_6, t_7) %>% 
-  rename("Give and Take" 		= "t_1",
-         "Man has Final Say" 		= "t_2",
-         "Accept Choice" 		= "t_3",
-         "Happy Wife Happy Life" 	= "t_4",
-         "Taking Turns" 		= "t_5",
-         "Money Matters" 		= "t_6", 
-         "Work Together" 		= "t_7")
-
+  rename("Assured Acquiescence"   = "t_1",
+         "Man has Final Say"     = "t_2",
+         "Practical Efficiency"  = "t_3",
+         "Happy Wife Happy Life" = "t_4",
+         "Taking Turns"          = "t_5",
+         "Money Matters"         = "t_6", 
+         "Work Together"         = "t_7")
 
 write_xlsx(top7terms ,  path = file.path(outDir, "Table03_topterms7topicfair.xlsx"))
 
-# Figure 3. Word Cloud  -----------------------------------------------------------
 ## Table of Phi, which is where top words come from. Used to plot words in word clouds or dot plots
 phi<-model$phi
 phi<-data.frame(phi)
@@ -184,24 +184,26 @@ clouddata <- left_join(df1, df2) %>%
   dplyr::arrange(desc(phi))
 
 # Clean dataset
+
+## topic order is based on frequency of topics for items + frequency of topics for activities
 clouddata <- clouddata %>% # label topics
   mutate(topic = case_when(
-    topic == "t_1" ~ "Topic 1: Give and Take",
-    topic == "t_2" ~ "Topic 2: Man Has Final Say",
-    topic == "t_3" ~ "Topic 3: Accept Choice",
-    topic == "t_4" ~ "Topic 4: Happy Wife, Happy Life",
+    topic == "t_1" ~ "Topic 2: Assured Acquiescence",
+    topic == "t_2" ~ "Topic 6: Man Has Final Say",
+    topic == "t_3" ~ "Topic 1: Practical Efficiency",
+    topic == "t_4" ~ "Topic 7: Happy Wife, Happy Life",
     topic == "t_5" ~ "Topic 5: Taking Turns",
-    topic == "t_6" ~ "Topic 6: Money Matters",
-    topic == "t_7" ~ "Topic 7: Work Together"))
+    topic == "t_6" ~ "Topic 3: Money Matters",
+    topic == "t_7" ~ "Topic 4: Work Together"))
 
 clouddata$topic <- factor(clouddata$topic,
-                          levels = c("Topic 1: Give and Take",
-                                     "Topic 2: Man Has Final Say",
-                                     "Topic 3: Accept Choice",
-                                     "Topic 4: Happy Wife, Happy Life",
+                          levels = c("Topic 1: Practical Efficiency",
+                                     "Topic 2: Assured Acquiescence",
+                                     "Topic 3: Money Matters",
+                                     "Topic 4: Work Together",
                                      "Topic 5: Taking Turns",
-                                     "Topic 6: Money Matters",
-                                     "Topic 7: Work Together"), 
+                                     "Topic 6: Man Has Final Say",
+                                     "Topic 7: Happy Wife, Happy Life"), 
                           ordered = FALSE)
 
 clouddata$rank <- as.numeric(clouddata$rank)
@@ -230,7 +232,7 @@ fig3 <- clouddata %>%
 
 fig3
 
-ggsave(file.path(figDir, "fig3.png"), fig3, height = 6, width = 6, units="in",dpi = 300)
+ggsave(file.path(figDir, "fig3.png"), fig3, height = 6, width = 6, units="in",dpi = 300, bg = 'white')
 
 
 #####################################################################################
@@ -255,7 +257,7 @@ write_xlsx(assignments,  path = file.path(outDir, "assignments.xlsx"))
 
 ## create wide data
 assign <- left_join(qualdataFULL, assignments) %>%
-  select(-c(qual, wN, same, topic, fair, longid)) %>%
+  select(-c(qual, wN, same, topic, fair)) %>%
   pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
 
 colnames(assign) <- sub("_qual1", "_item", colnames(assign))
@@ -286,28 +288,28 @@ table(lcadata$top_i)  # frequency of each topic for items
 table(lcadata$top_a)  # frequency of each topic for activities
 
 # Rename topics
-levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Give and Take"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Assured Acquiescence"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Man Has Final Say"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Accept Choice"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Practical Efficiency"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="4"] <- "Happy Wife Happy Life"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="5"] <- "Taking Turns"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="6"] <- "Money Matters"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="7"] <- "Work Together"
 
 
-lcadata$top_i <- factor(lcadata$top_i, levels = c("Give and Take", "Man Has Final Say", "Accept Choice", "Happy Wife Happy Life", "Taking Turns", 
-                                                  "Money Matters", "Work Together"))
+lcadata$top_i <- factor(lcadata$top_i, levels = c("Practical Efficiency", "Assured Acquiescence", "Money Matters", "Work Together",
+                                                  "Taking Turns", "Man Has Final Say", "Happy Wife Happy Life"))
 
-levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Give and Take"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Assured Acquiescence"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Man Has Final Say"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Accept Choice"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Practical Efficiency"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Happy Wife Happy Life"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="5"] <- "Taking Turns"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="6"] <- "Money Matters"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="7"] <- "Work Together"
 
-lcadata$top_a <- factor(lcadata$top_a, levels = c("Give and Take", "Man Has Final Say", "Accept Choice", "Happy Wife Happy Life", "Taking Turns", 
-                                                  "Money Matters", "Work Together"))
+lcadata$top_a <- factor(lcadata$top_a, levels = c("Practical Efficiency", "Assured Acquiescence", "Money Matters", "Work Together",
+                                                  "Taking Turns", "Man Has Final Say", "Happy Wife Happy Life"))
 
 table(lcadata$top_i)  # frequency of each topic for items
 table(lcadata$top_a)  # frequency of each topic for activities
@@ -333,12 +335,11 @@ lcadata<- lcadata%>%
 table(lcadata$apref )
 table(lcadata$adum)
 table(lcadata$top_i)
-table(lcadata$longid)
 
 #outputing to dta for multinom analysis in stata because Buddy's not very good at r :)
 
 # write_dta(lcadata,  "C:/Users/wjsca/OneDrive - UNT System/Final_Say-main/output/lcadataMultinomTopics.dta")
-write_dta(lcadata,  "C:/Users/wjs0079/OneDrive - UNT System/Final_Say-main/output/lcadataMultinomTopics.dta")
+# write_dta(lcadata,  "C:/Users/wjs0079/OneDrive - UNT System/Final_Say-main/output/lcadataMultinomTopics.dta")
 
 ## FIGURE 4 -------------------------------------------------------------------------------------------------
 table(lcadata$top_i)  # frequency of each topic for purchases
@@ -358,7 +359,7 @@ data_fig4$decision[data_fig4$decision == "top_a"] <- "Activity"
 fig4 <- data_fig4 %>%
   ggplot(aes(fill=topic, y=decision, x=prop)) + 
   geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
-  geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5)) +
+  geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5), color = "white") +
   theme_minimal() +
   scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme(legend.position = "top",
@@ -371,13 +372,4 @@ fig4 <- data_fig4 %>%
 
 fig4
 
-ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300)
-
-
-
-
-
-
-
-
-
+ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300, bg = 'white')
