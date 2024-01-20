@@ -684,11 +684,23 @@ remove(freq.word)
 # Create the analytic sample
 #####################################################################################
 
-qualdata <- qualdata %>%
-  filter(fair == 1) %>% # n = 4,798
-  filter(sample == "sample") %>% # n = 4,689
-  filter(wN > 0) # 4539
+# generating data frame will all cases (those who said decision was fair and unfair)
+qualdataFULL <- qualdata     %>%
+  filter(sample == "sample") %>% 
+  filter(wN > 0) 
 
 ## Sample sizes
-length(unique(quantdata[["CaseID"]])) #3978
-length(unique(qualdata[["CaseID"]]))  #2891
+length(unique(qualdataFULL[["CaseID"]])) #3853
+length(qualdataFULL[["CaseID"]]) #7570 person-responses
+
+# -- if only want to look at fair responses
+# qualdata <- qualdata %>%
+#   filter(fair == 1) %>% # n = 4,798
+#   filter(sample == "sample") %>% # n = 4,689
+#   filter(wN > 0) # 4539 (number of words greater than zero)
+# 
+## Sample sizes
+# length(unique(quantdata[["CaseID"]])) #3978
+# length(unique(qualdata[["CaseID"]]))  #2891
+
+message("End of FS_01_measures and sample") # Marks end of R Script
