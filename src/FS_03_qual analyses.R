@@ -373,3 +373,68 @@ fig4 <- data_fig4 %>%
 fig4
 
 ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300, bg = 'white')
+
+## FIGURE 5 -------------------------------------------------------------------------------------------------
+mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
+                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
+
+mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
+                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
+
+pur.pp  <- ggpredict(mn_item , terms = c("iperson", "relinc"))
+act.pp  <- ggpredict(mn_act ,  terms = c("aperson", "relinc"))
+
+pur.pp$type <- "purchase"
+act.pp$type <- "activity"
+
+data_fig56 <- rbind(pur.pp, act.pp)
+
+levels(data_fig56$x)[levels(data_fig56$x)=="Michelle"] <- "She decided"
+levels(data_fig56$x)[levels(data_fig56$x)=="Anthony"]  <- "He decided"
+data_fig56$x <- factor(data_fig56$x, levels = c("She decided", "He decided"), ordered = FALSE)
+data_fig56$type <- factor(data_fig56$type, levels = c("purchase", "activity"), ordered = FALSE)
+
+data_fig56$earnings <- factor(data_fig56$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+
+## Pretty topic labels
+data_fig56$response.level[data_fig56$response.level == "Assured.Acquiescence"]  <- "Assured Acquiescence"
+data_fig56$response.level[data_fig56$response.level == "Happy.Wife.Happy.Life"] <- "Man Has\nFinal Say"
+data_fig56$response.level[data_fig56$response.level == "Man.Has.Final.Say"]     <- "Practical Efficiency"
+data_fig56$response.level[data_fig56$response.level == "Money.Matters"]         <- "Happy Wife\nHappy Life"
+data_fig56$response.level[data_fig56$response.level == "Practical.Efficiency"]  <- "Taking Turns"
+data_fig56$response.level[data_fig56$response.level == "Taking.Turns"]          <- "Money Matters"
+data_fig56$response.level[data_fig56$response.level == "Work.Together"]         <- "Work Together"
+
+data_fig56$response.level <- factor(data_fig56$response.level, 
+                                    levels = c("Practical Efficiency", "Assured Acquiescence", 
+                                               "Money Matters", "Work Together",
+                                               "Taking Turns", "Man Has\nFinal Say", "Happy Wife\nHappy Life"))
+
+data_fig56 %>%
+  ggplot(aes(x = predicted, y = earnings, fill = x)) +
+#  geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
+  geom_point(size = 3.5, shape=21, alpha = 0.9) +
+  facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
+  scale_y_discrete(limits=rev, position = "right") +
+  scale_x_continuous(limits = c(0, .5), breaks = c(.0, .25, .5)) +
+  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  theme_minimal() +
+  theme(axis.text.x      = element_text(vjust = 0.5, hjust=1, size = 10),
+        strip.text.x     = element_text(face = "bold", size = 10),
+        strip.text.y     = element_text(angle = 0, size = 10, face = "bold"),
+        strip.text.y.left = element_text(angle = 0),
+        axis.title       = element_text(size = 10), 
+        axis.text        = element_text(size = 8), 
+        plot.margin      = unit(c(.1,.5,.1,.5),"cm"),
+        legend.position  = "top",
+        plot.title.position = "plot",
+        axis.line        = element_line(size = 4, colour = "white"),
+        panel.spacing=unit(.5, "lines"),
+        panel.grid.major.y = element_line(colour="#f2f2f2", size=7),
+        panel.grid.minor.x = element_blank(),
+        panel.border = element_blank()) +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Predicted probability of topic for each decision",
+        subtitle = "by vignette gender and relative earnings")
