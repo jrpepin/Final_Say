@@ -375,6 +375,9 @@ mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + it
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
+# https://cran.r-project.org/web/packages/huxtable/vignettes/huxreg.html <- make pretty tables in the future
+
+
 ## Create an object with predicted probabilities
 ### https://community.rstudio.com/t/plotting-confidence-intervals-with-ggeffects-for-multinom/54354
 effects.item <- effects::Effect(c("iperson", "relinc"), mn_item)
@@ -415,7 +418,7 @@ levels(data_fig5$x)[levels(data_fig5$x)=="Anthony"]  <- "He decided"
 
 data_fig5$x        <- factor(data_fig5$x, levels = c("She decided", "He decided"), ordered = FALSE)
 data_fig5$type     <- factor(data_fig5$type, levels = c("purchase", "activity"), ordered = FALSE)
-data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Man higher-earner", "Woman higher-earner", "Equal earners"), ordered = FALSE)
 
 data_fig5$response.level[data_fig5$response.level == "Man Has Final Say"]       <- "Man Has\nFinal Say"
 data_fig5$response.level[data_fig5$response.level == "Happy Wife Happy Life"]   <- "Happy Wife\nHappy Life"
