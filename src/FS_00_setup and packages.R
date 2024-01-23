@@ -25,6 +25,7 @@ pacman::p_load(
        nnet,       # multinomial models
        kableExtra, # make tables
        margins,    # average marginal effects
+       effects,    # predicted prob. w/ CI
        cowplot,    # graphing
        ggplot2,    # graphing
        ggeffects,  # predicted probabilities

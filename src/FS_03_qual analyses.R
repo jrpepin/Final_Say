@@ -381,39 +381,60 @@ mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + it
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-pur.pp  <- ggpredict(mn_item , terms = c("iperson", "relinc"))
-act.pp  <- ggpredict(mn_act ,  terms = c("aperson", "relinc"))
+## Create an object with predicted probabilities
+### https://community.rstudio.com/t/plotting-confidence-intervals-with-ggeffects-for-multinom/54354
+effects.item <- effects::Effect(c("iperson", "relinc"), mn_item)
+effects.act  <- effects::Effect(c("aperson", "relinc"), mn_act)
 
-pur.pp$type <- "purchase"
-act.pp$type <- "activity"
+## Generate a tidy data frame with predictions, lower and upper confidence intervals
+pur.pp = with(effects.item, cbind(x, prob, upper.prob, lower.prob))  
+act.pp = with(effects.act, cbind(x, prob, upper.prob, lower.prob))  
 
-data_fig56 <- rbind(pur.pp, act.pp)
+pur.pp <- pur.pp %>%
+  pivot_longer(cols = starts_with(c("prob", "U.prob", "L.prob"))) %>%
+  separate(name, into=c('type', 'response.level'), sep="prob.") %>%
+  mutate(type = case_when(
+    type == "U." ~ "conf.high",
+    type == "L." ~ "conf.low",
+    TRUE         ~ "predicted")) %>%
+  mutate(response.level=gsub("\\.", " ", response.level)) %>%
+  spread(type, value) %>%
+  rename(x = iperson) %>%
+  mutate(type = "purchase")
 
-levels(data_fig56$x)[levels(data_fig56$x)=="Michelle"] <- "She decided"
-levels(data_fig56$x)[levels(data_fig56$x)=="Anthony"]  <- "He decided"
-data_fig56$x <- factor(data_fig56$x, levels = c("She decided", "He decided"), ordered = FALSE)
-data_fig56$type <- factor(data_fig56$type, levels = c("purchase", "activity"), ordered = FALSE)
+act.pp <- act.pp %>%
+  pivot_longer(cols = starts_with(c("prob", "U.prob", "L.prob"))) %>%
+  separate(name, into=c('type', 'response.level'), sep="prob.") %>%
+  mutate(type = case_when(
+    type == "U." ~ "conf.high",
+    type == "L." ~ "conf.low",
+    TRUE         ~ "predicted")) %>%
+  mutate(response.level=gsub("\\.", " ", response.level)) %>%
+  spread(type, value) %>%
+  rename(x = aperson) %>%
+  mutate(type = "activity")
 
-data_fig56$earnings <- factor(data_fig56$group, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+data_fig5 <- rbind(pur.pp, act.pp) 
 
-## Pretty topic labels
-data_fig56$response.level[data_fig56$response.level == "Assured.Acquiescence"]  <- "Assured Acquiescence"
-data_fig56$response.level[data_fig56$response.level == "Happy.Wife.Happy.Life"] <- "Man Has\nFinal Say"
-data_fig56$response.level[data_fig56$response.level == "Man.Has.Final.Say"]     <- "Practical Efficiency"
-data_fig56$response.level[data_fig56$response.level == "Money.Matters"]         <- "Happy Wife\nHappy Life"
-data_fig56$response.level[data_fig56$response.level == "Practical.Efficiency"]  <- "Taking Turns"
-data_fig56$response.level[data_fig56$response.level == "Taking.Turns"]          <- "Money Matters"
-data_fig56$response.level[data_fig56$response.level == "Work.Together"]         <- "Work Together"
+levels(data_fig5$x)[levels(data_fig5$x)=="Michelle"] <- "She decided"
+levels(data_fig5$x)[levels(data_fig5$x)=="Anthony"]  <- "He decided"
 
-data_fig56$response.level <- factor(data_fig56$response.level, 
+data_fig5$x        <- factor(data_fig5$x, levels = c("She decided", "He decided"), ordered = FALSE)
+data_fig5$type     <- factor(data_fig5$type, levels = c("purchase", "activity"), ordered = FALSE)
+data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Equal earners", "Woman higher-earner", "Man higher-earner"), ordered = FALSE)
+
+data_fig5$response.level[data_fig5$response.level == "Man Has Final Say"]       <- "Man Has\nFinal Say"
+data_fig5$response.level[data_fig5$response.level == "Happy Wife Happy Life"]   <- "Happy Wife\nHappy Life"
+
+data_fig5$response.level <- factor(data_fig5$response.level, 
                                     levels = c("Practical Efficiency", "Assured Acquiescence", 
                                                "Money Matters", "Work Together",
                                                "Taking Turns", "Man Has\nFinal Say", "Happy Wife\nHappy Life"))
 
-data_fig56 %>%
+fig5 <- data_fig5 %>%
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
-#  geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
-  geom_point(size = 3.5, shape=21, alpha = 0.9) +
+  geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
+  geom_point(size = 3.5, shape=21, alpha = 0.7) +
   facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
   scale_y_discrete(limits=rev, position = "right") +
   scale_x_continuous(limits = c(0, .5), breaks = c(.0, .25, .5)) +
@@ -436,5 +457,9 @@ data_fig56 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Predicted probability of topic for each decision",
+        title    = "Predicted probability of topic for purchase and activity decisions",
         subtitle = "by vignette gender and relative earnings")
+
+fig5
+
+ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300, bg = 'white')
