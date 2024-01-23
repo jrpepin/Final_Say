@@ -155,7 +155,7 @@ topterms
 
 top7terms <- topterms %>%
   select(rank, t_1, t_2, t_3, t_4, t_5, t_6, t_7) %>% 
-  rename("Assured Acquiescence"   = "t_1",
+  rename("Assured Acquiescence"  = "t_1",
          "Man has Final Say"     = "t_2",
          "Practical Efficiency"  = "t_3",
          "Happy Wife Happy Life" = "t_4",
@@ -224,7 +224,7 @@ fig3 <- clouddata %>%
   facet_wrap(~topic, ncol = 2) +
   scale_size_area(max_size = 14) +
   scale_colour_manual(values = c("#566472", "#E16A86")) +
-  theme_minimal() +
+  theme_minimal(12) +
   theme(strip.text.x         = element_text(face="bold.italic"),
         panel.spacing        = unit(1.1, "lines")) +
   labs(title    = "Word clouds with highest-ranking word stems per topic", 
@@ -264,10 +264,6 @@ colnames(assign) <- sub("_qual1", "_item", colnames(assign))
 colnames(assign) <- sub("_qual2", "_act", colnames(assign))
 
 lcadata <- left_join(assign, data) ## Join tables
-
-# OLS REGRESSIONS ----------------------------------------------------------------
-# ADD BACK IN LATER
-
 
 
 # MULTI-NOMIAL REGRESSIONS --------------------------------------------------------
@@ -336,10 +332,8 @@ table(lcadata$apref )
 table(lcadata$adum)
 table(lcadata$top_i)
 
-#outputing to dta for multinom analysis in stata because Buddy's not very good at r :)
-
-# write_dta(lcadata,  "C:/Users/wjsca/OneDrive - UNT System/Final_Say-main/output/lcadataMultinomTopics.dta")
-# write_dta(lcadata,  "C:/Users/wjs0079/OneDrive - UNT System/Final_Say-main/output/lcadataMultinomTopics.dta")
+#outputing to dta for multinom table in Stata because we don't know how to do it in R :D
+write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
 
 ## FIGURE 4 -------------------------------------------------------------------------------------------------
 table(lcadata$top_i)  # frequency of each topic for purchases
@@ -360,7 +354,7 @@ fig4 <- data_fig4 %>%
   ggplot(aes(fill=topic, y=decision, x=prop)) + 
   geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
   geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5), color = "white") +
-  theme_minimal() +
+  theme_minimal(12) +
   scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme(legend.position = "top",
         axis.text.y = element_text(face="bold"),
@@ -458,7 +452,8 @@ fig5 <- data_fig5 %>%
         y        = " ", 
         fill     = " ",
         title    = "Predicted probability of topic for purchase and activity decisions",
-        subtitle = "by vignette gender and relative earnings")
+        subtitle = "by vignette gender and relative earnings",
+        caption  = "Predicted percentages calculated from multinomial regression models\nreported in Appendix Table D. Presented with 95% confidence intervals.")
 
 fig5
 

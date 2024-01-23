@@ -187,10 +187,10 @@ data_fig1 = merge(pp3, pp4, all = TRUE)
 head(data_fig1)
 
 data_fig1$x <-factor(data_fig1$x)
-levels(data_fig1$x)[levels(data_fig1$x)=="1"] <- "She decided"
-levels(data_fig1$x)[levels(data_fig1$x)=="0"] <- "He decided"
+levels(data_fig1$x)[levels(data_fig1$x)=="1"] <- "She\ndecided"
+levels(data_fig1$x)[levels(data_fig1$x)=="0"] <- "He\ndecided"
 
-data_fig1$x    <- factor(data_fig1$x, levels = c("She decided", "He decided"), ordered = FALSE)
+data_fig1$x    <- factor(data_fig1$x, levels = c("She\ndecided", "He\ndecided"), ordered = FALSE)
 data_fig1$type <- factor(data_fig1$type, levels = c("purchase", "activity"), ordered = FALSE)
 
 qualitative_hcl(4, palette = "Dark 3") # show color hex codes
@@ -208,7 +208,7 @@ fig2 <- data_fig1 %>%
              space = "free",
              switch = "y") +
   scale_fill_discrete_qualitative(palette = "Dark 3") +
-  theme_minimal() +
+  theme_minimal(12) +
   theme(legend.position     = "none",
         panel.grid.major.x  = element_blank(),
         strip.text          = element_text(face = "bold"),
@@ -226,7 +226,7 @@ fig2 <- data_fig1 %>%
         title    = "Perceptions of <span style = 'color: #E16A86;'>women's</span> and <span style = 'color: #00AD9A;'>men's</span> 
         decision-making about <p>purchases and activities.",
         subtitle = "% of respondents who said the decision was somewhat or very fair",
-        caption  = "Predicted percentages calculated from logistic regression models reported in Table 2, Panel B.") 
+        caption  = "Predicted percentages calculated from logistic regression models reported in Table 2, Panel B.\nPresented with 95% confidence intervals.") 
 
 fig2
 
@@ -409,7 +409,7 @@ figA <- data_figA %>%
             size = 3) +
   coord_flip()+
   scale_fill_manual(values = c("#18BC9C", "#3498DB", "#F39C12", "#E74C3C")) +
-  theme_minimal() +
+  theme_minimal(12) +
   theme(legend.position      = "top",
         legend.justification = c(1, 0),
         panel.grid.major.x   = element_blank(),
@@ -424,12 +424,12 @@ figA <- data_figA %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Fairness evaluation by purchase & activity presented to respondent",
+        title    = "Fairness evaluation by purchase & activity",
         subtitle = "How fair do you think the decision was?")
 
 figA   
 
-ggsave(filename = file.path(figDir, "figA.png"), figA, width=6, height=4, units="in", dpi=300)
+ggsave(filename = file.path(figDir, "figA.png"), figA, width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
 
