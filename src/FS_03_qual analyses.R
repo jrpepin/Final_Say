@@ -337,8 +337,8 @@ table(lcadata$apref )
 table(lcadata$adum)
 table(lcadata$top_i)
 
-#outputing to dta for multinom table in Stata because we don't know how to do it in R :D
-write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
+#outputing to dta for multinom table in Stata because we don't know how to do it yet in R :D
+#write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
 
 ## FIGURE 4 -------------------------------------------------------------------------------------------------
 
