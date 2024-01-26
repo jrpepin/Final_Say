@@ -188,22 +188,22 @@ clouddata <- left_join(df1, df2) %>%
 ## topic order is based on frequency of topics for items + frequency of topics for activities
 clouddata <- clouddata %>% # label topics
   mutate(topic = case_when(
-    topic == "t_1" ~ "Topic 2: Assured Acquiescence",
-    topic == "t_2" ~ "Topic 6: Man Has Final Say",
-    topic == "t_3" ~ "Topic 1: Practical Efficiency",
-    topic == "t_4" ~ "Topic 7: Happy Wife, Happy Life",
-    topic == "t_5" ~ "Topic 5: Taking Turns",
-    topic == "t_6" ~ "Topic 3: Money Matters",
-    topic == "t_7" ~ "Topic 4: Work Together"))
+    topic == "t_1" ~ "Topic 2: Assured Acquiescence (15%)",
+    topic == "t_2" ~ "Topic 6: Man Has Final Say (8%)",
+    topic == "t_3" ~ "Topic 1: Practical Efficiency (34%)",
+    topic == "t_4" ~ "Topic 7: Happy Wife, Happy Life (7%)",
+    topic == "t_5" ~ "Topic 5: Taking Turns (9%)",
+    topic == "t_6" ~ "Topic 3: Money Matters (13%)",
+    topic == "t_7" ~ "Topic 4: Work Together (13%)"))
 
 clouddata$topic <- factor(clouddata$topic,
-                          levels = c("Topic 1: Practical Efficiency",
-                                     "Topic 2: Assured Acquiescence",
-                                     "Topic 3: Money Matters",
-                                     "Topic 4: Work Together",
-                                     "Topic 5: Taking Turns",
-                                     "Topic 6: Man Has Final Say",
-                                     "Topic 7: Happy Wife, Happy Life"), 
+                          levels = c("Topic 1: Practical Efficiency (34%)",
+                                     "Topic 2: Assured Acquiescence (15%)",
+                                     "Topic 3: Money Matters (13%)",
+                                     "Topic 4: Work Together (13%)",
+                                     "Topic 5: Taking Turns (9%)",
+                                     "Topic 6: Man Has Final Say (8%)",
+                                     "Topic 7: Happy Wife, Happy Life (7%)"), 
                           ordered = FALSE)
 
 clouddata$rank <- as.numeric(clouddata$rank)
@@ -280,8 +280,16 @@ lcadata$top_a <- as.factor(lcadata$top_a)
 lcadata <- lcadata %>% 
   select(CaseID, ifair, afair, qual1, top_i, qual2, top_a, longid, everything()) # reorder columns
 
+## Get topic frequency
 freq_i <- table(lcadata$top_i)  # frequency of each topic for items
 freq_a <- table(lcadata$top_a)  # frequency of each topic for activities
+freqs  <- data.frame(t(rbind(freq_i, freq_a))) 
+freqs  <- tibble::rownames_to_column(freqs, "topic")
+freqs$row_sum <- rowSums(freqs[ , c(2,3)], na.rm=TRUE)
+freqs <- freqs %>%
+  mutate(total=sum(row_sum),
+         prop=percent(row_sum/total, accuracy = 1))
+freqs
 
 # Rename topics
 levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Assured Acquiescence"
@@ -306,9 +314,6 @@ levels(lcadata$top_a)[levels(lcadata$top_a)=="7"] <- "Work Together"
 
 lcadata$top_a <- factor(lcadata$top_a, levels = c("Practical Efficiency", "Assured Acquiescence", "Money Matters", "Work Together",
                                                   "Taking Turns", "Man Has Final Say", "Happy Wife Happy Life"))
-
-table(lcadata$top_i)  # frequency of each topic for items
-table(lcadata$top_a)  # frequency of each topic for activities
 
 #creating predictor for respondents' preferred decision-maker
 lcadata<- lcadata%>%
@@ -336,8 +341,6 @@ table(lcadata$top_i)
 write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
 
 ## FIGURE 4 -------------------------------------------------------------------------------------------------
-table(lcadata$top_i)  # frequency of each topic for purchases
-table(lcadata$top_a)  # frequency of each topic for activities
 
 data_fig4 <- lcadata %>%
   select(CaseID, top_i, top_a) %>%
@@ -375,7 +378,22 @@ mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + it
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-# https://cran.r-project.org/web/packages/huxtable/vignettes/huxreg.html <- make pretty tables in the future
+## Table A4
+mep <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "relinc")
+mep <- as_tibble(mep) %>%
+  select(group, relinc, estimate, std.error, p.value) %>%
+  mutate(estimate=round(estimate, digits = 2),
+         std.error=round(std.error, digits = 2),
+         std.error=round(std.error, digits = 3))
+kable(mep, "simple")
+
+mea <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "relinc")
+mea <- as_tibble(mea) %>%
+  select(group, relinc, estimate, std.error, p.value) %>%
+  mutate(estimate=round(estimate, digits = 2),
+         std.error=round(std.error, digits = 2),
+         std.error=round(std.error, digits = 3))
+kable(mea, "simple")
 
 
 ## Create an object with predicted probabilities

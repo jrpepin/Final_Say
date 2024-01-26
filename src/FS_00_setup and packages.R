@@ -24,6 +24,8 @@ pacman::p_load(
        srvyr,      # analyze survey data
        nnet,       # multinomial models
        kableExtra, # make tables
+       tibble,     # convert row names to column
+       marginaleffects, # average marginal effects
        margins,    # average marginal effects
        effects,    # predicted prob. w/ CI
        cowplot,    # graphing
