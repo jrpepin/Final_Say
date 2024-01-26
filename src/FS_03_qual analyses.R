@@ -280,8 +280,8 @@ lcadata$top_a <- as.factor(lcadata$top_a)
 lcadata <- lcadata %>% 
   select(CaseID, ifair, afair, qual1, top_i, qual2, top_a, longid, everything()) # reorder columns
 
-table(lcadata$top_i)  # frequency of each topic for items
-table(lcadata$top_a)  # frequency of each topic for activities
+freq_i <- table(lcadata$top_i)  # frequency of each topic for items
+freq_a <- table(lcadata$top_a)  # frequency of each topic for activities
 
 # Rename topics
 levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Assured Acquiescence"
@@ -397,7 +397,7 @@ pur.pp <- pur.pp %>%
   mutate(response.level=gsub("\\.", " ", response.level)) %>%
   spread(type, value) %>%
   rename(x = iperson) %>%
-  mutate(type = "purchase")
+  mutate(type = "Purchase")
 
 act.pp <- act.pp %>%
   pivot_longer(cols = starts_with(c("prob", "U.prob", "L.prob"))) %>%
@@ -409,7 +409,7 @@ act.pp <- act.pp %>%
   mutate(response.level=gsub("\\.", " ", response.level)) %>%
   spread(type, value) %>%
   rename(x = aperson) %>%
-  mutate(type = "activity")
+  mutate(type = "Activity")
 
 data_fig5 <- rbind(pur.pp, act.pp) 
 
@@ -417,47 +417,91 @@ levels(data_fig5$x)[levels(data_fig5$x)=="Michelle"] <- "She decided"
 levels(data_fig5$x)[levels(data_fig5$x)=="Anthony"]  <- "He decided"
 
 data_fig5$x        <- factor(data_fig5$x, levels = c("She decided", "He decided"), ordered = FALSE)
-data_fig5$type     <- factor(data_fig5$type, levels = c("purchase", "activity"), ordered = FALSE)
+data_fig5$type     <- factor(data_fig5$type, levels = c("Purchase", "Activity"), ordered = FALSE)
 data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Man higher-earner", "Woman higher-earner", "Equal earners"), ordered = FALSE)
 
+data_fig5$response.level[data_fig5$response.level == "Practical Efficiency"]    <- "Practical\nEfficiency"
+data_fig5$response.level[data_fig5$response.level == "Assured Acquiescence"]    <- "Assured\nAcquiescence"
+data_fig5$response.level[data_fig5$response.level == "Money Matters"]           <- "Money\nMatters"
+data_fig5$response.level[data_fig5$response.level == "Work Together"]           <- "Work\nTogether"
+data_fig5$response.level[data_fig5$response.level == "Taking Turns"]            <- "Taking\nTurns"
 data_fig5$response.level[data_fig5$response.level == "Man Has Final Say"]       <- "Man Has\nFinal Say"
 data_fig5$response.level[data_fig5$response.level == "Happy Wife Happy Life"]   <- "Happy Wife\nHappy Life"
 
 data_fig5$response.level <- factor(data_fig5$response.level, 
-                                    levels = c("Practical Efficiency", "Assured Acquiescence", 
-                                               "Money Matters", "Work Together",
-                                               "Taking Turns", "Man Has\nFinal Say", "Happy Wife\nHappy Life"))
+                                    levels = c("Practical\nEfficiency", "Assured\nAcquiescence", 
+                                               "Money\nMatters", "Work\nTogether",
+                                               "Taking\nTurns", "Man Has\nFinal Say", "Happy Wife\nHappy Life"))
 
-fig5 <- data_fig5 %>%
+p1_fig5 <- data_fig5 %>%
+  filter(response.level == "Practical\nEfficiency" | response.level == "Assured\nAcquiescence" |
+         response.level == "Money\nMatters" | response.level =="Work\nTogether") %>%
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
   geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
-  geom_point(size = 3.5, shape=21, alpha = 0.7) +
+  geom_point(size = 2.5, shape=21, alpha = 0.7) +
   facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
   scale_y_discrete(limits=rev, position = "right") +
-  scale_x_continuous(limits = c(0, .5), breaks = c(.0, .25, .5)) +
+  scale_x_continuous(limits = c(0, .5), breaks = c(.0, .25, .5), labels = c(".0", ".25", ".5")) +
   scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme_minimal() +
-  theme(axis.text.x      = element_text(vjust = 0.5, hjust=1, size = 10),
-        strip.text.x     = element_text(face = "bold", size = 10),
-        strip.text.y     = element_text(angle = 0, size = 10, face = "bold"),
-        strip.text.y.left = element_text(angle = 0),
-        axis.title       = element_text(size = 10), 
-        axis.text        = element_text(size = 8), 
-        plot.margin      = unit(c(.1,.5,.1,.5),"cm"),
-        legend.position  = "top",
+  theme(axis.text.x         = element_text(size = 10),
+        strip.text.x        = element_text(face = "bold", size = 10),
+        strip.text.y        = element_text(angle = 0, size = 10, face = "bold"),
+        strip.text.y.left   = element_text(angle = 0),
+        axis.title          = element_text(size = 10), 
+        axis.text           = element_text(size = 8), 
+        plot.margin         = unit(c(.1,.5,.1,.5),"cm"),
+        legend.position     = "top",
         plot.title.position = "plot",
-        axis.line        = element_line(size = 4, colour = "white"),
-        panel.spacing=unit(.5, "lines"),
-        panel.grid.major.y = element_line(colour="#f2f2f2", size=7),
-        panel.grid.minor.x = element_blank(),
-        panel.border = element_blank()) +
+        axis.line           = element_line(size = 4, colour = "white"),
+        panel.spacing       = unit(.5, "lines"),
+        panel.grid.major.y  = element_line(colour="#f2f2f2", size=7),
+        panel.grid.minor.x  = element_blank(),
+        panel.border        = element_blank()) +
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Predicted probability of topic for purchase and activity decisions",
-        subtitle = "by vignette gender and relative earnings",
-        caption  = "Predicted percentages calculated from multinomial regression models\nreported in Appendix Table D. Presented with 95% confidence intervals.")
+        title    = "Predicted probability of topic usage for purchase and activity decisions",
+        subtitle = "by vignette gender and relative earnings")
 
+p1_fig5
+
+
+p2_fig5 <- data_fig5 %>%
+  filter(response.level == "Taking\nTurns" | response.level == "Man Has\nFinal Say" |
+           response.level == "Happy Wife\nHappy Life") %>%
+  ggplot(aes(x = predicted, y = earnings, fill = x)) +
+  geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
+  geom_point(size = 2.5, shape=21, alpha = 0.7) +
+  facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
+  scale_y_discrete(limits=rev, position = "right") +
+  scale_x_continuous(limits = c(0, .2), breaks = c(.0, .1, .2), labels = c(".0", ".1", ".2")) +
+  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  theme_minimal() +
+  theme(axis.text.x         = element_text(size = 10),
+        strip.text.x        = element_blank(),
+        strip.text.y        = element_text(angle = 0, size = 10, face = "bold"),
+        strip.text.y.left   = element_text(angle = 0),
+        axis.title          = element_text(size = 10), 
+        axis.text           = element_text(size = 8), 
+        plot.margin         = unit(c(.1,.5,.1,.5),"cm"),
+        legend.position     = "none",
+        plot.title.position = "plot",
+        axis.line           = element_line(size = 4, colour = "white"),
+        panel.spacing       = unit(.5, "lines"),
+        panel.grid.major.y  = element_line(colour="#f2f2f2", size=7),
+        panel.grid.minor.x  = element_blank(),
+        panel.border        = element_blank()) +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        caption  = "Predicted probabilities calculated from multinomial regression models\nreported in Appendix Table A4. Presented with 95% confidence intervals.")
+
+p2_fig5
+
+### Put it all together
+fig5 <- ggarrange(p1_fig5, p2_fig5,
+               ncol = 1, nrow = 2, align = "v", heights = c(.6, .4))
 fig5
 
 ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300, bg = 'white')
