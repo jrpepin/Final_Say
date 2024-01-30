@@ -371,30 +371,35 @@ fig4
 
 ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300, bg = 'white')
 
-## FIGURE 5 -------------------------------------------------------------------------------------------------
+# MULTINOMIALS -------------------------------------------------------------------------------------------------
+### Purchase
 mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
+### Activity
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
 
-## Table A4
-mep <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "relinc")
-mep <- as_tibble(mep) %>%
+## Table A4 ------------------------------------------------------------------------------------------------
+### Purchase
+mep_A4 <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "relinc")
+mep_A4 <- as_tibble(mep_A4) %>%
   select(group, relinc, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
          std.error=round(std.error, digits = 2),
          std.error=round(std.error, digits = 3))
-kable(mep, "simple")
+kable(mep_A4, "simple")
 
-mea <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "relinc")
-mea <- as_tibble(mea) %>%
+### Activity
+mea_A4 <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "relinc")
+mea_A4 <- as_tibble(mea_A4) %>%
   select(group, relinc, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
          std.error=round(std.error, digits = 2),
          std.error=round(std.error, digits = 3))
-kable(mea, "simple")
+kable(mea_A4, "simple")
 
+## FIGURE 5 -------------------------------------------------------------------------------------------------
 
 ## Create an object with predicted probabilities
 ### https://community.rstudio.com/t/plotting-confidence-intervals-with-ggeffects-for-multinom/54354
@@ -523,3 +528,43 @@ fig5 <- ggarrange(p1_fig5, p2_fig5,
 fig5
 
 ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300, bg = 'white')
+
+
+## Table A5 ------------------------------------------------------------------------------------------------
+### Purchase (same multinom from Table A4)
+mep_A5 <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "gender")
+mep_A5 <- as_tibble(mep_A5) %>%
+  select(group, gender, estimate, std.error, p.value) %>%
+  mutate(estimate=round(estimate, digits = 2),
+         std.error=round(std.error, digits = 2),
+         std.error=round(std.error, digits = 3))
+kable(mep_A5, "simple")
+
+### Activity (same multinom from Table A4)
+mea_A5 <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "gender")
+mea_A5 <- as_tibble(mea_A5) %>%
+  select(group, gender, estimate, std.error, p.value) %>%
+  mutate(estimate=round(estimate, digits = 2),
+         std.error=round(std.error, digits = 2),
+         std.error=round(std.error, digits = 3))
+kable(mea_A5, "simple")
+
+
+## Table A6 ------------------------------------------------------------------------------------------------
+
+lcadata$ipref <- ifelse(lcadata$ipref == "Prefer Anthony", 1, 0)
+lcadata$apref <- ifelse(lcadata$apref == "Prefer Anthony", 1, 0)
+
+### Purchase
+logitP_A6 <- glm(ipref ~ top_i + relinc + organize + mar + child + dur + item +
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              lcadata, weights = weight, family="binomial")
+
+summary(margins(logitP_A6, variables = c("top_i")))
+
+### Activity
+logitA_A6 <- glm(apref ~ top_a + relinc + organize + mar + child + dur + item +
+                   gender+relate+parent+raceeth+educ+employ+incdum+age,
+                 lcadata, weights = weight, family="binomial")
+
+summary(margins(logitA_A6, variables = c("top_a")))
