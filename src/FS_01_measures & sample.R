@@ -1,54 +1,61 @@
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_01_measures & sample.R
 # Joanna R. Pepin & William J. Scarborough
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # This file creates the variables for analysis and then the analytic sample.
 
-# Table 01 --------------------------------------------------------------------------
+# Table 01 ---------------------------------------------------------------------
 ## Experimental Design (No table generated)
 
-#####################################################################################
+################################################################################
 # Prep the data for analysis
-#####################################################################################
+################################################################################
 
-## Load the data --------------------------------------------------------------------
+## Load the data ---------------------------------------------------------------
 data <- read_sav(file.path(dataDir, rawdata))   # load the raw data file
 
-## Select the Variables -------------------------------------------------------------
-data <- select(data, CaseID, weight, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, PPINCIMP, 
-               PPETHM, REL2, REL1, PPREG4, PPT01, PPT25, PPT612, PPT1317,
-               DOV_RELSTAT, DOV_PARENTST, DOV_EARNINGS, DOV_RELDUR, DOV_ITEM, DOV_PERSON_B04,
-               B05, DOV_ACTIVITY, DOV_PERSON2_B06, B07, B04, B06, B01, B02_Shared,
-               B03_Shared, B02_Individual, B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue)
+## Select the Variables --------------------------------------------------------
+data <- select(data, CaseID, weight, PPAGE, PPGENDER, PPEDUCAT, PPWORK, PPMARIT, 
+               PPINCIMP, PPETHM, REL2, REL1, PPREG4, PPT01, PPT25, PPT612, 
+               PPT1317, DOV_RELSTAT, DOV_PARENTST, DOV_EARNINGS, DOV_RELDUR, 
+               DOV_ITEM, DOV_PERSON_B04,B05, DOV_ACTIVITY, DOV_PERSON2_B06, B07, 
+               B04, B06, B01, B02_Shared, B03_Shared, B02_Individual, 
+               B03_Individual, DOV_B02_MaxValue, DOV_B03_MaxValue)
 
-## Rename variables -----------------------------------------------------------------
+## Rename variables ------------------------------------------------------------
 data <- rename(data, 
-               age      = PPAGE,           gender    = PPGENDER,       educ       = PPEDUCAT,
-               work     = PPWORK,          relate    =	PPMARIT,        income     = PPINCIMP,
-               race     = PPETHM,          relfreq   = REL2,           religion   = REL1,
-               region   = PPREG4,          mar       = DOV_RELSTAT,  	child      = DOV_PARENTST,
-               relinc   = DOV_EARNINGS,    dur       = DOV_RELDUR,     item       = DOV_ITEM,
-               iperson  = DOV_PERSON_B04,  qual1     = B05,            activity   = DOV_ACTIVITY,
-               aperson  = DOV_PERSON2_B06, qual2     = B07,            ifair      = B04,
-               afair    = B06,             organize  = B01,            herjoint   = B02_Shared,
-               hisjoint = B03_Shared,      herindv   = B02_Individual, hisindv    = B03_Individual)
+               age      = PPAGE,           gender    = PPGENDER,       
+               educ     = PPEDUCAT,        work      = PPWORK,          
+               relate   = PPMARIT,         income    = PPINCIMP,
+               race     = PPETHM,          relfreq   = REL2,           
+               religion = REL1,            region    = PPREG4,          
+               mar      = DOV_RELSTAT,  	 child     = DOV_PARENTST,
+               relinc   = DOV_EARNINGS,    dur       = DOV_RELDUR,     
+               item     = DOV_ITEM,        iperson   = DOV_PERSON_B04,  
+               qual1    = B05,             activity  = DOV_ACTIVITY,
+               aperson  = DOV_PERSON2_B06, qual2     = B07,            
+               ifair    = B04,             afair     = B06,             
+               organize = B01,             herjoint  = B02_Shared,
+               hisjoint = B03_Shared,      herindv   = B02_Individual, 
+               hisindv  = B03_Individual)
 
-## Generate a codebook -------------------------------------------------------------
+## Generate a codebook ---------------------------------------------------------
 sjPlot::view_df(data) # Load codebook in viewer pane
-sjPlot::view_df(data, file = file.path(outDir, "codebook.html")) # Save codebook as html file
+sjPlot::view_df(data, file = file.path(outDir, "codebook.html"))                # Save codebook as html file
 
 ### Example of viewing variable and value labels
 data$gender %>% attr('label') ### Viewing variable labels
 data$gender %>% attr('labels') ### Viewing value labels
 
-## Change class ---------------------------------------------------------------------
-### Working with SPSS labels https://martinctc.github.io/blog/working-with-spss-labels-in-r/
+## Change class ----------------------------------------------------------------
+### SPSS labels https://martinctc.github.io/blog/working-with-spss-labels-in-r/
 
-fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", "religion",
-           "region", "mar", "child", "relinc", "dur", "item", "iperson", "activity", 
-           "aperson", "ifair", "afair", "organize", "DOV_B02_MaxValue", "DOV_B03_MaxValue")
+fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", 
+           "religion", "region", "mar", "child", "relinc", "dur", "item", 
+           "iperson", "activity", "aperson", "ifair", "afair", "organize", 
+           "DOV_B02_MaxValue", "DOV_B03_MaxValue")
 
 icols <- c("age", "PPT01", "PPT25", "PPT612", "PPT1317", 
            "herjoint", "hisjoint", "herindv", "hisindv")
@@ -59,26 +66,26 @@ data[fcols] <- lapply(data[fcols], sjlabelled::as_label)
 data[icols] <- lapply(data[icols], as.integer)
 data[ccols] <- lapply(data[ccols], as.character)
 
-#####################################################################################
+################################################################################
 # Prep the demographic variables for analysis
-#####################################################################################
+################################################################################
 
-## age -----------------------------------------------------------------------------
+## age -------------------------------------------------------------------------
 summary(data$age)
 
-## gender --------------------------------------------------------------------------
+## gender ----------------------------------------------------------------------
 table(data$gender)
 data$gender <-data$gender %>%
   droplevels()
 table(data$gender)
 
-## education -----------------------------------------------------------------------
+## education -------------------------------------------------------------------
 table(data$educ)
 data$educ <-data$educ %>%
   droplevels()
 table(data$educ)
 
-## work ----------------------------------------------------------------------------
+## work ------------------------------------------------------------------------
 table(data$work)
 data$work <-data$work %>%
   droplevels()
@@ -87,16 +94,19 @@ data <- data %>%
   mutate(
     employ = case_when(
       work == "Working - as a paid employee"                  | 
-        work == "Working - self-employed"                       ~ "Employed",
+      work == "Working - self-employed"                       ~ "Employed",
       work == "Not working - on temporary layoff from a job"  |
-        work == "Not working - looking for work"                ~ "Unemployed",
+      work == "Not working - looking for work"                ~ "Unemployed",
       work == "Not working - retired"                         |
       work == "Not working - disabled"                        |
-        work == "Not working - other"                           ~ "Not in labor force",
-      TRUE                                                      ~  NA_character_ 
+      work == "Not working - other"                           ~ "Not in labor force",
+      TRUE                                                    ~  NA_character_ 
     ))
 
-data$employ <- factor(data$employ, levels = c("Employed", "Unemployed", "Not in labor force"), ordered = FALSE)
+data$employ <- factor(data$employ, 
+                      levels  = c("Employed", "Unemployed", 
+                                  "Not in labor force"), 
+                      ordered = FALSE)
 table(data$employ)
 
 ## relate -------------------------------------------------------------------------
@@ -116,10 +126,13 @@ data <- data %>%
       TRUE                                      ~  NA_character_ 
     ))
 
-data$relate <- factor(data$relate, levels = c("Married", "Cohabit", "Never married", "Divorced/Sep./Widow"), ordered = FALSE)
+data$relate <- factor(data$relate, 
+                      levels  = c("Married", "Cohabit", "Never married", 
+                                 "Divorced/Sep./Widow"), 
+                      ordered = FALSE)
 table(data$relate)
 
-## income -------------------------------------------------------------------------
+## income ----------------------------------------------------------------------
 table(data$income)
 data$income <-data$income %>%
   droplevels() %>%
@@ -133,7 +146,9 @@ data <- data %>%
       TRUE                  ~  NA_character_ 
     ))
 
-data$incdum <- factor(data$incdum, levels = c("< than $50,000", "> than $50,000"), ordered = FALSE)
+data$incdum <- factor(data$incdum, 
+                      levels  = c("< than $50,000", "> than $50,000"), 
+                      ordered = FALSE)
 table(data$incdum)
 
 ## race/eth ----------------------------------------------------------------------
@@ -152,7 +167,9 @@ data <- data %>%
       TRUE                                    ~  NA_character_ 
     ))
 
-data$raceeth <- factor(data$raceeth, levels = c("White", "Black", "Hispanic", "Other"), ordered = FALSE)
+data$raceeth <- factor(data$raceeth, 
+                       levels  = c("White", "Black", "Hispanic", "Other"), 
+                       ordered = FALSE)
 table(data$raceeth)
 
 ## religion freq ----------------------------------------------------------------
@@ -171,7 +188,10 @@ data <- data %>%
       TRUE                                         ~  NA_character_ 
     ))
 
-data$relfreq <- factor(data$relfreq, levels = c("Weekly plus", "Weekly", "Monthly", "Yearly", "Never", "Unknown"), ordered = FALSE)
+data$relfreq <- factor(data$relfreq, 
+                       levels  = c("Weekly plus", "Weekly", "Monthly", 
+                                   "Yearly", "Never", "Unknown"), 
+                       ordered = FALSE)
 table(data$relfreq)
 
 ## religion -------------------------------------------------------------------
@@ -189,8 +209,10 @@ data <- data %>%
       TRUE                   ~ "Other Religion"
     ))
 
-data$religion <- factor(data$religion, levels = c("Evangelical or Portestant Christian", "Catholic", 
-                                                  "None", "Other Religion"), ordered = FALSE)
+data$religion <- factor(data$religion, 
+                        levels  = c("Evangelical or Portestant Christian", 
+                                   "Catholic", "None", "Other Religion"), 
+                        ordered = FALSE)
 table(data$religion)
 
 ## region -------------------------------------------------------------------
@@ -215,13 +237,15 @@ data <- data %>%
 
 table(data$parent)
 
-data$parent <- factor(data$parent, levels = c("Not a parent", "Parent"), ordered = FALSE)
+data$parent <- factor(data$parent, 
+                      levels  = c("Not a parent", "Parent"), 
+                      ordered = FALSE)
 
-#####################################################################################
+################################################################################
 # Prep the vignette variables for analysis
-#####################################################################################
+################################################################################
 
-## relate/parent condition ----------------------------------------------------------
+## relate/parent condition -----------------------------------------------------
 table(data$mar, data$child)
 
 data <- data %>%
@@ -234,8 +258,10 @@ data <- data %>%
       TRUE                                                    ~  NA_character_ 
     ))
 
-data$marpar <- factor(data$marpar, levels = c("Cohabit/No kids", "Cohabit/Parent", 
-                                              "Married/No kids", "Married/Parent"), ordered = FALSE)
+data$marpar <- factor(data$marpar, 
+                      levels  = c("Cohabit/No kids", "Cohabit/Parent",
+                                  "Married/No kids", "Married/Parent"), 
+                      ordered = FALSE)
 table(data$marpar)
 
 ## relative earnings condition ------------------------------------------------------
@@ -253,8 +279,10 @@ data <- data %>%
       TRUE                 ~ NA_character_
     ))
 
-data$relinc <- factor(data$relinc, levels = c("Man higher-earner", "Woman higher-earner", 
-                                              "Equal earners"), ordered = FALSE)
+data$relinc <- factor(data$relinc, 
+                      levels  = c("Man higher-earner", "Woman higher-earner", 
+                                  "Equal earners"), 
+                      ordered = FALSE)
 table(data$relinc)
 
 ## a non-gendered earner identifier
@@ -267,23 +295,25 @@ data <- data %>%
       (relinc  == "Man higher-earner"   & iperson == "Michelle") ~ "Lower earner",
       TRUE                                                       ~ "Equal earners"))
 
-data$earner <- factor(data$earner, levels = c("Higher earner", "Lower earner", 
-                                              "Equal earners"), ordered = FALSE)
+data$earner <- factor(data$earner, 
+                      levels  = c("Higher earner", "Lower earner",
+                                  "Equal earners"), 
+                      ordered = FALSE)
 
-## duration condition ------------------------------------------------------
+## duration condition ----------------------------------------------------------
 table(data$dur)
 
-#####################################################################################
+################################################################################
 # Prep the vignette response variables for analysis
-#####################################################################################
+################################################################################
 
-## purchase (item) condition --------------------------------------------------------
+## purchase (item) condition ---------------------------------------------------
 table(data$item)
 
-## activity condition ---------------------------------------------------------------
+## activity condition ----------------------------------------------------------
 table(data$activity)
 
-## item fairness --------------------------------------------------------------------
+## item fairness ---------------------------------------------------------------
 table(data$ifair)
 
 data$ifair[data$ifair == "Refused"]   <- NA
@@ -302,7 +332,7 @@ data <- data %>%
     ))
 data$idum <-as.integer(data$idum)
 
-## activity fairness ----------------------------------------------------------------
+## activity fairness -----------------------------------------------------------
 table(data$afair)
 
 data$afair[data$afair == "Refused"]   <- NA
@@ -322,13 +352,13 @@ data <- data %>%
 data$adum <-as.integer(data$adum)
 
 
-## item person ----------------------------------------------------------------------
+## item person -----------------------------------------------------------------
 table(data$iperson)
 
-## item person ----------------------------------------------------------------------
+## item person -----------------------------------------------------------------
 table(data$aperson)
 
-## repeat decider -------------------------------------------------------------------
+## repeat decider --------------------------------------------------------------
 data <- data %>%
   mutate(
     order = case_when(
@@ -338,9 +368,11 @@ data <- data %>%
       iperson == "Anthony"   & aperson == "Michelle" ~"Mixed"
     ))
 
-data$order <- factor(data$order, levels = c("Same", "Mixed"), ordered = FALSE)
+data$order <- factor(data$order, 
+                     levels  = c("Same", "Mixed"), 
+                     ordered = FALSE)
 
-## organize -------------------------------------------------------------------------
+## organize --------------------------------------------------------------------
 table(data$organize)
 
 data$organize[data$organize == "Refused"]   <- NA
@@ -358,7 +390,9 @@ data <- data %>%
       TRUE                                                                                   ~ NA_character_
     ))
 
-data$organize <- factor(data$organize, levels = c("Shared", "Separate", "Both"), ordered = FALSE)
+data$organize <- factor(data$organize, 
+                        levels = c("Shared", "Separate", "Both"), 
+                        ordered = FALSE)
 table(data$organize)
 
 ### Replace allocation range as missing if less than zero dollars
@@ -393,40 +427,38 @@ data$herjoint
 data$jointtot <- data$herjoint + data$hisjoint
 
 data %>%
-  filter(is.na(jointtot) & is.na(herjoint) & is.na(hisjoint) & organize == "Both") %>%
+  filter(is.na(jointtot)   & 
+           is.na(herjoint) & 
+           is.na(hisjoint) & organize == "Both") %>%
   select(CaseID, herindv, hisindv, herjoint, hisjoint, jointtot)
 
 ## will drop cases 1013
 
-#####################################################################################
+################################################################################
 # Create the analytic sample
-#####################################################################################
+################################################################################
 
 quantdata <- data
-
-# NOTE, WE NO LONGER FOUCS ON FINANCIAL ORGANIZATION SO NOT REMOVING THESE CASES ANYMORE
-  # quantdata <- data %>%
-  # filter(CaseID != 902 & CaseID != 1962 & CaseID != 1013) 
 
 nrow(data)
 nrow(quantdata)
 
 ## list-wise deletion -- resulting in 42 deleted observations
 quantdata <- quantdata %>%
-  filter(!is.na(organize) & 
+  filter(!is.na(organize) & #### COME BACK AND DELETE THIS RESTRICTION
            !is.na(afair) &
            !is.na(ifair))
 nrow(data)
 nrow(quantdata)
 
-## Generate a new codebook ---------------------------------------------------------
+## Generate a new codebook -----------------------------------------------------
 
 ## keep only variables needed for analyses
 
 quantdata <- quantdata %>%
   select(CaseID, weight,
-         gender, relate, parent, raceeth, educ, employ, incdum, age, religion, relfreq,
-         mar, child, marpar, relinc, earner, dur, organize, 
+         gender, relate, parent, raceeth, educ, employ, incdum, age, religion, 
+         relfreq, mar, child, marpar, relinc, earner, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
          item, activity, aperson, iperson, order, adum, afair, idum, ifair,
          qual1, qual2)
@@ -436,10 +468,9 @@ sjPlot::view_df(quantdata, file = file.path(outDir, "codebook_processed.html")) 
 
 nrow(quantdata)
 
-
-#####################################################################################
+################################################################################
 # Qualitative Dataset prep
-#####################################################################################
+################################################################################
 
 qualdata <- quantdata %>% # create long format dataset
   select(CaseID, qual1, qual2) %>%
@@ -497,7 +528,7 @@ qualdata <- qualdata %>%
     ))
 
 # addressing spelling
-qual.tm <- unnest_tokens(qualdata, word, qual) # create dataset with CaseId and words
+qual.tm <- unnest_tokens(qualdata, word, qual) # create data w/ CaseId & words
 head(qual.tm[, c("CaseID", "word")]) # view new dataset
 
 words <- unique(qual.tm$word) # create list of unique words
@@ -598,7 +629,8 @@ names(vect.corpus) <- bad.whole.words
 
 qualdata$qual <- stringr::str_replace_all(qualdata$qual, vect.corpus)
 
-# Removing invalid responses (FILE "exclusion criteria qual data' IDENTIFIES INVALID RESPONSES)
+# Removing invalid responses 
+##(FILE "exclusion criteria qual data' IDENTIFIES INVALID RESPONSES)
 
 ## Don't know responses 
 
@@ -680,11 +712,11 @@ remove(qual.tm)
 remove(word.list)
 remove(freq.word)
 
-#####################################################################################
+################################################################################
 # Create the analytic sample
-#####################################################################################
+################################################################################
 
-# generating data frame will all cases (those who said decision was fair and unfair)
+# generating data frame with all cases (decision was fair and unfair)
 qualdataFULL <- qualdata     %>%
   filter(sample == "sample") %>% 
   filter(wN > 0) 

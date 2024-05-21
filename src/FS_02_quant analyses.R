@@ -1,16 +1,16 @@
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_02_quant analyses.R
 # Joanna R. Pepin & William J. Scarborough
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # This file analyzes the decision making variables.
 
-#####################################################################################
+################################################################################
 # Paper Tables and Figures (quant)
-#####################################################################################
+################################################################################
 
-# Table 02. -------------------------------------------------------------------------
+# Table 02. --------------------------------------------------------------------
 
 ## Specify reference levels
 quantdata$relate   <- relevel(quantdata$relate,   ref = "Never married")
@@ -20,8 +20,10 @@ quantdata$employ   <- relevel(quantdata$employ,   ref = "Employed")
 quantdata$incdum   <- relevel(quantdata$incdum,   ref = "< than $50,000")
 quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
 quantdata$order    <- relevel(quantdata$order,    ref = "Same")
-quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") # create dummy variables
-quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle") # create dummy variables
+
+# create dummy variables
+quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") 
+quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle")
 
 
 ### export to stata for FE models (Table C)
@@ -36,47 +38,55 @@ write_dta(femodels , path = file.path(outDir, "femodels.dta"))
 
 logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + item +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
+              quantdata, family="binomial")
 
 logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur + order + activity +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
+              quantdata, family="binomial")
 
+### interactions
 logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + item +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
+              quantdata, family="binomial")
 
 logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + activity +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, weights = weight, family="binomial")
+              quantdata, family="binomial")
 
 ## Average marginal effects
 ### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
 ### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
 
-## Panel A ------------------------------------------------------------------------------------
-AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc")))
-AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc")))
+## Panel A ---------------------------------------------------------------------
+AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc", "gender")))
+AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc", "gender")))
 
-summary(margins(logit1, variables = c("gender", "relate", "parent", "raceeth", "educ", "incdum", "age")))
-summary(margins(logit2, variables = c("gender", "relate", "parent", "raceeth", "educ", "incdum", "age", "order")))
+summary(margins(logit1, 
+                variables = c("gender", "relate", "parent", 
+                              "raceeth", "educ", "incdum", "age")))
+summary(margins(logit2, 
+                variables = c("gender", "relate", "parent", 
+                              "raceeth", "educ", "incdum", "age", "order")))
 
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
-z_genderA <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / sqrt(AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)
-z_equalA  <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / sqrt(AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)
-z_fmoreA  <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / sqrt(AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)
+z_RgenderA <- (AME_log1[[1,2]] - AME_log2[[1,2]]) / sqrt(AME_log1[[1,3]]^2 + AME_log2[[1,3]]^2)
+z_deciderA <- (AME_log1[[2,2]] - AME_log2[[2,2]]) / sqrt(AME_log1[[2,3]]^2 + AME_log2[[2,3]]^2)
+z_equalA   <- (AME_log1[[3,2]] - AME_log2[[3,2]]) / sqrt(AME_log1[[3,3]]^2 + AME_log2[[3,3]]^2)
+z_fmoreA   <- (AME_log1[[4,2]] - AME_log2[[4,2]]) / sqrt(AME_log1[[4,3]]^2 + AME_log2[[4,3]]^2)
 
-p_genderA <- 2*pnorm(-abs(z_genderA)) 
-p_equalA  <- 2*pnorm(-abs(z_equalA)) 
-p_fmoreA  <- 2*pnorm(-abs(z_fmoreA)) 
+p_RgenderA <- 2*pnorm(-abs(z_RgenderA)) 
+p_deciderA <- 2*pnorm(-abs(z_deciderA)) 
+p_equalA   <- 2*pnorm(-abs(z_equalA)) 
+p_fmoreA   <- 2*pnorm(-abs(z_fmoreA)) 
 
 AME_log1
 AME_log2
 
-print(paste("Gender test of equality: p =", round(p_genderA, digits = 3)))
-print(paste("Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
 print(paste("Equal test of equality: p =", round(p_equalA, digits = 3)))
+print(paste("Woman Higher-Earner test of equality: p =", round(p_fmoreA, digits = 3)))
+print(paste("Decider test of equality: p =", round(p_deciderA, digits = 3)))
+print(paste("Respondents' Gender test of equality: p =", round(p_RgenderA, digits = 3)))
 
 ### -- sensitivity test -- include order of decider*gender of decider
 quantdata <- quantdata %>%
@@ -85,10 +95,10 @@ quantdata <- quantdata %>%
 
 logit1o <- glm(idum ~ perI * orderN + relinc + organize + mar + child + dur + item + 
                  gender+relate+parent+raceeth+educ+employ+incdum+age,
-               quantdata, weights = weight, family="binomial")
+               quantdata, family="binomial")
 logit2o <- glm(adum ~ perA * orderN + relinc + organize + mar + child + dur + activity +
                  gender+relate+parent+raceeth+educ+employ+incdum+age,
-               quantdata, weights = weight, family="binomial")
+               quantdata, family="binomial")
 
 AME1o <- summary(margins(logit1o, 
                          variables = "perI",
@@ -99,13 +109,14 @@ AME2o <- summary(margins(logit2o,
 AME1o 
 AME2o
 
-## Panel B ------------------------------------------------------------------------------------
+## Panel B ---------------------------------------------------------------------
 
-### Item **************************************************************************************
+### Item ***********************************************************************
 AME3 <- summary(margins(logit3, 
                         variables = "relinc",
                         at = list(perI = 0:1)))
 AME3
+
 ## test difference between coefficients
 ### create Z scores
 z_equalI <- (AME3[[1,3]] - AME3[[2,3]]) / sqrt(AME3[[1,4]]^2 + AME3[[2,4]]^2)
@@ -117,18 +128,20 @@ p_equalI  <- 2*pnorm(-abs(z_equalI))
 p_womanI  <- 2*pnorm(-abs(z_womanI))
 
 ### report p values
-print(paste("(ITEM) test of equality-- Equal Earners * gender: p =", round(p_equalI, digits = 3)))
-print(paste("(ITEM) test of equality-- Woman Higher-Earner * gender: p =", round(p_womanI, digits = 3)))
+print(paste("(ITEM) test of equality-- Equal Earners * gender: p =", 
+            round(p_equalI, digits = 3)))
+print(paste("(ITEM) test of equality-- Woman Higher-Earner * gender: p =", 
+            round(p_womanI, digits = 3)))
 
-
-### Activity **********************************************************************************
+### Activity *******************************************************************
 AME4 <- summary(margins(logit4, 
                         variables = "relinc",
                         at = list(perA = 0:1)))
 AME4
+
 ## test difference between coefficients
 ### create Z scores
-z_equalA <- (AME4[[1,3]] - AME4[[2,3]]) / sqrt(AME4[[1,4]]^2 + AME4[[2,4]]^2)
+z_equalA  <- (AME4[[1,3]] - AME4[[2,3]]) / sqrt(AME4[[1,4]]^2 + AME4[[2,4]]^2)
 z_womanA  <- (AME4[[3,3]] - AME4[[4,3]]) / sqrt(AME4[[3,4]]^2 + AME4[[4,4]]^2)
 z_equalA
 z_womanA
@@ -138,11 +151,13 @@ p_equalA  <- 2*pnorm(-abs(z_equalA))
 p_womanA  <- 2*pnorm(-abs(z_womanA))
 
 ### report p values
-print(paste("(ACTIVITY) test of equality-- Equal Earners * gender: p =", round(p_equalA, digits = 3)))
-print(paste("(ACTIVITY) test of equality-- Woman Higher-Earner * gender: p =", round(p_womanA, digits = 3)))
+print(paste("(ACTIVITY) test of equality-- Equal Earners * gender: p =", 
+            round(p_equalA, digits = 3)))
+print(paste("(ACTIVITY) test of equality-- Woman Higher-Earner * gender: p =", 
+            round(p_womanA, digits = 3)))
 
 
-### test equality of coefficients between Item & Activity ************************************
+### test equality of coefficients between Item & Activity **********************
 
 ## Z scores
 z_equal_MAN_AB  <- (AME3[[1,3]] - AME4[[1,3]]) / sqrt(AME3[[1,4]]^2 + AME4[[1,4]]^2)
@@ -163,40 +178,50 @@ p_equal_MAN_AB  <- 2*pnorm(-abs(z_equal_MAN_AB))
 p_lower_FEM_AB  <- 2*pnorm(-abs(z_lower_FEM_AB)) 
 p_equal_FEM_AB  <- 2*pnorm(-abs(z_equal_FEM_AB)) 
 
-print(paste("(ITEM VS ACT) Man * Equal Earners test of equality: p =", round(p_equal_MAN_AB, digits = 3)))
-print(paste("(ITEM VS ACT) Female * Equal Earners test of equality: p =", round(p_equal_FEM_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Man * Equal Earners test of equality: p =", 
+            round(p_equal_MAN_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Female * Equal Earners test of equality: p =", 
+            round(p_equal_FEM_AB, digits = 3)))
 
-print(paste("(ITEM VS ACT) Man * Lower-Earner test of equality: p =", round(p_lower_MAN_AB, digits = 3)))
-print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", round(p_lower_FEM_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Man * Lower-Earner test of equality: p =", 
+            round(p_lower_MAN_AB, digits = 3)))
+print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", 
+            round(p_lower_FEM_AB, digits = 3)))
 
-
-# Figure 2. --------------------------------------------------------------------------
+# Figure 2. --------------------------------------------------------------------
 # (*Figure 1 is the coherence plot generated in FS_03_qual analyses)
 ### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html
 ### https://github.com/easystats/insight/issues/451 <- delta??
 ### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
 
 ## Create predicted probabilities datesets
-pp3   <- ggeffect(logit3, terms = c("perI", "relinc"))
-pp4   <- ggeffect(logit4, terms = c("perA", "relinc"))
+pp3   <- ggeffect(logit3, terms = c("perI", "relinc", "gender"))
+pp4   <- ggeffect(logit4, terms = c("perA", "relinc", "gender"))
 
-pp3$type <- "purchase"
-pp4$type <- "activity"
+pp3$type <- "High\nstakes"
+pp4$type <- "Low\nstakes"
 
-data_fig1 = merge(pp3, pp4, all = TRUE)
-head(data_fig1)
+data_fig2 = merge(pp3, pp4, all = TRUE)
+head(data_fig2)
 
-data_fig1$x <-factor(data_fig1$x)
-levels(data_fig1$x)[levels(data_fig1$x)=="1"] <- "She\ndecided"
-levels(data_fig1$x)[levels(data_fig1$x)=="0"] <- "He\ndecided"
+data_fig2$x <-factor(data_fig2$x)
+levels(data_fig2$x)[levels(data_fig2$x)=="1"] <- "She\ndecided"
+levels(data_fig2$x)[levels(data_fig2$x)=="0"] <- "He\ndecided"
 
-data_fig1$x    <- factor(data_fig1$x, levels = c("She\ndecided", "He\ndecided"), ordered = FALSE)
-data_fig1$type <- factor(data_fig1$type, levels = c("purchase", "activity"), ordered = FALSE)
+data_fig2$x    <- factor(data_fig2$x, 
+                         levels  = c("She\ndecided", "He\ndecided"), 
+                         ordered = FALSE)
+data_fig2$type <- factor(data_fig2$type, 
+                         levels  = c("High\nstakes", "Low\nstakes"), 
+                         ordered = FALSE)
+
+levels(data_fig2$facet)[levels(data_fig2$facet)=="Male"]   <- "Men"
+levels(data_fig2$facet)[levels(data_fig2$facet)=="Female"] <- "Women"
 
 qualitative_hcl(4, palette = "Dark 3") # show color hex codes
 
-fig2 <- data_fig1 %>%
-  ggplot(aes(x = x, y = predicted, fill = x)) +
+fig2 <- data_fig2 %>%
+  ggplot(aes(x = x, y = predicted, fill = facet)) +
   geom_col(width = 0.6, position = position_dodge(0.7)) +
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#ADB5BD") +
@@ -207,9 +232,10 @@ fig2 <- data_fig1 %>%
              scales="free",
              space = "free",
              switch = "y") +
-  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  scale_fill_grey() +
+  #  scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme_minimal(12) +
-  theme(legend.position     = "none",
+  theme(legend.position     = "right",
         panel.grid.major.x  = element_blank(),
         strip.text          = element_text(face = "bold"),
         strip.text.y.left   = element_text(angle = 0),
@@ -222,22 +248,21 @@ fig2 <- data_fig1 %>%
   scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
   labs( x        = " ", 
         y        = " ", 
-        fill     = " ",
-        title    = "Perceptions of <span style = 'color: #E16A86;'>women's</span> and <span style = 'color: #00AD9A;'>men's</span> 
-        decision-making about <p>purchases and activities.",
-        subtitle = "% of respondents who said the decision was somewhat or very fair",
-        caption  = "Predicted percentages calculated from logistic regression models reported in Table 2, Panel B.\nPresented with 95% confidence intervals.") 
+        fill     = "Respondents'\ngender",
+        title    = "Perceptions of decision-making by decision type and relative earnings",
+        subtitle = "Predicted % of respondents who said the decision was somewhat or very fair",
+        caption  = "Predicted percentages calculated from Table 2 logistic regression models interacting relative income and gender of decider.\nPresented by respondent gender with 95% confidence intervals.") 
 
 fig2
 
-ggsave(filename = file.path(figDir, "fig2.png"), fig2, width=6, height=6, units="in", dpi=300)
+ggsave(filename = file.path(figDir, "fig2.png"), fig2, 
+       width=9, height=6, units="in", dpi=300, bg = "white")
 
-
-#####################################################################################
+################################################################################
 # Appendix Tables and Figures (quant)
-#####################################################################################
+################################################################################
 
-# Table A ---------------------------------------------------------------------------
+# Table A ----------------------------------------------------------------------
 ## Weighted Descriptive Statistics of Respondent Characteristics
 
 ## Create weighted data 
@@ -277,7 +302,7 @@ read_docx() %>%
   print(target = file.path(outDir, "finalsay_tableA.docx"))
 
 
-# Table B ---------------------------------------------------------------------------
+# Table B ----------------------------------------------------------------------
 ## Weighted Bi-variate Statistics of Perceptions of Fairness in Decision Making by Type of Decision
 
 tabBdata <- quantdata %>%
@@ -290,9 +315,9 @@ tabBdata <- quantdata %>%
   mutate(
     person = case_when(
       (type  == "idum"   &  iperson == "Michelle") |
-        (type  == "adum"   &  aperson == "Michelle") ~ "Woman",
+      (type  == "adum"   &  aperson == "Michelle") ~ "Woman",
       (type  == "idum"   &  iperson == "Anthony")  |
-        (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
+      (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
   # Create long data for vignette manipulation
   pivot_longer(
     cols = c(relinc, person, organize, mar, child, dur),
@@ -303,8 +328,9 @@ tabBdata <- quantdata %>%
 
 ## Re order variable manipulations
 tabBdata$variable <- factor(tabBdata$variable, 
-                            levels = c("relinc", "person", "organize",
-                                       "mar", "child", "dur"), ordered = FALSE)
+                            levels  = c("relinc", "person", "organize",
+                                        "mar", "child", "dur"), 
+                            ordered = FALSE)
 ## Set as weighted survey data
 tabBSvy <- tabBdata %>% 
   srvyr::as_survey_design(id = CaseID,
@@ -366,7 +392,7 @@ read_docx() %>%
   print(target = file.path(outDir, "finalsay_tableB.docx")) # save table
 
 
-# Appendix Figure A. --------------------------------------------------------------------------
+# Appendix Figure A. -----------------------------------------------------------
 ## Fairness Evaluation by Item/Activity Presented to Respondent
 
 data_figA <- quantdata %>%
@@ -392,7 +418,9 @@ data_figA <- quantdata %>%
   ungroup()
 
 data_figA$type[data_figA$type == "item"] <-"purchase"
-data_figA$type <- factor(data_figA$type, levels = c("purchase", "activity"), ordered = FALSE)
+data_figA$type <- factor(data_figA$type, 
+                         levels  = c("purchase", "activity"), 
+                         ordered = FALSE)
 
 
 figA <- data_figA %>%
@@ -429,11 +457,12 @@ figA <- data_figA %>%
 
 figA   
 
-ggsave(filename = file.path(figDir, "figA.png"), figA, width=6, height=4, units="in", dpi=300, bg = 'white')
+ggsave(filename = file.path(figDir, "figA.png"), figA, 
+       width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
 
-# # Appendix Figure B. --------------------------------------------------------------------------
+# # Appendix Figure B. ---------------------------------------------------------
 # 
 # ## Create predicted probabilities datesets
 # pp1   <- ggeffect(logit1, terms = "perI")
