@@ -71,3 +71,83 @@ fig2 <- data_fig2 %>%
         caption  = "Predicted percentages calculated from logistic regression models interacting relative income and gender of decider reported in Table 2.\nPresented by respondent gender with 95% confidence intervals.") 
 
 fig2
+
+
+### REPLACE WORDCLOUDS
+library(treemapify)
+
+clouddata %>%
+  ggplot(aes(area = phi, label = word, fill = as.factor(phi), subgroup = word)) +
+  geom_treemap() + 
+  geom_treemap_text(color = "white") +
+#  geom_treemap_subgroup_border(color = "white") +
+  facet_wrap(~topic, ncol = 2) +
+  scale_fill_grey() +
+  theme_minimal(12) +
+  theme(legend.position     = "none") +
+  labs(title    = "Highest-ranking word stems per topic", 
+       subtitle = "Tiles are weighted by probability of being found in topic")
+
+
+
+# ---------------------------------------------Interactions
+
+### interactions
+logit5H <- glm(idum ~ perI * child + relinc + organize + mar + dur + item +
+                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+               quantdata, family="binomial")
+
+logit5L <- glm(adum ~ perA * child + relinc + organize + mar + dur + order + activity +
+                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+               quantdata, family="binomial")
+
+m5H <- margins(logit5H, 
+               variables = "child",
+               at = list(perI = 0:1))
+m5L <- margins(logit5L, 
+               variables = "child",
+               at = list(perA = 0:1))
+
+
+logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + item +
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              quantdata, family="binomial")
+
+m3H <- marginaleffects::avg_comparisons(logit3, 
+                                        variables = "relinc",
+                                        by = "perI") 
+
+m3L <- marginaleffects::avg_comparisons(logit4, 
+                                        variables = "relinc",
+                                        by = "perA") %>%
+  select(-c("term")) %>%
+  mutate(term = paste(contrast, perA, sep= "#"))%>%
+  select(term, everything())
+
+
+library(broom.helpers)
+m3H <- tidy_marginal_contrasts(logit3)
+m3L <- tidy_marginal_contrasts(logit4)
+
+
+## Create pretty labels
+coef_map <- c(
+  "relincEqual earners"       = "Equal earners",
+  "relincWoman higher-earner" = "Woman higher-earner",
+  "perI"                      = "Decider",
+  "perA"                      = "Decider",
+  "childone child together"   = "1 child together"
+)
+
+## Add table notes
+reference = c("Notes: MTF", "Models include...")
+
+modelsummary(
+  list("High Stakes" = m3H, "Low Stakes" = m3L),
+#  coef_map = coef_map,
+  gof_map = c("nobs"),
+  stars = c("*" =.05, "**" = .01, "***" = .001),
+  fmt = fmt_decimal(digits = 3, pdigits = 3),
+  notes = reference)
+#  output = file.path(outDir, "Table02.docx"))
+  

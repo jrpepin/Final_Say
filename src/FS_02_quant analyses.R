@@ -188,6 +188,21 @@ print(paste("(ITEM VS ACT) Man * Lower-Earner test of equality: p =",
 print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =", 
             round(p_lower_FEM_AB, digits = 3)))
 
+
+## Panel C. Other interactions per reviewer B ----------------------------------
+
+### interactions
+logit5a <- glm(idum ~ perI * child + relinc + organize + mar + dur + item +
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              quantdata, family="binomial")
+
+logit5b <- glm(adum ~ perA * child + relinc + organize + mar + dur + order + activity +
+                gender+relate+parent+raceeth+educ+employ+incdum+age,
+              quantdata, family="binomial")
+
+
+
+
 # Figure 2. --------------------------------------------------------------------
 # (*Figure 1 is the coherence plot generated in FS_03_qual analyses)
 ### https://strengejacke.github.io/ggeffects/articles/introduction_marginal_effects.html

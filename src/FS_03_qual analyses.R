@@ -145,7 +145,7 @@ mean(model$coherence)
 # Figure 3. Word Cloud  -----------------------------------------------------------
 
 ## Table of top words
-model$top_terms  <- GetTopTerms(phi = model$phi, M = 50)
+model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
 t(model$top_terms)
 topterms         <- data.frame(model$top_terms)
 topterms         <- tibble::rownames_to_column(topterms, "rank") 
@@ -155,13 +155,13 @@ topterms
 
 top7terms <- topterms %>%
   select(rank, t_1, t_2, t_3, t_4, t_5, t_6, t_7) %>% 
-  rename("Assured Acquiescence"  = "t_1",
-         "Man has Final Say"     = "t_2",
-         "Practical Efficiency"  = "t_3",
-         "Happy Wife Happy Life" = "t_4",
-         "Taking Turns"          = "t_5",
-         "Money Matters"         = "t_6", 
-         "Work Together"         = "t_7")
+  rename("Assured Acquiescence (15%)"  = "t_1",
+         "Man has Final Say (8%)"      = "t_2",
+         "Practical Efficiency (34%)"  = "t_3",
+         "Happy Wife Happy Life (7%)"  = "t_4",
+         "Taking Turns (9%)"           = "t_5",
+         "Money Matters (13%)"         = "t_6", 
+         "Work Together (13%)"         = "t_7")
 
 write_xlsx(top7terms ,  path = file.path(outDir, "Table03_topterms7topicfair.xlsx"))
 
@@ -188,51 +188,46 @@ clouddata <- left_join(df1, df2) %>%
 ## topic order is based on frequency of topics for items + frequency of topics for activities
 clouddata <- clouddata %>% # label topics
   mutate(topic = case_when(
-    topic == "t_1" ~ "Topic 2: Assured Acquiescence (15%)",
-    topic == "t_2" ~ "Topic 6: Man Has Final Say (8%)",
-    topic == "t_3" ~ "Topic 1: Practical Efficiency (34%)",
-    topic == "t_4" ~ "Topic 7: Happy Wife, Happy Life (7%)",
-    topic == "t_5" ~ "Topic 5: Taking Turns (9%)",
-    topic == "t_6" ~ "Topic 3: Money Matters (13%)",
-    topic == "t_7" ~ "Topic 4: Work Together (13%)"))
+    topic == "t_1" ~ "Topic 2:\nAssured Acquiescence (15%)",
+    topic == "t_2" ~ "Topic 6:\nMan Has Final Say (8%)",
+    topic == "t_3" ~ "Topic 1:\nPractical Efficiency (34%)",
+    topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (7%)",
+    topic == "t_5" ~ "Topic 5:\nTaking Turns (9%)",
+    topic == "t_6" ~ "Topic 3:\nMoney Matters (13%)",
+    topic == "t_7" ~ "Topic 4:\nWork Together (13%)"))
 
 clouddata$topic <- factor(clouddata$topic,
-                          levels = c("Topic 1: Practical Efficiency (34%)",
-                                     "Topic 2: Assured Acquiescence (15%)",
-                                     "Topic 3: Money Matters (13%)",
-                                     "Topic 4: Work Together (13%)",
-                                     "Topic 5: Taking Turns (9%)",
-                                     "Topic 6: Man Has Final Say (8%)",
-                                     "Topic 7: Happy Wife, Happy Life (7%)"), 
+                          levels = c("Topic 1:\nPractical Efficiency (34%)",
+                                     "Topic 2:\nAssured Acquiescence (15%)",
+                                     "Topic 3:\nMoney Matters (13%)",
+                                     "Topic 4:\nWork Together (13%)",
+                                     "Topic 5:\nTaking Turns (9%)",
+                                     "Topic 6:\nMan Has Final Say (8%)",
+                                     "Topic 7:\nHappy Wife, Happy Life (7%)"), 
                           ordered = FALSE)
-
-clouddata$rank <- as.numeric(clouddata$rank)
-
-clouddata <- clouddata %>% # top 5 indicator
-  mutate(top5 = case_when(
-    rank <= 5 ~ "yes",
-    TRUE      ~ "no"))
-
-## Create wordcloud
+## Create bargraphs
 
 fig3 <- clouddata %>%
-  ggplot(aes(label = word, size = phi, color = top5)) + 
-  geom_text_wordcloud(rm_outside = TRUE, 
-                      max_steps = 1,
-                      grid_size = 1, 
-                      eccentricity = .9) +
-  facet_wrap(~topic, ncol = 2) +
-  scale_size_area(max_size = 14) +
-  scale_colour_manual(values = c("#566472", "#E16A86")) +
+  filter(as.numeric(rank) < 11) %>%
+  filter(!is.na(phi)) %>%
+  ggplot(aes(x = phi, y = reorder_within(word, phi, topic))) +
+  geom_col(width = 0.6) +
+  facet_wrap(~ topic, ncol = 2,
+             scales="free_y") +
+  scale_fill_grey() +
+  scale_y_reordered() +
+  scale_x_continuous(breaks = c(".000" = 0.000, ".025" = 0.025, 
+                                ".050" = 0.050, ".075" = 0.075)) +
   theme_minimal(12) +
-  theme(strip.text.x         = element_text(face="bold.italic"),
-        panel.spacing        = unit(1.1, "lines")) +
-  labs(title    = "Word clouds with highest-ranking word stems per topic", 
-       subtitle = "Word stems weighted by probability of being found in topic")
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Highest-ranking word stems per topic",
+        subtitle = "Probability of being found in topic (phi)")
 
 fig3
 
-ggsave(file.path(figDir, "fig3.png"), fig3, height = 6, width = 6, units="in",dpi = 300, bg = 'white')
+ggsave(file.path(figDir, "fig3.png"), fig3, height = 8, width = 6, units="in",dpi = 300, bg = 'white')
 
 
 #####################################################################################
@@ -358,7 +353,8 @@ fig4 <- data_fig4 %>%
   geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
   geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5), color = "white") +
   theme_minimal(12) +
-  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  scale_fill_grey() +
+#  scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme(legend.position = "top",
         axis.text.y = element_text(face="bold"),
         plot.title.position = "plot") +
@@ -374,11 +370,11 @@ ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units=
 # MULTINOMIALS -------------------------------------------------------------------------------------------------
 ### Purchase
 mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
-                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
+                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
 
 ### Activity
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
-                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata, weights = weight)
+                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
 
 ## Table A4 ------------------------------------------------------------------------------------------------
 ### Purchase
@@ -465,7 +461,8 @@ p1_fig5 <- data_fig5 %>%
   facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
   scale_y_discrete(limits=rev, position = "right") +
   scale_x_continuous(limits = c(0, .5), breaks = c(.0, .25, .5), labels = c(".0", ".25", ".5")) +
-  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  scale_fill_grey() +
+  #  scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme_minimal() +
   theme(axis.text.x         = element_text(size = 10),
         strip.text.x        = element_text(face = "bold", size = 10),
@@ -499,7 +496,8 @@ p2_fig5 <- data_fig5 %>%
   facet_grid(response.level ~ type , scales = "free", space = "free", switch = "y") +
   scale_y_discrete(limits=rev, position = "right") +
   scale_x_continuous(limits = c(0, .2), breaks = c(.0, .1, .2), labels = c(".0", ".1", ".2")) +
-  scale_fill_discrete_qualitative(palette = "Dark 3") +
+  scale_fill_grey() +
+#  scale_fill_discrete_qualitative(palette = "Dark 3") +
   theme_minimal() +
   theme(axis.text.x         = element_text(size = 10),
         strip.text.x        = element_blank(),
@@ -558,13 +556,13 @@ lcadata$apref <- ifelse(lcadata$apref == "Prefer Anthony", 1, 0)
 ### Purchase
 logitP_A6 <- glm(ipref ~ top_i + relinc + organize + mar + child + dur + item +
                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-              lcadata, weights = weight, family="binomial")
+              lcadata, family="binomial")
 
 summary(margins(logitP_A6, variables = c("top_i")))
 
 ### Activity
 logitA_A6 <- glm(apref ~ top_a + relinc + organize + mar + child + dur + item +
                    gender+relate+parent+raceeth+educ+employ+incdum+age,
-                 lcadata, weights = weight, family="binomial")
+                 lcadata, family="binomial")
 
 summary(margins(logitA_A6, variables = c("top_a")))

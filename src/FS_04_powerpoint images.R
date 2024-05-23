@@ -69,6 +69,37 @@ fig2_pp1
 ggsave(filename = file.path(figDir, "fig2_pp1.png"), fig2_pp1, width=12, height=4, units="in", dpi=300)
 
 ## Wordcloud
+
+## Create wordcloud
+
+clouddata$rank <- as.numeric(clouddata$rank)
+
+clouddata <- clouddata %>% # top 5 indicator
+  mutate(top5 = case_when(
+    rank <= 5 ~ "yes",
+    TRUE      ~ "no"))
+
+fig3 <- clouddata %>%
+  ggplot(aes(label = word, size = phi, color = top5)) + 
+  geom_text_wordcloud(rm_outside = TRUE, 
+                      max_steps = 1,
+                      grid_size = 1, 
+                      eccentricity = .9) +
+  facet_wrap(~topic, ncol = 2) +
+  scale_size_area(max_size = 14) +
+  scale_colour_manual(values = c("#566472", "#E16A86")) +
+  theme_minimal(12) +
+  theme(strip.text.x         = element_text(face="bold.italic"),
+        panel.spacing        = unit(1.1, "lines")) +
+  labs(title    = "Word clouds with highest-ranking word stems per topic", 
+       subtitle = "Word stems weighted by probability of being found in topic")
+
+fig3
+
+ggsave(file.path(figDir, "fig3.png"), fig3, height = 6, width = 6, units="in",dpi = 300, bg = 'white')
+
+
+
 fig3_pp1 <- clouddata %>%
   filter(topic == "Topic 1: Equality or Bust") %>%
   ggplot(aes(label = word, size = phi, color = top5)) + 

@@ -12,37 +12,39 @@ library("pacman")                  # Load pacman package
 
 # Install packages not yet installed & load them
 pacman::p_load(
-       here,       # relative file paths
-       devtools,   # loading github packages
+       here,            # relative file paths
+       devtools,        # loading github packages
        dplyr, 
        tidyr, 
-       haven,      # import spss data with labels & export Stata data
-       expss,      # add variable labels 
-       sjlabelled, # convert labels to factors
-       sjPlot,     # generate a codebook
-       survey,     # analyze survey data
-       srvyr,      # analyze survey data
-       nnet,       # multinomial models
-       kableExtra, # make tables
-       tibble,     # convert row names to column
+       haven,           # import spss data with labels & export Stata data
+       expss,           # add variable labels 
+       sjlabelled,      # convert labels to factors
+       sjPlot,          # generate a codebook
+       survey,          # analyze survey data
+       srvyr,           # analyze survey data
+       nnet,            # multinomial models
+       kableExtra,      # make tables
+       tibble,          # convert row names to column
        marginaleffects, # average marginal effects
-       margins,    # average marginal effects
-       effects,    # predicted prob. w/ CI
-       cowplot,    # graphing
-       ggplot2,    # graphing
-       ggeffects,  # predicted probabilities
-       effects,    # required for ggeffects
+       margins,         # average marginal effects
+       effects,         # predicted prob. w/ CI
+       cowplot,         # graphing
+       ggplot2,         # graphing
+       treemapify,      # tree maps
+       ggeffects,       # predicted probabilities
+       effects,         # required for ggeffects
        sjmisc,
        colorspace, 
-       ggrepel,    # graphing
-       ggpubr,
-       ggtext,     # Color labels in ggtitle
-       scales,     # percentages for ggplots axes
-       officer,    # producing word output
-       flextable,  # producing word output
-       tidytext,   # addressing spelling
-       weights,    # drop leading 0 in geom_text labels
-       colorspace, # color palettes of figures
+       ggrepel,         # graphing
+       ggpubr, 
+       ggtext,          # Color labels in ggtitle
+       scales,          # percentages for ggplots axes
+       officer,         # producing word output
+       modelsummary,    # producing word tables
+       flextable,       # producing word output
+       tidytext,        # addressing spelling
+       weights,         # drop leading 0 in geom_text labels
+       colorspace,      # color palettes of figures
        hunspell,
        stringi,
        stringr,
