@@ -26,7 +26,6 @@ pacman::p_load(
        kableExtra,      # make tables
        tibble,          # convert row names to column
        marginaleffects, # average marginal effects
-       margins,         # average marginal effects
        effects,         # predicted prob. w/ CI
        cowplot,         # graphing
        ggplot2,         # graphing
@@ -68,22 +67,24 @@ pacman::p_load(
        extrafont,
        tagcloud, 
        RJSONIO,
-       ggwordcloud
+       ggwordcloud,
+       conflicted
        )
 
 # remotes::install_github("ddsjoberg/gtsummary")
 library(gtsummary) # tables with unweighted Ns
-
-if(!require(conflicted)){
-  devtools::install_github("r-lib/conflicted")
-  library(conflicted)
-}
 
 sessionInfo()
 
 # Address any conflicts in the packages
 conflict_scout() # Identify the conflicts
 conflict_prefer("remove", "base")
+conflict_prefer("here", "here")
+conflict_prefer("ggsave", "cowplot")
+conflict_prefer("replace_na", "tidyr")
+conflict_prefer("read_stata", "haven")
+conflict_prefer("vars", "ggplot2")
+
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
 conflict_prefer("summarise", "dplyr")
@@ -92,11 +93,6 @@ conflict_prefer("count", "dplyr")
 conflict_prefer("rename", "dplyr")
 conflict_prefer("arrange", "dplyr")
 conflict_prefer("desc", "dplyr")
-conflict_prefer("ggsave", "cowplot")
-conflict_prefer("replace_na", "tidyr")
-conflict_prefer("here", "here")
-conflict_prefer("read_stata", "haven")
-conflict_prefer("vars", "ggplot2")
 
 #####################################################################################
 # Download the data
@@ -111,8 +107,8 @@ rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downlo
 # Set-up the Directories
 #####################################################################################
 
-projDir <- here()                                 # File path to this project's directory
-dataDir <- here("../../Data/TESS")                # Name of folder where the TESS data was downloaded
+projDir <- here::here()                           # File path to this project's directory
+dataDir <- here::here("../../Data/TESS")          # Name of folder where the TESS data was downloaded
 srcDir  <- "src"                                  # Name of the sub-folder where we will save our source code (R scripts)
 funDir  <- "src/functions"                        # File path where we will save our functions
 qualDir <- "src/qual"                             # File path where saved qualitative coding results

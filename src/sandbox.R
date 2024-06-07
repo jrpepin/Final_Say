@@ -5,13 +5,6 @@ modelsummary::modelsummary(
   stars = c("*" =.05, "**" = .01, "***" = .001)
 )
 
-library(performance)
-test_performance(logit1, logit2)
-test_bf(logit1, logit2)
-test_vuong(logit1, logit2) # nonnest2::vuongtest(m1, m2)
-
-
-
 ## Create predicted probabilities datesets
 pp3   <- ggeffect(logit3, terms = c("perI", "relinc", "gender"))
 pp4   <- ggeffect(logit4, terms = c("perA", "relinc", "gender"))
@@ -89,65 +82,138 @@ clouddata %>%
        subtitle = "Tiles are weighted by probability of being found in topic")
 
 
+## Table 02 --------------------------------------------------------------------
+library(marginaleffects)
 
-# ---------------------------------------------Interactions
-
-### interactions
-logit5H <- glm(idum ~ perI * child + relinc + organize + mar + dur + item +
-                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-               quantdata, family="binomial")
-
-logit5L <- glm(adum ~ perA * child + relinc + organize + mar + dur + order + activity +
-                 gender+relate+parent+raceeth+educ+employ+incdum+age,
-               quantdata, family="binomial")
-
-m5H <- margins(logit5H, 
-               variables = "child",
-               at = list(perI = 0:1))
-m5L <- margins(logit5L, 
-               variables = "child",
-               at = list(perA = 0:1))
-
-
-logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + item +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
-              quantdata, family="binomial")
-
-m3H <- marginaleffects::avg_comparisons(logit3, 
-                                        variables = "relinc",
-                                        by = "perI") 
-
-m3L <- marginaleffects::avg_comparisons(logit4, 
-                                        variables = "relinc",
-                                        by = "perA") %>%
-  select(-c("term")) %>%
-  mutate(term = paste(contrast, perA, sep= "#"))%>%
-  select(term, everything())
-
-
-library(broom.helpers)
-m3H <- tidy_marginal_contrasts(logit3)
-m3L <- tidy_marginal_contrasts(logit4)
-
+m1 <- avg_slopes(logit1, variables = c("relinc", "perI", "gender"))
+m2 <- avg_slopes(logit2, variables = c("relinc", "perA", "gender"))
 
 ## Create pretty labels
 coef_map <- c(
-  "relincEqual earners"       = "Equal earners",
-  "relincWoman higher-earner" = "Woman higher-earner",
-  "perI"                      = "Decider",
-  "perA"                      = "Decider",
-  "childone child together"   = "1 child together"
+  "relinc mean(Equal earners) - mean(Man higher-earner)"       = "Equal earners",
+  "relinc mean(Woman higher-earner) - mean(Man higher-earner)" = "Woman higher-earner",
+  "perI mean(1) - mean(0)"                                     = "Decider: Woman",
+  "perA mean(1) - mean(0)"                                     = "Decider: Woman",
+  "gender mean(Female) - mean(Male)"                           = "Respondent: Woman"
 )
 
+
 ## Add table notes
-reference = c("Notes: MTF", "Models include...")
+reference = c("Notes: N = 3,978. Vignette manipulations and respondent demographic characteristics included as controls. 
+              2 tailed tests. Standard errors in parentheses")
 
 modelsummary(
-  list("High Stakes" = m3H, "Low Stakes" = m3L),
-#  coef_map = coef_map,
+  list("High Stakes" = m1, "Low Stakes" = m2),
+  coef_map = coef_map,
   gof_map = c("nobs"),
+  shape = term : contrast ~ model,
+  exponentiate = TRUE,
   stars = c("*" =.05, "**" = .01, "***" = .001),
   fmt = fmt_decimal(digits = 3, pdigits = 3),
   notes = reference)
 #  output = file.path(outDir, "Table02.docx"))
-  
+
+# test equality of coefficients between HIGH & LOW stakes
+# https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
+# https://journals.sagepub.com/doi/10.1177/0081175019852763
+z_equal   <- (m1[[3,3]] - m2[[3,3]]) / sqrt(m1[[3,4]]^2 + m2[[3,4]]^2)
+z_fmore   <- (m1[[4,3]] - m2[[4,3]]) / sqrt(m1[[4,4]]^2 + m2[[4,4]]^2)
+z_Rgender <- (m1[[1,3]] - m2[[1,3]]) / sqrt(m1[[1,4]]^2 + m2[[1,4]]^2)
+z_decider <- (m1[[2,3]] - m2[[2,3]]) / sqrt(m1[[2,4]]^2 + m2[[2,4]]^2)
+
+p_equal   <- 2*pnorm(-abs(z_equal)) 
+p_fmore   <- 2*pnorm(-abs(z_fmore)) 
+p_Rgender <- 2*pnorm(-abs(z_Rgender)) 
+p_decider <- 2*pnorm(-abs(z_decider)) 
+
+# Test of Equality between models (pvalues)
+message("Equal earners: p = ",       round(p_equal,     digits = 3))
+message("Woman Higher-Earner: p = ", round(p_fmore,     digits = 3))
+message("Decider: p = ",             round(p_decider,   digits = 3))
+message("Respondents' Gender: p = ", round(p_Rgender,   digits = 3))
+
+
+## Interactions
+m3 <- avg_slopes(logit3, variables = c("relinc"), by = "perI")
+m4 <- avg_slopes(logit4, variables = c("relinc"), by = "perA")
+
+## Combine interaction labels
+m3$term <- paste(m3$term, m3$perI, sep= ".")
+m4$term <- paste(m4$term, m4$perA, sep= ".")
+
+## Create pretty labels
+coef_map2 <- c(
+  "relinc.0 mean(Equal earners) - mean(Man higher-earner)"       = "Equal earners: He decides",
+  "relinc.1 mean(Equal earners) - mean(Man higher-earner)"       = "Equal earners: She decides",
+  "relinc.0 mean(Woman higher-earner) - mean(Man higher-earner)" = "Woman higher-earner: He decides",
+  "relinc.1 mean(Woman higher-earner) - mean(Man higher-earner)" = "Woman higher-earner: She decides")
+
+modelsummary(
+  list("High Stakes" = m3, "Low Stakes" = m4),
+  coef_map = coef_map2,
+  gof_map = c("nobs"),
+  shape = term : contrast ~ model,
+#  exponentiate = TRUE,
+  stars = c("*" =.05, "**" = .01, "***" = .001),
+  fmt = fmt_decimal(digits = 3, pdigits = 3),
+  notes = reference)
+#  output = file.path(outDir, "Table02.docx"))
+
+# test equality between models with interactions
+z_equalH   <- (m3[[1,4]] - m4[[1,4]]) / sqrt(m3[[1,5]]^2 + m4[[1,5]]^2)
+z_equalS   <- (m3[[2,4]] - m4[[2,4]]) / sqrt(m3[[2,5]]^2 + m4[[2,5]]^2)
+
+z_fmoreH   <- (m3[[3,4]] - m4[[3,4]]) / sqrt(m3[[3,5]]^2 + m4[[3,5]]^2)
+z_fmoreS   <- (m3[[4,4]] - m4[[4,4]]) / sqrt(m3[[4,5]]^2 + m4[[4,5]]^2)
+
+p_equalH   <- 2*pnorm(-abs(z_equalH)) 
+p_equalS   <- 2*pnorm(-abs(z_equalS)) 
+p_fmoreH   <- 2*pnorm(-abs(z_fmoreH)) 
+p_fmoreS   <- 2*pnorm(-abs(z_fmoreS)) 
+
+# Test of Equality pvalues
+message("Equal earners: He decides p = ",       round(p_equalH,   digits = 3))
+message("Equal earners: She decides p = ",      round(p_equalS,   digits = 3))
+message("Woman Higher-Earner: He decidesp = ",  round(p_fmoreH,   digits = 3))
+message("Woman Higher-Earner: She decidesp = ", round(p_fmoreS,   digits = 3))
+
+
+
+## Create table 2 with both panels
+panels <- list(
+  "Effect of Relative Income and Gender of Decider" = list(
+    "High Stakes" = m1, "Low Stakes" = m2),
+  "Effect of Relative Income by Gender of Decider" = list(
+    "High Stakes" = m3, "Low Stakes" = m4))
+
+## Combine interaction labels
+m1$term <- paste(m1$term, m1$contrast, sep= ".")
+m2$term <- paste(m2$term, m2$contrast, sep= ".")
+
+m3$term <- paste(m3$term, m3$contrast, m3$perI, sep= ".")
+m4$term <- paste(m4$term, m4$contrast, m4$perA, sep= ".")
+
+
+## Create pretty labels
+coef_mapC <- c(
+  "relinc.mean(Equal earners) - mean(Man higher-earner)"         = "Equal earners",
+  "relinc.mean(Woman higher-earner) - mean(Man higher-earner)"   = "Woman higher-earner",
+  "perI.mean(1) - mean(0)"                                       = "Decider: Woman",
+  "perA.mean(1) - mean(0)"                                       = "Decider: Woman",
+  "gender.mean(Female) - mean(Male)"                             = "Respondent's Gender: Woman",
+  "relinc.mean(Equal earners) - mean(Man higher-earner).0"       = "Equal earners: He decides",
+  "relinc.mean(Equal earners) - mean(Man higher-earner).1"       = "Equal earners: She decides",
+  "relinc.mean(Woman higher-earner) - mean(Man higher-earner).0" = "Woman higher-earner: He decides",
+  "relinc.mean(Woman higher-earner) - mean(Man higher-earner).1" = "Woman higher-earner: She decides")
+
+# shape
+modelsummary(
+  panels,
+  shape = "rbind",
+  coef_map = coef_mapC,
+  gof_map = NA,
+  #  exponentiate = TRUE,
+  stars = c("*" =.05, "**" = .01, "***" = .001),
+  fmt = fmt_decimal(digits = 3, pdigits = 3),
+  notes = reference)
+
