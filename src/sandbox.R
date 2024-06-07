@@ -83,7 +83,6 @@ clouddata %>%
 
 
 ## Table 02 --------------------------------------------------------------------
-library(marginaleffects)
 
 m1 <- avg_slopes(logit1, variables = c("relinc", "perI", "gender"))
 m2 <- avg_slopes(logit2, variables = c("relinc", "perA", "gender"))
@@ -177,22 +176,63 @@ message("Equal earners: She decides p = ",      round(p_equalS,   digits = 3))
 message("Woman Higher-Earner: He decidesp = ",  round(p_fmoreH,   digits = 3))
 message("Woman Higher-Earner: She decidesp = ", round(p_fmoreS,   digits = 3))
 
+# Table 02 ---------------------------------------------------------------------
 
+## Calculate AMEs
+m1 <- avg_slopes(logit1, variables = c("relinc", "perI", "gender"))
+m2 <- avg_slopes(logit2, variables = c("relinc", "perA", "gender"))
+m3 <- avg_slopes(logit3, variables = c("relinc"), by = "perI")
+m4 <- avg_slopes(logit4, variables = c("relinc"), by = "perA")
 
-## Create table 2 with both panels
+# test equality of coefficients between HIGH & LOW stakes
+# https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
+# https://journals.sagepub.com/doi/10.1177/0081175019852763
+z_equal   <- (m1[[3,3]] - m2[[3,3]]) / sqrt(m1[[3,4]]^2 + m2[[3,4]]^2)
+z_fmore   <- (m1[[4,3]] - m2[[4,3]]) / sqrt(m1[[4,4]]^2 + m2[[4,4]]^2)
+z_Rgender <- (m1[[1,3]] - m2[[1,3]]) / sqrt(m1[[1,4]]^2 + m2[[1,4]]^2)
+z_decider <- (m1[[2,3]] - m2[[2,3]]) / sqrt(m1[[2,4]]^2 + m2[[2,4]]^2)
+
+p_equal   <- 2*pnorm(-abs(z_equal)) 
+p_fmore   <- 2*pnorm(-abs(z_fmore)) 
+p_Rgender <- 2*pnorm(-abs(z_Rgender)) 
+p_decider <- 2*pnorm(-abs(z_decider)) 
+
+# Test of Equality between models (pvalues)
+message("Equal earners: p = ",       round(p_equal,     digits = 3))
+message("Woman Higher-Earner: p = ", round(p_fmore,     digits = 3))
+message("Decider: p = ",             round(p_decider,   digits = 3))
+message("Respondents' Gender: p = ", round(p_Rgender,   digits = 3))
+
+# test equality between models with interactions
+z_equalH   <- (m3[[1,4]] - m4[[1,4]]) / sqrt(m3[[1,5]]^2 + m4[[1,5]]^2)
+z_equalS   <- (m3[[2,4]] - m4[[2,4]]) / sqrt(m3[[2,5]]^2 + m4[[2,5]]^2)
+
+z_fmoreH   <- (m3[[3,4]] - m4[[3,4]]) / sqrt(m3[[3,5]]^2 + m4[[3,5]]^2)
+z_fmoreS   <- (m3[[4,4]] - m4[[4,4]]) / sqrt(m3[[4,5]]^2 + m4[[4,5]]^2)
+
+p_equalH   <- 2*pnorm(-abs(z_equalH)) 
+p_equalS   <- 2*pnorm(-abs(z_equalS)) 
+p_fmoreH   <- 2*pnorm(-abs(z_fmoreH)) 
+p_fmoreS   <- 2*pnorm(-abs(z_fmoreS)) 
+
+# Test of Equality pvalues
+message("Equal earners: He decides p = ",       round(p_equalH,   digits = 3))
+message("Equal earners: She decides p = ",      round(p_equalS,   digits = 3))
+message("Woman Higher-Earner: He decidesp = ",  round(p_fmoreH,   digits = 3))
+message("Woman Higher-Earner: She decidesp = ", round(p_fmoreS,   digits = 3))
+
+## Combine labels for table
+m1$term <- paste(m1$term, m1$contrast, sep= ".")
+m2$term <- paste(m2$term, m2$contrast, sep= ".")
+m3$term <- paste(m3$term, m3$contrast, m3$perI, sep= ".")
+m4$term <- paste(m4$term, m4$contrast, m4$perA, sep= ".")
+
+## Create model list for 2 panels
 panels <- list(
   "Effect of Relative Income and Gender of Decider" = list(
     "High Stakes" = m1, "Low Stakes" = m2),
   "Effect of Relative Income by Gender of Decider" = list(
     "High Stakes" = m3, "Low Stakes" = m4))
-
-## Combine interaction labels
-m1$term <- paste(m1$term, m1$contrast, sep= ".")
-m2$term <- paste(m2$term, m2$contrast, sep= ".")
-
-m3$term <- paste(m3$term, m3$contrast, m3$perI, sep= ".")
-m4$term <- paste(m4$term, m4$contrast, m4$perA, sep= ".")
-
 
 ## Create pretty labels
 coef_mapC <- c(
@@ -206,7 +246,7 @@ coef_mapC <- c(
   "relinc.mean(Woman higher-earner) - mean(Man higher-earner).0" = "Woman higher-earner: He decides",
   "relinc.mean(Woman higher-earner) - mean(Man higher-earner).1" = "Woman higher-earner: She decides")
 
-# shape
+## Produce table
 modelsummary(
   panels,
   shape = "rbind",
