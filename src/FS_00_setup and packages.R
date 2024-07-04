@@ -25,7 +25,7 @@ pacman::p_load(
        nnet,            # multinomial models
        kableExtra,      # make tables
        tibble,          # convert row names to column
-       marginaleffects, # average marginal effects
+ #      marginaleffects, # average marginal effects
        effects,         # predicted prob. w/ CI
        cowplot,         # graphing
        ggplot2,         # graphing
