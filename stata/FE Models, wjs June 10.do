@@ -1,46 +1,33 @@
 clear
 
 //global outDir "CHANGE THIS TO YOUR OUTDIR FILEPATH"
-global outDir "C:/Users/wjsca/OneDrive - UNT System/Final_Say-main/output"
-//global outDir "C:/Users/wjs0079/OneDrive - UNT System/Final_Say-main/output"
+* global outDir "C:/Users/wjsca/OneDrive - UNT System/Final_Say-main/output"
+global outDir "C:\Users\Joanna\Dropbox\Repositories\Final_Say\output"
 
 // Import the data that was exported from FS_02_quant analyses.R
 use "$outDir/femodels.dta" , clear
 
-foreach var in ifair afair {
-replace `var' = 5-`var'
-label drop `var'
-label define `var'lab 1 "very unfair" 2 "seomwhat unfair" 3 "somehwat fair" 4 "very fair"
-label values `var' `var'lab
-}
-tab2 idum ifair, nol
-tab2 adum afair, nol
 
-	//Reshaping and coding
-		rename perI per1
-		rename idum dum1
-		rename ifair fair1
-		rename perA per2
-		rename adum dum2
-		rename afair fair2
+//Reshaping 
+reshape long per dum fair, i(CaseID) j(decision)
 
-		reshape long per dum fair, i(CaseID) j(decision)
-		tab per
+tab per
 		
-		destring CaseID, generate(CaseIDnum)
+cap drop CaseIDnum
+destring CaseID, generate(CaseIDnum)
+sort CaseIDnum
 
-		label define per 0 "Anthony" 1 "Michelle" 
-		label values per per
-		label define dum 0 "Disagree" 1 "Agree"
-		label values dum dum
-		label define decision 1 "Items" 2 "Activity"
-		label values decision decision
-		tab1 per dum decision
+label define per 0 "Anthony" 1 "Michelle" 
+label values per per
+label define dum 0 "Disagree" 1 "Agree"
+label values dum dum
+label define decision 1 "Items" 2 "Activity"
+label values decision decision
+tab1 per dum decision
 
-		
 save "$outDir/quantdatalong", replace
 
-//------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //Linear Probability Model using Fair/Unfair Outcome
 			
 ///LPMs
@@ -48,7 +35,7 @@ use "$outDir/quantdatalong", clear
 
 //Balanced data
 bys CaseID: egen caseN = count(CaseID)
-keep if caseN==2
+keep if caseN==2 // no change in Ns
 
 	//Overall and By Gender
 			eststo clear
@@ -71,9 +58,7 @@ keep if caseN==2
 					test [1.per]1.gender#1.decision = [1.per]2.gender#1.decision
 					test [1.per]1.gender#2.decision = [1.per]2.gender#2.decision
 
-							
-			
-	
+** TABLE 02
 	//By Relative Income
 			eststo clear
 			xtset CaseIDnum
@@ -89,6 +74,7 @@ keep if caseN==2
 			esttab, se r2 b(3) se(3) compress nogap replace
 			esttab using "$outDir/lpmbyrelativeincome.csv", b(3) se(3) compress nogap replace
 	
+
 	//By gender and relative income
 			eststo clear
 			xtset CaseIDnum
@@ -129,9 +115,7 @@ keep if caseN==2
 					test [1.per]1.gender#1.decision = [1.per]2.gender#1.decision
 					test [1.per]1.gender#2.decision = [1.per]2.gender#2.decision
 							
-		
-		
-	//visualization
+** FIGURE 2	
 			xtset CaseIDnum
 			xtreg dum i.per##i.decision if gender==1	& relinc == 1 , fe
 				mgen, at(per=(0 1) decision=(1 2)) stub(g1r1)
@@ -291,39 +275,3 @@ use "$outDir/quantdatalong", clear
 				test [1.per]1.gender#1.decision = [1.per]2.gender#1.decision
 				test [1.per]1.gender#2.decision = [1.per]2.gender#2.decision
 						
-
-
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-
-
-			

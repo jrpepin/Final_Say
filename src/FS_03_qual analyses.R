@@ -273,7 +273,7 @@ lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers go to first c
 lcadata$top_a <- as.factor(lcadata$top_a)
 
 lcadata <- lcadata %>% 
-  select(CaseID, ifair, afair, qual1, top_i, qual2, top_a, longid, everything()) # reorder columns
+  select(CaseID, fair1, fair2, qual1, top_i, qual2, top_a, longid, everything()) # reorder columns
 
 ## Get topic frequency
 freq_i <- table(lcadata$top_i)  # frequency of each topic for items
@@ -314,22 +314,22 @@ lcadata$top_a <- factor(lcadata$top_a, levels = c("Practical Efficiency", "Assur
 lcadata<- lcadata%>%
   mutate(
     ipref = case_when(
-      iperson== "Michelle" & idum == 1       			~ "Prefer Michelle",
-      iperson== "Anthony"  & idum == 0       			~ "Prefer Michelle",
-      iperson== "Michelle" & idum == 0       			~ "Prefer Anthony",
-      iperson== "Anthony"  & idum == 1       			~ "Prefer Anthony",
+      iperson== "Michelle" & dum1 == 1       			~ "Prefer Michelle",
+      iperson== "Anthony"  & dum1 == 0       			~ "Prefer Michelle",
+      iperson== "Michelle" & dum1 == 0       			~ "Prefer Anthony",
+      iperson== "Anthony"  & dum1 == 1       			~ "Prefer Anthony",
     ))
 
 lcadata<- lcadata%>%
   mutate(
     apref = case_when(
-      aperson== "Michelle" & adum == 1       			~ "Prefer Michelle",
-      aperson== "Anthony"  & adum == 0       			~ "Prefer Michelle",
-      aperson== "Michelle" & adum == 0       			~ "Prefer Anthony",
-      aperson== "Anthony"  & adum == 1       			~ "Prefer Anthony",
+      aperson== "Michelle" & dum2 == 1       			~ "Prefer Michelle",
+      aperson== "Anthony"  & dum2 == 0       			~ "Prefer Michelle",
+      aperson== "Michelle" & dum2 == 0       			~ "Prefer Anthony",
+      aperson== "Anthony"  & dum2 == 1       			~ "Prefer Anthony",
     ))
 table(lcadata$apref )
-table(lcadata$adum)
+table(lcadata$dum2)
 table(lcadata$top_i)
 
 #outputing to dta for multinom table in Stata because we don't know how to do it yet in R :D

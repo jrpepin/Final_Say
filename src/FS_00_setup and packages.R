@@ -22,10 +22,12 @@ pacman::p_load(
        sjPlot,          # generate a codebook
        survey,          # analyze survey data
        srvyr,           # analyze survey data
+       plm,             # Linear Models for Panel Data (fe)
        nnet,            # multinomial models
        kableExtra,      # make tables
        tibble,          # convert row names to column
- #      marginaleffects, # average marginal effects
+       marginaleffects, # average marginal effects
+       broom.helpers,   # tibbles of AME
        effects,         # predicted prob. w/ CI
        cowplot,         # graphing
        ggplot2,         # graphing

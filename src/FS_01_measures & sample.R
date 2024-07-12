@@ -36,7 +36,7 @@ data <- rename(data,
                item     = DOV_ITEM,        iperson   = DOV_PERSON_B04,  
                qual1    = B05,             activity  = DOV_ACTIVITY,
                aperson  = DOV_PERSON2_B06, qual2     = B07,            
-               ifair    = B04,             afair     = B06,             
+               fair1    = B04,             fair2     = B06,             
                organize = B01,             herjoint  = B02_Shared,
                hisjoint = B03_Shared,      herindv   = B02_Individual, 
                hisindv  = B03_Individual)
@@ -54,7 +54,7 @@ data$gender %>% attr('labels') ### Viewing value labels
 
 fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", 
            "religion", "region", "mar", "child", "relinc", "dur", "item", 
-           "iperson", "activity", "aperson", "ifair", "afair", "organize", 
+           "iperson", "activity", "aperson", "fair1", "fair2", "organize", 
            "DOV_B02_MaxValue", "DOV_B03_MaxValue")
 
 icols <- c("age", "PPT01", "PPT25", "PPT612", "PPT1317", 
@@ -140,16 +140,16 @@ data$income <-data$income %>%
 
 data <- data %>%
   mutate(
-    incdum = case_when(
+    inc = case_when(
       income <= 11          ~ "< than $50,000",
       income >= 12          ~ "> than $50,000",
       TRUE                  ~  NA_character_ 
     ))
 
-data$incdum <- factor(data$incdum, 
+data$inc <- factor(data$inc, 
                       levels  = c("< than $50,000", "> than $50,000"), 
                       ordered = FALSE)
-table(data$incdum)
+table(data$inc)
 
 ## race/eth ----------------------------------------------------------------------
 table(data$race)
@@ -314,49 +314,65 @@ table(data$item)
 table(data$activity)
 
 ## item fairness ---------------------------------------------------------------
-table(data$ifair)
+table(data$fair1)
 
-data$ifair[data$ifair == "Refused"]   <- NA
+data$fair1[data$fair1 == "Refused"]   <- NA
 
-data$ifair <-data$ifair %>%
+data$fair1 <-data$fair1 %>%
   droplevels()
 
-table(data$ifair)
+table(data$fair1)
+
+data$fair1 <- factor(data$fair1, 
+                      levels  = c("Very unfair", "Somewhat unfair",
+                                  "Somewhat fair", "Very fair"), 
+                      ordered = FALSE)
 
 ### dummy var
 data <- data %>%
   mutate(
-    idum = case_when(
-      ifair  == "Very fair"   | ifair == "Somewhat fair"          ~ 1,
-      ifair  == "Very unfair" | ifair == "Somewhat unfair"        ~ 0
+    dum1 = case_when(
+      fair1  == "Very fair"   | fair1 == "Somewhat fair"          ~ 1,
+      fair1  == "Very unfair" | fair1 == "Somewhat unfair"        ~ 0
     ))
-data$idum <-as.integer(data$idum)
+data$dum1 <-as.integer(data$dum1)
 
 ## activity fairness -----------------------------------------------------------
-table(data$afair)
+table(data$fair2)
 
-data$afair[data$afair == "Refused"]   <- NA
+data$fair2[data$fair2 == "Refused"]   <- NA
 
-data$afair <-data$afair %>%
+data$fair2 <-data$fair2 %>%
   droplevels()
 
-table(data$afair)
+table(data$fair2)
+
+data$fair2 <- factor(data$fair2, 
+                     levels  = c("Very unfair", "Somewhat unfair",
+                                 "Somewhat fair", "Very fair"), 
+                     ordered = FALSE)
 
 ### dummy var
 data <- data %>%
   mutate(
-    adum = case_when(
-      afair  == "Very fair"   | afair == "Somewhat fair"          ~ 1,
-      afair  == "Very unfair" | afair == "Somewhat unfair"        ~ 0
+    dum2 = case_when(
+      fair2  == "Very fair"   | fair2 == "Somewhat fair"          ~ 1,
+      fair2  == "Very unfair" | fair2 == "Somewhat unfair"        ~ 0
     ))
-data$adum <-as.integer(data$adum)
+data$dum2 <-as.integer(data$dum2)
 
 
-## item person -----------------------------------------------------------------
+## high-stakes person ----------------------------------------------------------
 table(data$iperson)
 
-## item person -----------------------------------------------------------------
+### create dummy variable
+data$per1     <- as.numeric(data$iperson == "Michelle") 
+
+## low-stakes person -----------------------------------------------------------
 table(data$aperson)
+
+### create dummy variable
+data$per2     <- as.numeric(data$aperson == "Michelle")
 
 ## repeat decider --------------------------------------------------------------
 data <- data %>%
@@ -446,8 +462,8 @@ nrow(quantdata)
 ## list-wise deletion -- resulting in 42 deleted observations
 quantdata <- quantdata %>%
   filter(!is.na(organize) & #### COME BACK AND DELETE THIS RESTRICTION
-           !is.na(afair) &
-           !is.na(ifair))
+           !is.na(fair2) &
+           !is.na(fair1))
 nrow(data)
 nrow(quantdata)
 
@@ -457,10 +473,11 @@ nrow(quantdata)
 
 quantdata <- quantdata %>%
   select(CaseID, weight,
-         gender, relate, parent, raceeth, educ, employ, incdum, age, religion, 
+         gender, relate, parent, raceeth, educ, employ, inc, age, religion, 
          relfreq, mar, child, marpar, relinc, earner, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
-         item, activity, aperson, iperson, order, adum, afair, idum, ifair,
+         item, activity, aperson, iperson, 
+         per1, per2, dum1, dum2, fair1, fair2, order,
          qual1, qual2)
 
 sjPlot::view_df(quantdata) # Load codebook in viewer pane
@@ -694,9 +711,9 @@ qualdata$qual <- str_replace(qualdata$qual, "fifty fifty", "5050")
 
 # Add item/activity fairness perception
 fairdata <- data %>% # create long format dataset
-  select(CaseID, idum, adum) %>%
+  select(CaseID, dum1, dum2) %>%
   pivot_longer(
-    cols = c(idum, adum),
+    cols = c(dum1, dum2),
     names_to = "topic",
     values_to = "fair") %>%  
   group_by(CaseID) %>%  # create a long format id

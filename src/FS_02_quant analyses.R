@@ -17,40 +17,55 @@ quantdata$relate   <- relevel(quantdata$relate,   ref = "Never married")
 quantdata$raceeth  <- relevel(quantdata$raceeth,  ref = "White")
 quantdata$educ     <- relevel(quantdata$educ,     ref = "High school")
 quantdata$employ   <- relevel(quantdata$employ,   ref = "Employed")
-quantdata$incdum   <- relevel(quantdata$incdum,   ref = "< than $50,000")
+quantdata$inc      <- relevel(quantdata$inc,      ref = "< than $50,000")
 quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
 quantdata$order    <- relevel(quantdata$order,    ref = "Same")
 
-# create dummy variables
-quantdata$perI     <- as.numeric(quantdata$iperson == "Michelle") 
-quantdata$perA     <- as.numeric(quantdata$aperson == "Michelle")
 
 
 ### export to stata for FE models (Table C)
 femodels <- quantdata %>%
-  select(CaseID, idum, adum, perI, perA, 
+  select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
          relinc, organize, mar, child, dur, item, gender, relate, parent, 
-         raceeth, educ, employ, incdum, age, activity, order, weight)
+         raceeth, educ, employ, inc, age, activity, order, weight)
 
 write_dta(femodels , path = file.path(outDir, "femodels.dta")) 
 
+## Wide to long
+femodels <- femodels %>% 
+  pivot_longer(                                                                 # long 2 numeric variables
+    cols = c(contains('per'), 
+             contains('dum')),
+    names_to = c("vars", "decision"),
+    names_pattern = "(.*)(.)$") %>%
+  pivot_wider(                                                                  # back to 2 rows (decisions) per person
+    names_from = vars,
+    values_from = value) %>%
+  pivot_longer(                                                                 # long factor variable
+    cols = c("fair1", "fair2"),
+    names_to = c("drop1", "drop2"),
+    names_pattern = "(.*)(.)$",
+    values_to = "fair") %>%
+filter(decision == drop2) %>%                                                   # back to 2 rows (decisions) per person
+select(!c(drop1, drop2))
+
 ## Run the models
 
-logit1 <- glm(idum ~ perI + relinc + organize + mar + child + dur + item +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit1 <- glm(dum1 ~ per1 + relinc + organize + mar + child + dur + item +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
-logit2 <- glm(adum ~ perA + relinc + organize + mar + child + dur + order + activity +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit2 <- glm(dum2 ~ per2 + relinc + organize + mar + child + dur + order + activity +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
 ### interactions
-logit3 <- glm(idum ~ perI * relinc + organize + mar + child + dur + item +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit3 <- glm(dum1 ~ per1 * relinc + organize + mar + child + dur + item +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
-logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + activity +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit4 <- glm(dum2 ~ per2 * relinc + organize + mar + child + dur + order + activity +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
 ## Average marginal effects
@@ -58,15 +73,15 @@ logit4 <- glm(adum ~ perA * relinc + organize + mar + child + dur + order + acti
 ### https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html
 
 ## Panel A ---------------------------------------------------------------------
-AME_log1  <- summary(margins(logit1,  variables = c("perI", "relinc", "gender")))
-AME_log2  <- summary(margins(logit2,  variables = c("perA", "relinc", "gender")))
+AME_log1  <- summary(margins(logit1,  variables = c("per1", "relinc", "gender")))
+AME_log2  <- summary(margins(logit2,  variables = c("per2", "relinc", "gender")))
 
 summary(margins(logit1, 
                 variables = c("gender", "relate", "parent", 
-                              "raceeth", "educ", "incdum", "age")))
+                              "raceeth", "educ", "inc", "age")))
 summary(margins(logit2, 
                 variables = c("gender", "relate", "parent", 
-                              "raceeth", "educ", "incdum", "age", "order")))
+                              "raceeth", "educ", "inc", "age", "order")))
 
 # test equality of coefficients between Item & Activity
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
@@ -93,18 +108,18 @@ quantdata <- quantdata %>%
   mutate(orderN= case_when (order == "Same"  ~ 0,
                             order == "Mixed" ~ 1))
 
-logit1o <- glm(idum ~ perI * orderN + relinc + organize + mar + child + dur + item + 
-                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit1o <- glm(dum1 ~ per1 * orderN + relinc + organize + mar + child + dur + item + 
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
                quantdata, family="binomial")
-logit2o <- glm(adum ~ perA * orderN + relinc + organize + mar + child + dur + activity +
-                 gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit2o <- glm(dum2 ~ per2 * orderN + relinc + organize + mar + child + dur + activity +
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
                quantdata, family="binomial")
 
 AME1o <- summary(margins(logit1o, 
-                         variables = "perI",
+                         variables = "per1",
                          at = list(orderN= 0:1)))
 AME2o <- summary(margins(logit2o, 
-                         variables = "perA",
+                         variables = "per2",
                          at = list(orderN= 0:1)))
 AME1o 
 AME2o
@@ -114,7 +129,7 @@ AME2o
 ### Item ***********************************************************************
 AME3 <- summary(margins(logit3, 
                         variables = "relinc",
-                        at = list(perI = 0:1)))
+                        at = list(per1 = 0:1)))
 AME3
 
 ## test difference between coefficients
@@ -136,7 +151,7 @@ print(paste("(ITEM) test of equality-- Woman Higher-Earner * gender: p =",
 ### Activity *******************************************************************
 AME4 <- summary(margins(logit4, 
                         variables = "relinc",
-                        at = list(perA = 0:1)))
+                        at = list(per2 = 0:1)))
 AME4
 
 ## test difference between coefficients
@@ -192,12 +207,12 @@ print(paste("(ITEM VS ACT) Female * Lower-Earner test of equality: p =",
 ## Panel C. Other interactions per reviewer B ----------------------------------
 
 ### interactions
-logit5a <- glm(idum ~ perI * child + relinc + organize + mar + dur + item +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit5a <- glm(dum1 ~ per1 * child + relinc + organize + mar + dur + item +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
-logit5b <- glm(adum ~ perA * child + relinc + organize + mar + dur + order + activity +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
+logit5b <- glm(dum2 ~ per2 * child + relinc + organize + mar + dur + order + activity +
+                gender+relate+parent+raceeth+educ+employ+inc+age,
               quantdata, family="binomial")
 
 
@@ -210,8 +225,8 @@ logit5b <- glm(adum ~ perA * child + relinc + organize + mar + dur + order + act
 ### https://data.library.virginia.edu/a-beginners-guide-to-marginal-effects/
 
 ## Create predicted probabilities datesets
-pp3   <- ggeffect(logit3, terms = c("perI", "relinc", "gender"))
-pp4   <- ggeffect(logit4, terms = c("perA", "relinc", "gender"))
+pp3   <- ggeffect(logit3, terms = c("per1", "relinc", "gender"))
+pp4   <- ggeffect(logit4, terms = c("per2", "relinc", "gender"))
 
 pp3$type <- "High\nstakes"
 pp4$type <- "Low\nstakes"
@@ -283,7 +298,7 @@ ggsave(filename = file.path(figDir, "fig2.png"), fig2,
 ## Create weighted data 
 tabAdata <- quantdata %>%
   select("weight", "gender", "relate", "parent", "raceeth", 
-         "educ", "employ", "incdum", "age")
+         "educ", "employ", "inc", "age")
 
 tabASvy <- svydesign(ids = ~1, weights = ~ weight, data = tabAdata)
 
@@ -295,14 +310,14 @@ tabA <- tabASvy %>%
                  raceeth ~ "Respondent race/ethnicity",
                  educ    ~ "Educational attainment",
                  employ  ~ "Employment status",
-                 incdum  ~ "Household income > $50,000",
+                 inc     ~ "Household income > $50,000",
                  age     ~ "Respondent age"),
     type  = list(gender  ~ "dichotomous",
                  parent  ~ "dichotomous",
-                 incdum  ~ "dichotomous"),
+                 inc     ~ "dichotomous"),
     value = list(gender  = "Female",
                  parent  = "Parent",
-                 incdum  = "> than $50,000"))  %>%
+                 inc  = "> than $50,000"))  %>%
   modify_header(
    label = '**Variable**',
    stat_0 = '**N = 3,978**') %>%
@@ -323,16 +338,16 @@ read_docx() %>%
 tabBdata <- quantdata %>%
   # Create long data for item/activity vars
   pivot_longer(
-    cols = c(idum, adum),
+    cols = c(dum1, dum2),
     names_to = "type",
     values_to = "fairness") %>%
   # Add a gender of decider variable
   mutate(
     person = case_when(
-      (type  == "idum"   &  iperson == "Michelle") |
-      (type  == "adum"   &  aperson == "Michelle") ~ "Woman",
-      (type  == "idum"   &  iperson == "Anthony")  |
-      (type  == "adum"   &  aperson == "Anthony")  ~ "Man")) %>%
+      (type  == "dum1"   &  iperson == "Michelle") |
+      (type  == "dum2"   &  aperson == "Michelle") ~ "Woman",
+      (type  == "dum1"   &  iperson == "Anthony")  |
+      (type  == "dum2"   &  aperson == "Anthony")  ~ "Man")) %>%
   # Create long data for vignette manipulation
   pivot_longer(
     cols = c(relinc, person, organize, mar, child, dur),
@@ -357,7 +372,7 @@ tabBsum <- tabBSvy %>%
             sd = sd(fairness, na.rm = TRUE)) %>%
   subset(select = -c(variable, mean_se)) %>%
   pivot_wider(names_from = type, values_from = c(mean, sd)) %>%
-  select(level, mean_idum, sd_idum, mean_adum, sd_adum)
+  select(level, mean_dum1, sd_dum1, mean_dum2, sd_dum2)
 
 tabBsum <- tabBsum %>%
   mutate(
@@ -386,10 +401,10 @@ tabB <- tabBsum %>%
   flextable::align(i = 1, align = "center", part = "header") %>%
   colformat_double(digits = 2) %>%
   set_header_labels(level = "Vignette Variables",
-                    mean_idum = "M",
-                    sd_idum   = "SD", 
-                    mean_adum = "M",
-                    sd_adum   = "SD" ) %>% 
+                    mean_dum1 = "M",
+                    sd_dum1   = "SD", 
+                    mean_dum2 = "M",
+                    sd_dum2   = "SD" ) %>% 
   autofit() %>%
   padding(i=c(2:4,6:7,9:11,13:14,16:17,19:20), j=1, padding.left=25) %>%
   add_footer(level = "Note: Descriptive statistics include survey weights.\n
@@ -411,10 +426,10 @@ read_docx() %>%
 ## Fairness Evaluation by Item/Activity Presented to Respondent
 
 data_figA <- quantdata %>%
-  select("CaseID", "item", "activity", "ifair", "afair") %>%
+  select("CaseID", "item", "activity", "fair1", "fair2") %>%
   # Create long data for item/activity fairness vars
   pivot_longer(
-    cols = c(ifair, afair),
+    cols = c(fair1, fair2),
     names_to = "drop",
     values_to = "fairness") %>%
   # Create long data for item/activity decision vars
@@ -423,8 +438,8 @@ data_figA <- quantdata %>%
     names_to = "type",
     values_to = "category") %>%
   # remove duplicates
-  filter((drop == "ifair" & type == "item") |
-           (drop == "afair" & type == "activity")) %>%
+  filter((drop == "fair1" & type == "item") |
+           (drop == "fair2" & type == "activity")) %>%
   select(-c("drop")) %>%
   # create percentage data
   group_by(type, category) %>%
@@ -480,8 +495,8 @@ ggsave(filename = file.path(figDir, "figA.png"), figA,
 # # Appendix Figure B. ---------------------------------------------------------
 # 
 # ## Create predicted probabilities datesets
-# pp1   <- ggeffect(logit1, terms = "perI")
-# pp2   <- ggeffect(logit2, terms = "perA")
+# pp1   <- ggeffect(logit1, terms = "per1")
+# pp2   <- ggeffect(logit2, terms = "per2")
 # 
 # # https://github.com/easystats/insight/issues/451 <- delta??
 # 
