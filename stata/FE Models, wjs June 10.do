@@ -75,7 +75,7 @@ keep if caseN==2 // no change in Ns
 			esttab using "$outDir/lpmbyrelativeincome.csv", b(3) se(3) compress nogap replace
 	
 
-	//By gender and relative income
+//By gender and relative income (Appendix Table A3)
 			eststo clear
 			xtset CaseIDnum
 			xtreg dum i.per##i.decision if gender==1	& relinc == 1  , fe

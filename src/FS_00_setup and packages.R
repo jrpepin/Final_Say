@@ -43,6 +43,8 @@ pacman::p_load(
        officer,         # producing word output
        modelsummary,    # producing word tables
        flextable,       # producing word output
+       gt,              # tables with gt formatting
+       pandoc,          # word docs from modelsummary
        tidytext,        # addressing spelling
        weights,         # drop leading 0 in geom_text labels
        colorspace,      # color palettes of figures
