@@ -25,6 +25,7 @@ pacman::p_load(
        plm,             # Linear Models for Panel Data (fe)
        nnet,            # multinomial models
        kableExtra,      # make tables
+       huxtable,        # make tables with extra rows
        tibble,          # convert row names to column
        marginaleffects, # average marginal effects
        broom.helpers,   # tibbles of AME

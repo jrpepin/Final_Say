@@ -184,7 +184,6 @@ m1F$term <- paste(m1F$term, m1F$decision, sep= ".")
 m2F$term <- paste(m2F$term, m2F$decision, sep= ".")
 m3F$term <- paste(m3F$term, m3F$decision, sep= ".")
 
-
 # test equality of coefficients between HIGH & LOW stakes
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
 # https://journals.sagepub.com/doi/10.1177/0081175019852763
@@ -221,7 +220,6 @@ message("Women p = ",  round(p_WHEF,  digits = 3))
 message("Men p = ",    round(p_EEM,   digits = 3)) 
 message("Women p = ",  round(p_EEF,   digits = 3)) 
 
-
 ## Create model list for 2 panels
 panels <- list(
   "Man Higher Earner" = list(
@@ -236,20 +234,10 @@ coef_map <- c(
   "per.1"    = "High Stakes",
   "per.2"   = "Low Stakes")
 
-## Table notes
-nA3 <- "Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. 
-Results calculated from respondent-fixed effects linear probability models. 
-Independent models applied by relative income and respondent gender. 
-Standard errors in parentheses."
-
 
 ## Produce Appendix Table 03
-rows <- tribble(~term,          ~Men,  ~Women,
-                'Significant difference, high vs. low stakes?', 'Yes', 'No')
 
-attr(rows, 'position') <- c(4)
-
-# https://michaeltopper1.github.io/panelsummary/articles/panelsummary.html
+library(huxtable)
 modelsummary(
   panels,
   shape = "rbind",
@@ -258,13 +246,25 @@ modelsummary(
   #  exponentiate = TRUE,
   stars = c("*" =.05, "**" = .01, "***" = .001),
   fmt = fmt_decimal(digits = 3, pdigits = 3),
-  add_rows = rows,
-  notes = nA3,
-  output = "gt") 
-
-tab %>%
-  tab_footnote(footnote = md("Statistically significant gender difference (p < .05)."),
-               locations = cells_body(rows = 7, columns = 1))
+#  add_rows = rows,
+  output = "huxtable") %>%
+  insert_row(c("Man Higher Earner",   " ", " "), after = 1) %>%
+  insert_row(c("Woman Higher Earner", " ", " "), after = 6) %>%
+  insert_row(c("Equal Earners", " ", " "),       after = 11) %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 'Yes', 'No'), 
+             after = 6) %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 'No', 'Yes'), 
+             after = 12) %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 'No', 'No'), 
+             after = 18) %>%
+  set_top_border(row = c(8, 14), col = everywhere) %>%
+  set_bottom_border(row = c(1,8,14), col = everywhere) %>%
+  set_align(row = c(3, 5, 9, 11, 15, 17), 1, "center") %>%
+  huxtable::as_flextable() %>%
+  flextable::footnote(i = 11, j = 1, 
+                      value = as_paragraph(c("Statistically significant gender difference (p < .05)."))) %>%
+  add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses.") %>%
+  save_as_docx(path = file.path(outDir, "finalsay_tableA3.docx"))
 
 
 # Figure 02. -------------------------------------------------------------------
