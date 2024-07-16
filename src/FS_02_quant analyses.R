@@ -255,10 +255,11 @@ data_A1 <- quantdata %>%
   select("weight", "gender", "relate", "parent", "raceeth", 
          "educ", "employ", "inc", "age")
 
-tabASvy <- svydesign(ids = ~1, weights = ~ weight, data = data_A1)
+data_A1_Svy <- svydesign(ids = ~1, weights = ~ weight, data = data_A1)
 
-tabA <- tabASvy %>%
+tabA1 <- data_A1_Svy %>%
   tbl_svysummary(
+    include = !c(weight),
     label = list(gender  ~ "Women",
                  relate  ~ "Relationship Status",
                  parent  ~ "Parent",
@@ -278,20 +279,20 @@ tabA <- tabASvy %>%
     stat_0 = '**N = 3,978**') %>%
   as_flex_table() 
 
-tabA # show table
+tabA1 # show table
 
 ## https://mran.microsoft.com/snapshot/2017-12-11/web/packages/officer/vignettes/word.html
 read_docx() %>% 
   body_add_par("Table A. Weighted Sample Characteristics") %>% 
-  body_add_flextable(value = tabA) %>% 
-  print(target = file.path(outDir, "finalsay_tableA.docx"))
+  body_add_flextable(value = tabA1) %>% 
+  print(target = file.path(outDir, "finalsay_tableA1.docx"))
 
 
 # Appendix Table 2 -------------------------------------------------------------
-## Weighted Bi-variate Statistics of Perceptions of Fairness in Decision Making 
-## by Type of Decision
+## Bivariate Statistics of Perceptions of Fairness in Decision Making 
+## by Type of Decision (N = 3,978)
 
-tabBdata <- quantdata %>%
+data_A2 <- quantdata %>%
   # Create long data for item/activity vars
   pivot_longer(
     cols = c(dum1, dum2),
@@ -301,59 +302,60 @@ tabBdata <- quantdata %>%
   mutate(
     person = case_when(
       (type  == "dum1"   &  iperson == "Michelle") |
-        (type  == "dum2"   &  aperson == "Michelle") ~ "Woman",
+      (type  == "dum2"   &  aperson == "Michelle") ~ "Woman",
       (type  == "dum1"   &  iperson == "Anthony")  |
-        (type  == "dum2"   &  aperson == "Anthony")  ~ "Man")) %>%
+      (type  == "dum2"   &  aperson == "Anthony")  ~ "Man")) %>%
   # Create long data for vignette manipulation
   pivot_longer(
-    cols = c(relinc, person, organize, mar, child, dur),
+    cols = c(relinc, person, mar, child, dur), # removed organize
     names_to = "variable",
     values_to = "level") %>%
   # Keep vignette variables
   select("CaseID", "weight", "type", "variable", "level", "fairness")
 
 ## Re order variable manipulations
-tabBdata$variable <- factor(tabBdata$variable, 
+data_A2$variable <- factor(data_A2$variable, 
                             levels  = c("relinc", "person", "organize",
                                         "mar", "child", "dur"), 
                             ordered = FALSE)
+
 ## Set as weighted survey data
-tabBSvy <- tabBdata %>% 
+data_A2_Svy <- data_A2 %>% 
   srvyr::as_survey_design(id = CaseID,
                           weights = weight)
 ## Create summary data
-tabBsum <- tabBSvy %>%
+tabA2 <- data_A2 %>%
   group_by(type, variable, level) %>%
-  summarize(mean = survey_mean(fairness, na.rm = TRUE),
+  summarize(mean = mean(fairness, na.rm = TRUE),
             sd = sd(fairness, na.rm = TRUE)) %>%
-  subset(select = -c(variable, mean_se)) %>%
+  subset(select = -c(variable)) %>%
   pivot_wider(names_from = type, values_from = c(mean, sd)) %>%
   select(level, mean_dum1, sd_dum1, mean_dum2, sd_dum2)
 
-tabBsum <- tabBsum %>%
-  mutate(
+tabA2 <- tabA2 %>%
+mutate(
     cat = case_when(
-      tabBsum$level == "Man higher-earner"     |
-        tabBsum$level == "Woman higher-earner" |
-        tabBsum$level == "Equal earners"       ~ "Relative Earnings",
-      tabBsum$level == "Woman"                 |
-        tabBsum$level == "Man"                 ~ "Gender of Decider",
-      tabBsum$level == "Shared"                |
-        tabBsum$level == "Separate"            |
-        tabBsum$level == "Both"                ~ "Financial Allocation Strategy",
-      tabBsum$level == "live together"         |
-        tabBsum$level == "are married"         ~ "Marital Status",
-      tabBsum$level == "no children"           |
-        tabBsum$level == "one child together"  ~ "Parental Status",
-      tabBsum$level == "3 years"               |
-        tabBsum$level == "7 years"             ~ "Relationship Duration"))
+      tabA2$level == "Man higher-earner"     |
+      tabA2$level == "Woman higher-earner"   |
+      tabA2$level == "Equal earners"       ~ "Relative Earnings",
+      tabA2$level == "Woman"                 |
+      tabA2$level == "Man"                 ~ "Gender of Decider",
+      tabA2$level == "Shared"                |
+      tabA2$level == "Separate"              |
+      tabA2$level == "Both"                ~ "Financial Allocation Strategy",
+      tabA2$level == "live together"         |
+      tabA2$level == "are married"         ~ "Marital Status",
+      tabA2$level == "no children"           |
+      tabA2$level == "one child together"  ~ "Parental Status",
+      tabA2$level == "3 years"               |
+      tabA2$level == "7 years"             ~ "Relationship Duration"))
 
 ## Create Flextable
-tabBsum <- as_grouped_data(x = tabBsum, groups = c("cat"), columns = NULL) # Group by vignette condition
+tabA2 <- as_grouped_data(x = tabA2, groups = c("cat"), columns = NULL) # Group by vignette condition
 
-tabB <- tabBsum %>%
+tabA2 <- tabA2 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) %>%
-  add_header_row(values = c("", "Purchase", "Activity"), colwidths = c(1, 2, 2)) %>%
+  add_header_row(values = c("", "High Stakes", "Low Stakes"), colwidths = c(1, 2, 2)) %>%
   flextable::align(i = 1, align = "center", part = "header") %>%
   colformat_double(digits = 2) %>%
   set_header_labels(level = "Vignette Variables",
@@ -362,21 +364,19 @@ tabB <- tabBsum %>%
                     mean_dum2 = "M",
                     sd_dum2   = "SD" ) %>% 
   autofit() %>%
-  padding(i=c(2:4,6:7,9:11,13:14,16:17,19:20), j=1, padding.left=25) %>%
-  add_footer(level = "Note: Descriptive statistics include survey weights.\n
-             Range is from 0 (not fair) to 1 (fair).") %>%
+  padding(i=c(2:4,6:7,9:10,12:13, 15:16), j=1, padding.left=25) %>%
+  add_footer(level = "Note: Perception of fairness measured as 0 (not fair) or 1 (fair).") %>%
   merge_at(j = 1:5, part = "footer")
 
 num <-nrow(quantdata) #number of observations
 
-tabB # show table
+tabA2 # show table
 
 read_docx() %>% 
   body_add_par(paste("Table 02. Weighted Bivariate Statistics of Perceptions of Fairness in Decision Making 
                by Type of Decision (N = ", num,")", sep="")) %>% 
-  body_add_flextable(value = tabB) %>% 
-  print(target = file.path(outDir, "finalsay_tableB.docx")) # save table
-
+  body_add_flextable(value = tabA2) %>% 
+  print(target = file.path(outDir, "finalsay_tableA2.docx")) # save table
 
 # Appendix Table A3 ------------------------------------------------------------
 
