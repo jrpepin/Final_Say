@@ -21,8 +21,8 @@ quantdata$order    <- relevel(quantdata$order,    ref = "Same")
 ## Wide to long
 femodels <- quantdata %>%
   select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
-         relinc, organize, mar, child, dur, item, gender, relate, parent, 
-         raceeth, educ, employ, inc, age, activity, order, weight) %>% 
+         relinc, organize, mar, child, dur, high, gender, relate, parent, 
+         raceeth, educ, employ, inc, age, low, order, weight) %>% 
   pivot_longer(                                                                 # long 2 numeric variables
     cols = c(contains('per'), 
              contains('dum')),
@@ -244,22 +244,19 @@ ggsave(filename = file.path(figDir, "fig2.png"), fig2,
 
 
 ################################################################################
-# Supplementary Materials (quant)
+# Appendix (quant)
 ################################################################################
 
 # Appendix Table 1 -------------------------------------------------------------
-## Weighted Descriptive Statistics of Respondent Characteristics
+## Descriptive Statistics of Respondent Characteristics
 
 ## Create weighted data 
 data_A1 <- quantdata %>%
-  select("weight", "gender", "relate", "parent", "raceeth", 
+  select("gender", "relate", "parent", "raceeth", 
          "educ", "employ", "inc", "age")
 
-data_A1_Svy <- svydesign(ids = ~1, weights = ~ weight, data = data_A1)
-
-tabA1 <- data_A1_Svy %>%
-  tbl_svysummary(
-    include = !c(weight),
+tabA1 <- data_A1 %>%
+  tbl_summary(
     label = list(gender  ~ "Women",
                  relate  ~ "Relationship Status",
                  parent  ~ "Parent",
@@ -283,7 +280,7 @@ tabA1 # show table
 
 ## https://mran.microsoft.com/snapshot/2017-12-11/web/packages/officer/vignettes/word.html
 read_docx() %>% 
-  body_add_par("Table A. Weighted Sample Characteristics") %>% 
+  body_add_par("Table A1. Sample Characteristics") %>% 
   body_add_flextable(value = tabA1) %>% 
   print(target = file.path(outDir, "finalsay_tableA1.docx"))
 
@@ -293,7 +290,7 @@ read_docx() %>%
 ## by Type of Decision (N = 3,978)
 
 data_A2 <- quantdata %>%
-  # Create long data for item/activity vars
+  # Create long data for high/low vars
   pivot_longer(
     cols = c(dum1, dum2),
     names_to = "type",
@@ -319,10 +316,6 @@ data_A2$variable <- factor(data_A2$variable,
                                         "mar", "child", "dur"), 
                             ordered = FALSE)
 
-## Set as weighted survey data
-data_A2_Svy <- data_A2 %>% 
-  srvyr::as_survey_design(id = CaseID,
-                          weights = weight)
 ## Create summary data
 tabA2 <- data_A2 %>%
   group_by(type, variable, level) %>%
@@ -449,9 +442,7 @@ coef_map <- c(
   "per.2"   = "Low Stakes")
 
 
-## Produce Appendix Table 03
-
-library(huxtable)
+## Produce Appendix Table A3
 modelsummary(
   panels,
   shape = "rbind",
@@ -480,69 +471,24 @@ modelsummary(
   add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses.") %>%
   save_as_docx(path = file.path(outDir, "finalsay_tableA3.docx"))
 
-
-
-### export to stata for FE models (Table C)
-femodels <- quantdata %>%
-  select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
-         relinc, organize, mar, child, dur, item, gender, relate, parent, 
-         raceeth, educ, employ, inc, age, activity, order, weight)
-
-write_dta(femodels , path = file.path(outDir, "femodels.dta")) 
-
-### -- sensitivity test -- include order of decider*gender of decider
-quantdata <- quantdata %>%
-  mutate(orderN= case_when (order == "Same"  ~ 0,
-                            order == "Mixed" ~ 1))
-
-logit1o <- glm(dum1 ~ per1 * orderN + relinc + organize + mar + child + dur + item + 
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-logit2o <- glm(dum2 ~ per2 * orderN + relinc + organize + mar + child + dur + activity +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-
-AME1o <- summary(margins(logit1o, 
-                         variables = "per1",
-                         at = list(orderN= 0:1)))
-AME2o <- summary(margins(logit2o, 
-                         variables = "per2",
-                         at = list(orderN= 0:1)))
-AME1o 
-AME2o
-
-## Other interactions per reviewer B -------------------------------------------
-
-### interactions
-logit5a <- glm(dum1 ~ per1 * child + relinc + organize + mar + dur + item +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-
-logit5b <- glm(dum2 ~ per2 * child + relinc + organize + mar + dur + order + activity +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-
-
-
-
 # Appendix Figure A. -----------------------------------------------------------
-## Fairness Evaluation by Item/Activity Presented to Respondent
+## Fairness Evaluation by high/low Presented to Respondent
 
 data_figA <- quantdata %>%
-  select("CaseID", "item", "activity", "fair1", "fair2") %>%
-  # Create long data for item/activity fairness vars
+  select("CaseID", "high", "low", "fair1", "fair2") %>%
+  # Create long data for high/low fairness vars
   pivot_longer(
     cols = c(fair1, fair2),
     names_to = "drop",
     values_to = "fairness") %>%
-  # Create long data for item/activity decision vars
+  # Create long data for high/low decision vars
   pivot_longer(
-    cols = c(item, activity),
+    cols = c(high, low),
     names_to = "type",
     values_to = "category") %>%
   # remove duplicates
-  filter((drop == "fair1" & type == "item") |
-           (drop == "fair2" & type == "activity")) %>%
+  filter((drop == "fair1" & type == "high") |
+         (drop == "fair2" & type == "low")) %>%
   select(-c("drop")) %>%
   # create percentage data
   group_by(type, category) %>%
@@ -550,11 +496,12 @@ data_figA <- quantdata %>%
   mutate(pct = prop.table(n)) %>%
   ungroup()
 
-data_figA$type[data_figA$type == "item"] <-"purchase"
-data_figA$type <- factor(data_figA$type, 
-                         levels  = c("purchase", "activity"), 
-                         ordered = FALSE)
+data_figA$type[data_figA$type == "high"] <-"High\nstakes"
+data_figA$type[data_figA$type == "low"] <-"Low\nstakes"
 
+data_figA$type <- factor(data_figA$type, 
+                         levels  = c("High\nstakes", "Low\nstakes"), 
+                         ordered = FALSE)
 
 figA <- data_figA %>%
   ggplot(aes(x = category, y = pct, fill = fairness)) +
@@ -569,7 +516,7 @@ figA <- data_figA %>%
             colour = "white",
             size = 3) +
   coord_flip()+
-  scale_fill_manual(values = c("#18BC9C", "#3498DB", "#F39C12", "#E74C3C")) +
+  scale_fill_grey() +
   theme_minimal(12) +
   theme(legend.position      = "top",
         legend.justification = c(1, 0),
@@ -585,7 +532,7 @@ figA <- data_figA %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Fairness evaluation by purchase & activity",
+        title    = "Fairness evaluation for high and low stake decisions",
         subtitle = "How fair do you think the decision was?")
 
 figA   
@@ -593,53 +540,137 @@ figA
 ggsave(filename = file.path(figDir, "figA.png"), figA, 
        width=6, height=4, units="in", dpi=300, bg = 'white')
 
+################################################################################
+# Supplementary Materials
+################################################################################
+
+#Section A. Results of Fixed Effects Models Using Continuous Outcome 
+#to Measure Perception of Fairness
+
+## Run the fixed effects models
+plm1_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1, model = "within")
+plm2_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2, model = "within")
+plm3_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3, model = "within")
+
+plm1M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1M, model = "within")
+plm2M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2M, model = "within")
+plm3M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3M, model = "within")
+
+plm1F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1F, model = "within")
+plm2F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2F, model = "within")
+plm3F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3F, model = "within")
+
+## Average Marginal Effects of the models
+
+m1_S1 <- avg_slopes(plm1_S1, variables = c("per"), by = "decision")             ### Full Sample
+m2_S1 <- avg_slopes(plm2_S1, variables = c("per"), by = "decision")
+m3_S1 <- avg_slopes(plm3_S1, variables = c("per"), by = "decision")
+
+m1M_S1 <- avg_slopes(plm1M_S1, variables = c("per"), by = "decision")           ### Men
+m2M_S1 <- avg_slopes(plm2M_S1, variables = c("per"), by = "decision")
+m3M_S1 <- avg_slopes(plm3M_S1, variables = c("per"), by = "decision")
+
+m1F_S1 <- avg_slopes(plm1F_S1, variables = c("per"), by = "decision")           ### Women
+m2F_S1 <- avg_slopes(plm2F_S1, variables = c("per"), by = "decision")
+m3F_S1 <- avg_slopes(plm3F_S1, variables = c("per"), by = "decision")
+
+## identify interaction variables
+m1_S1$term <- paste(m1_S1$term, m1_S1$decision, sep= ".")                       ### Full Sample
+m2_S1$term <- paste(m2_S1$term, m2_S1$decision, sep= ".")
+m3_S1$term <- paste(m3_S1$term, m3_S1$decision, sep= ".")
+
+m1M_S1$term <- paste(m1M_S1$term, m1M_S1$decision, sep= ".")                    ### Men
+m2M_S1$term <- paste(m2M_S1$term, m2M_S1$decision, sep= ".")
+m3M_S1$term <- paste(m3M_S1$term, m3M_S1$decision, sep= ".")
+
+m1F_S1$term <- paste(m1F_S1$term, m1F_S1$decision, sep= ".")                    ### Women
+m2F_S1$term <- paste(m2F_S1$term, m2F_S1$decision, sep= ".")
+m3F_S1$term <- paste(m3F_S1$term, m3F_S1$decision, sep= ".")
 
 
-# # Appendix Figure B. ---------------------------------------------------------
-# 
-# ## Create predicted probabilities datesets
-# pp1   <- ggeffect(logit1, terms = "per1")
-# pp2   <- ggeffect(logit2, terms = "per2")
-# 
-# # https://github.com/easystats/insight/issues/451 <- delta??
-# 
-# pp1$type <- "item"
-# pp2$type <- "activity"
-# 
-# data_figB = merge(pp1, pp2, all = TRUE)
-# head(data_figB)
-# 
-# data_figB$x[data_figB$x==1] <- "She decided"
-# data_figB$x[data_figB$x==0]  <- "He decided"
-# data_figB$type <- factor(data_figB$type, levels = c("item", "activity"), ordered = FALSE)
-# 
-# figB <- data_figB %>%
-#   ggplot(aes(x = x, y = predicted, fill = x)) +
-#   geom_col(width = 0.6, position = position_dodge(0.7)) +
-#   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
-#                 stat="identity", position=position_dodge(.7), color="#ADB5BD") +
-#   geom_text(position = position_dodge(width = .7),
-#             vjust = -0.5,
-#             aes(label=sprintf("%1.0f%%", predicted*100))) +
-#   facet_wrap(~ type) +
-#   scale_fill_manual(values = c("#18BC9C", "#F39C12")) +
-#   theme_minimal() +
-#   theme(legend.position     = "top",
-#         panel.grid.major.x  = element_blank(),
-#         plot.title          = element_text(face = "bold"),
-#         plot.title.position = "plot",
-#         plot.subtitle       = element_text(face = "italic", color = "#707070"),
-#         plot.caption        = element_text(face = "italic", color = "#707070")) +
-#   scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
-#   labs( x        = " ", 
-#         y        = " ", 
-#         fill     = " ",
-#         title    = "Gender differences in perceptions of fairness \nin decision-making for items and activities.",
-#         subtitle = "% of respondents who said the decision was somewhat or very fair...",
-#         caption  = "Predicted percentages adjust for other vignette manipulations and respondent demographic characteristics.") 
-# 
-# figB
-# 
-# ggsave(filename = file.path(figDir, "figB.png"), figB, width=5, height=5, units="in", dpi=300)
+## Calculate Z scores
+MHE_S1   <- (m1_S1[[1,4]] - m1_S1[[2,4]]) / sqrt(m1_S1[[1,5]]^2 + m1_S1[[2,5]]^2)
+WHE_S1   <- (m2_S1[[1,4]] - m2_S1[[2,4]]) / sqrt(m2_S1[[1,5]]^2 + m2_S1[[2,5]]^2)
+EE_S1    <- (m3_S1[[1,4]] - m3_S1[[2,4]]) / sqrt(m3_S1[[1,5]]^2 + m3_S1[[2,5]]^2)
+
+MHEM_S1  <- (m1M_S1[[1,4]] - m1M_S1[[2,4]]) / sqrt(m1M_S1[[1,5]]^2 + m1M_S1[[2,5]]^2)
+MHEF_S1  <- (m1F_S1[[1,4]] - m1F_S1[[2,4]]) / sqrt(m1F_S1[[1,5]]^2 + m1F_S1[[2,5]]^2)
+
+WHEM_S1  <- (m2M_S1[[1,4]] - m2M_S1[[2,4]]) / sqrt(m2M_S1[[1,5]]^2 + m2M_S1[[2,5]]^2)
+WHEF_S1  <- (m2F_S1[[1,4]] - m2F_S1[[2,4]]) / sqrt(m2F_S1[[1,5]]^2 + m2F_S1[[2,5]]^2)
+
+EEM_S1   <- (m3M_S1[[1,4]] - m3M_S1[[2,4]]) / sqrt(m3M_S1[[1,5]]^2 + m3M_S1[[2,5]]^2)
+EEF_S1   <- (m3F_S1[[1,4]] - m3F_S1[[2,4]]) / sqrt(m3F_S1[[1,5]]^2 + m3F_S1[[2,5]]^2)
+
+## Calculate p values
+p_MHE_S1  <- 2*pnorm(-abs(MHE_S1)) 
+p_WHE_S1  <- 2*pnorm(-abs(WHE_S1)) 
+p_EE_S1   <- 2*pnorm(-abs(EE_S1)) 
+
+p_MHEM_S1 <- 2*pnorm(-abs(MHEM_S1)) 
+p_MHEF_S1 <- 2*pnorm(-abs(MHEF_S1)) 
+
+p_WHEM_S1 <- 2*pnorm(-abs(WHEM_S1)) 
+p_WHEF_S1 <- 2*pnorm(-abs(WHEF_S1)) 
+
+p_EEM_S1  <- 2*pnorm(-abs(EEM_S1)) 
+p_EEF_S1  <- 2*pnorm(-abs(EEF_S1)) 
 
 
+## Man Higher Earner
+message("All p = ",    round(p_MHE_S1,  digits = 3))
+message("Men p = ",    round(p_MHEM_S1,  digits = 3)) 
+message("Women p = ",  round(p_MHEF_S1,  digits = 3)) 
+
+## Woman Higher Earner
+message("All p = ",    round(p_WHE_S1,  digits = 3))
+message("Men p = ",    round(p_WHEM_S1,  digits = 3)) 
+message("Women p = ",  round(p_WHEF_S1,  digits = 3)) 
+
+## Equal Earners
+message("All p = ",    round(p_EE_S1,   digits = 3))
+message("Men p = ",    round(p_EEM_S1,   digits = 3)) 
+message("Women p = ",  round(p_EEF_S1,   digits = 3)) 
+
+# ------------------------------------------------------------------------------
+# code that may be useful still but not part of workflow
+
+### export to stata for FE models (Table C)
+femodels <- quantdata %>%
+  select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
+         relinc, organize, mar, child, dur, high, gender, relate, parent, 
+         raceeth, educ, employ, inc, age, low, order, weight)
+
+write_dta(femodels , path = file.path(outDir, "femodels.dta")) 
+
+### -- sensitivity test -- include order of decider*gender of decider
+quantdata <- quantdata %>%
+  mutate(orderN= case_when (order == "Same"  ~ 0,
+                            order == "Mixed" ~ 1))
+
+logit1o <- glm(dum1 ~ per1 * orderN + relinc + organize + mar + child + dur + high + 
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
+               quantdata, family="binomial")
+logit2o <- glm(dum2 ~ per2 * orderN + relinc + organize + mar + child + dur + low +
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
+               quantdata, family="binomial")
+
+AME1o <- summary(margins(logit1o, 
+                         variables = "per1",
+                         at = list(orderN= 0:1)))
+AME2o <- summary(margins(logit2o, 
+                         variables = "per2",
+                         at = list(orderN= 0:1)))
+AME1o 
+AME2o
+
+## Other interactions per reviewer B -------------------------------------------
+
+### interactions
+logit5a <- glm(dum1 ~ per1 * child + relinc + organize + mar + dur + high +
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
+               quantdata, family="binomial")
+
+logit5b <- glm(dum2 ~ per2 * child + relinc + organize + mar + dur + order + low +
+                 gender+relate+parent+raceeth+educ+employ+inc+age,
+               quantdata, family="binomial")

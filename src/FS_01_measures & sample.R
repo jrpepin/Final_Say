@@ -33,8 +33,8 @@ data <- rename(data,
                religion = REL1,            region    = PPREG4,          
                mar      = DOV_RELSTAT,  	 child     = DOV_PARENTST,
                relinc   = DOV_EARNINGS,    dur       = DOV_RELDUR,     
-               item     = DOV_ITEM,        iperson   = DOV_PERSON_B04,  
-               qual1    = B05,             activity  = DOV_ACTIVITY,
+               high     = DOV_ITEM,        iperson   = DOV_PERSON_B04,  
+               qual1    = B05,             low       = DOV_ACTIVITY,
                aperson  = DOV_PERSON2_B06, qual2     = B07,            
                fair1    = B04,             fair2     = B06,             
                organize = B01,             herjoint  = B02_Shared,
@@ -53,8 +53,8 @@ data$gender %>% attr('labels') ### Viewing value labels
 ### SPSS labels https://martinctc.github.io/blog/working-with-spss-labels-in-r/
 
 fcols <- c("gender", "educ", "work", "relate", "income", "race", "relfreq", 
-           "religion", "region", "mar", "child", "relinc", "dur", "item", 
-           "iperson", "activity", "aperson", "fair1", "fair2", "organize", 
+           "religion", "region", "mar", "child", "relinc", "dur", "high", 
+           "iperson", "low", "aperson", "fair1", "fair2", "organize", 
            "DOV_B02_MaxValue", "DOV_B03_MaxValue")
 
 icols <- c("age", "PPT01", "PPT25", "PPT612", "PPT1317", 
@@ -307,13 +307,13 @@ table(data$dur)
 # Prep the vignette response variables for analysis
 ################################################################################
 
-## purchase (item) condition ---------------------------------------------------
-table(data$item)
+## high-stakes condition -------------------------------------------------------
+table(data$high)
 
-## activity condition ----------------------------------------------------------
-table(data$activity)
+## low-stakes condition --------------------------------------------------------
+table(data$low)
 
-## item fairness ---------------------------------------------------------------
+## high-stakes fairness --------------------------------------------------------
 table(data$fair1)
 
 data$fair1[data$fair1 == "Refused"]   <- NA
@@ -337,7 +337,7 @@ data <- data %>%
     ))
 data$dum1 <-as.integer(data$dum1)
 
-## activity fairness -----------------------------------------------------------
+## low-stakes fairness ---------------------------------------------------------
 table(data$fair2)
 
 data$fair2[data$fair2 == "Refused"]   <- NA
@@ -476,7 +476,7 @@ quantdata <- quantdata %>%
          gender, relate, parent, raceeth, educ, employ, inc, age, religion, 
          relfreq, mar, child, marpar, relinc, earner, dur, organize, 
          herindv, hisindv, herjoint, hisjoint, jointtot,
-         item, activity, aperson, iperson, 
+         high, low, aperson, iperson, 
          per1, per2, dum1, dum2, fair1, fair2, order,
          qual1, qual2)
 
@@ -709,7 +709,7 @@ qualdata$qual <- str_replace(qualdata$qual, "50 50", "5050")
 qualdata$qual <- str_replace(qualdata$qual, "50  50", "5050")
 qualdata$qual <- str_replace(qualdata$qual, "fifty fifty", "5050")
 
-# Add item/activity fairness perception
+# Add high/low fairness perception
 fairdata <- data %>% # create long format dataset
   select(CaseID, dum1, dum2) %>%
   pivot_longer(

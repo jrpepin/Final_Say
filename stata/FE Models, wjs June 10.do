@@ -216,10 +216,10 @@ keep if caseN==2 // no change in Ns
 use "$outDir/quantdatalong", clear
 	//can only include controls with within-respondent variation
 		xtset CaseIDnum
-		xtsum  relinc organize mar child dur gender relate parent raceeth educ employ incdum age dum per decision fair
+		xtsum  relinc organize mar child dur gender relate parent raceeth educ employ inc age dum per decision fair
 			//only "dum", "per", "dec", and "fair" have within-respondent variation for FE models
 
-		
+//Supplemental Table 01		
 		//by Relative Income
 			eststo clear
 			xtset CaseIDnum
