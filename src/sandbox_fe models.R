@@ -222,21 +222,6 @@ message("Men p = ",    round(p_EEM,   digits = 3))
 message("Women p = ",  round(p_EEF,   digits = 3)) 
 
 
-rows <- tribble(~term,          ~Men,  ~Women,
-                'factor(cyl)4', '-',   '-',
-                'Info',         '???', 'XYZ')
-attr(rows, 'position') <- c(3, 9)
-
-
-new_row1 <- data.frame("Significant difference, high vs. low stakes?",
-                       "Yes", "No")
-
-new_row2 <- data.frame("Significant difference, high vs. low stakes?",
-                       "No", "Yes")
-
-new_row3 <- data.frame("Significant difference, high vs. low stakes?",
-                       "No", "Yes")
-
 ## Create model list for 2 panels
 panels <- list(
   "Man Higher Earner" = list(
@@ -259,6 +244,12 @@ Standard errors in parentheses."
 
 
 ## Produce Appendix Table 03
+rows <- tribble(~term,          ~Men,  ~Women,
+                'Significant difference, high vs. low stakes?', 'Yes', 'No')
+
+attr(rows, 'position') <- c(4)
+
+# https://michaeltopper1.github.io/panelsummary/articles/panelsummary.html
 modelsummary(
   panels,
   shape = "rbind",
@@ -266,10 +257,12 @@ modelsummary(
   gof_map = NA,
   #  exponentiate = TRUE,
   stars = c("*" =.05, "**" = .01, "***" = .001),
-  notes = nA3,
   fmt = fmt_decimal(digits = 3, pdigits = 3),
   add_rows = rows,
-  output = "gt") %>%
+  notes = nA3,
+  output = "gt") 
+
+tab %>%
   tab_footnote(footnote = md("Statistically significant gender difference (p < .05)."),
                locations = cells_body(rows = 7, columns = 1))
 
