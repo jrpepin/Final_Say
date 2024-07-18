@@ -120,29 +120,27 @@ m3F$term <- paste(m3F$term, m3F$decision, sep= ".")
 ## Test for statistical sig. between high and low stakes decisions
 ### Calculate Z scores 
   MHE    <- (m1[[1,4]] - m1[[2,4]]) / sqrt(m1[[1,5]]^2 + m1[[2,5]]^2)
-  WHE    <- (m2[[1,4]] - m2[[2,4]]) / sqrt(m2[[1,5]]^2 + m2[[2,5]]^2)
-  EE     <- (m3[[1,4]] - m3[[2,4]]) / sqrt(m3[[1,5]]^2 + m3[[2,5]]^2)
-  
   MHEM   <- (m1M[[1,4]] - m1M[[2,4]]) / sqrt(m1M[[1,5]]^2 + m1M[[2,5]]^2)
   MHEF   <- (m1F[[1,4]] - m1F[[2,4]]) / sqrt(m1F[[1,5]]^2 + m1F[[2,5]]^2)
-  
+
+  WHE    <- (m2[[1,4]] - m2[[2,4]]) / sqrt(m2[[1,5]]^2 + m2[[2,5]]^2)
   WHEM   <- (m2M[[1,4]] - m2M[[2,4]]) / sqrt(m2M[[1,5]]^2 + m2M[[2,5]]^2)
   WHEF   <- (m2F[[1,4]] - m2F[[2,4]]) / sqrt(m2F[[1,5]]^2 + m2F[[2,5]]^2)
-  
+ 
+  EE     <- (m3[[1,4]] - m3[[2,4]]) / sqrt(m3[[1,5]]^2 + m3[[2,5]]^2)
   EEM    <- (m3M[[1,4]] - m3M[[2,4]]) / sqrt(m3M[[1,5]]^2 + m3M[[2,5]]^2)
   EEF    <- (m3F[[1,4]] - m3F[[2,4]]) / sqrt(m3F[[1,5]]^2 + m3F[[2,5]]^2)
 
 ### Calculate p values
   p_MHE  <- 2*pnorm(-abs(MHE)) 
-  p_WHE  <- 2*pnorm(-abs(WHE)) 
-  p_EE   <- 2*pnorm(-abs(EE)) 
-  
   p_MHEM <- 2*pnorm(-abs(MHEM)) 
   p_MHEF <- 2*pnorm(-abs(MHEF)) 
-  
+
+  p_WHE  <- 2*pnorm(-abs(WHE)) 
   p_WHEM <- 2*pnorm(-abs(WHEM)) 
   p_WHEF <- 2*pnorm(-abs(WHEF)) 
-  
+
+  p_EE   <- 2*pnorm(-abs(EE)) 
   p_EEM  <- 2*pnorm(-abs(EEM)) 
   p_EEF  <- 2*pnorm(-abs(EEF)) 
 
@@ -314,7 +312,6 @@ fig2
 ggsave(filename = file.path(figDir, "fig2.png"), fig2, 
        width=9, height=6, units="in", dpi=300, bg = "white")
 
-
 ################################################################################
 # Appendix (quant)
 ################################################################################
@@ -443,145 +440,146 @@ read_docx() %>%
   body_add_flextable(value = tabA2) %>% 
   print(target = file.path(outDir, "finalsay_tableA2.docx")) # save table
 
-#Table A3. Results of Fixed Effects Models Using Continuous Outcome 
-#to Measure Perception of Fairness
+# Appendix Table A3 ------------------------------------------------------------
+## Results of Fixed Effects Models Using Continuous Outcome 
+## to Measure Perception of Fairness
 
 ## Run the fixed effects models
 
 ### Full Sample
-plm1_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1, model = "within")
-plm2_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2, model = "within")
-plm3_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3, model = "within")
+plm1_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1, model = "within")
+plm2_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2, model = "within")
+plm3_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3, model = "within")
 
 ### Men
-plm1M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1M, model = "within")
-plm2M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2M, model = "within")
-plm3M_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3M, model = "within")
+plm1M_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1M, model = "within")
+plm2M_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2M, model = "within")
+plm3M_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3M, model = "within")
 
 ### Women
-plm1F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1F, model = "within")
-plm2F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2F, model = "within")
-plm3F_S1 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3F, model = "within")
+plm1F_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1F, model = "within")
+plm2F_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2F, model = "within")
+plm3F_A3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3F, model = "within")
 
 ## Average Marginal Effects of the models
 
-m1_S1  <- avg_slopes(plm1_S1, variables = c("per"), by = "decision")             
-m2_S1  <- avg_slopes(plm2_S1, variables = c("per"), by = "decision")
-m3_S1  <- avg_slopes(plm3_S1, variables = c("per"), by = "decision")
+m1_A3  <- avg_slopes(plm1_A3, variables = c("per"), by = "decision")             
+m2_A3  <- avg_slopes(plm2_A3, variables = c("per"), by = "decision")
+m3_A3  <- avg_slopes(plm3_A3, variables = c("per"), by = "decision")
 
-m1M_S1 <- avg_slopes(plm1M_S1, variables = c("per"), by = "decision")           
-m2M_S1 <- avg_slopes(plm2M_S1, variables = c("per"), by = "decision")
-m3M_S1 <- avg_slopes(plm3M_S1, variables = c("per"), by = "decision")
+m1M_A3 <- avg_slopes(plm1M_A3, variables = c("per"), by = "decision")           
+m2M_A3 <- avg_slopes(plm2M_A3, variables = c("per"), by = "decision")
+m3M_A3 <- avg_slopes(plm3M_A3, variables = c("per"), by = "decision")
 
-m1F_S1 <- avg_slopes(plm1F_S1, variables = c("per"), by = "decision")           
-m2F_S1 <- avg_slopes(plm2F_S1, variables = c("per"), by = "decision")
-m3F_S1 <- avg_slopes(plm3F_S1, variables = c("per"), by = "decision")
+m1F_A3 <- avg_slopes(plm1F_A3, variables = c("per"), by = "decision")           
+m2F_A3 <- avg_slopes(plm2F_A3, variables = c("per"), by = "decision")
+m3F_A3 <- avg_slopes(plm3F_A3, variables = c("per"), by = "decision")
 
 ## identify interaction variables
-m1_S1$term  <- paste(m1_S1$term,  m1_S1$decision, sep= ".")
-m2_S1$term  <- paste(m2_S1$term,  m2_S1$decision, sep= ".")
-m3_S1$term  <- paste(m3_S1$term,  m3_S1$decision, sep= ".")
+m1_A3$term  <- paste(m1_A3$term,  m1_A3$decision, sep= ".")
+m2_A3$term  <- paste(m2_A3$term,  m2_A3$decision, sep= ".")
+m3_A3$term  <- paste(m3_A3$term,  m3_A3$decision, sep= ".")
 
-m1M_S1$term <- paste(m1M_S1$term, m1M_S1$decision, sep= ".")
-m2M_S1$term <- paste(m2M_S1$term, m2M_S1$decision, sep= ".")
-m3M_S1$term <- paste(m3M_S1$term, m3M_S1$decision, sep= ".")
+m1M_A3$term <- paste(m1M_A3$term, m1M_A3$decision, sep= ".")
+m2M_A3$term <- paste(m2M_A3$term, m2M_A3$decision, sep= ".")
+m3M_A3$term <- paste(m3M_A3$term, m3M_A3$decision, sep= ".")
 
-m1F_S1$term <- paste(m1F_S1$term, m1F_S1$decision, sep= ".")
-m2F_S1$term <- paste(m2F_S1$term, m2F_S1$decision, sep= ".")
-m3F_S1$term <- paste(m3F_S1$term, m3F_S1$decision, sep= ".")
+m1F_A3$term <- paste(m1F_A3$term, m1F_A3$decision, sep= ".")
+m2F_A3$term <- paste(m2F_A3$term, m2F_A3$decision, sep= ".")
+m3F_A3$term <- paste(m3F_A3$term, m3F_A3$decision, sep= ".")
 
 
 ## Calculate Z scores
-MHE_S1   <- (m1_S1[[1,4]] - m1_S1[[2,4]])   / sqrt(m1_S1[[1,5]]^2 + m1_S1[[2,5]]^2)
-WHE_S1   <- (m2_S1[[1,4]] - m2_S1[[2,4]])   / sqrt(m2_S1[[1,5]]^2 + m2_S1[[2,5]]^2)
-EE_S1    <- (m3_S1[[1,4]] - m3_S1[[2,4]])   / sqrt(m3_S1[[1,5]]^2 + m3_S1[[2,5]]^2)
+MHE_A3   <- (m1_A3[[1,4]] - m1_A3[[2,4]])   / sqrt(m1_A3[[1,5]]^2 + m1_A3[[2,5]]^2)
+WHE_A3   <- (m2_A3[[1,4]] - m2_A3[[2,4]])   / sqrt(m2_A3[[1,5]]^2 + m2_A3[[2,5]]^2)
+EE_A3    <- (m3_A3[[1,4]] - m3_A3[[2,4]])   / sqrt(m3_A3[[1,5]]^2 + m3_A3[[2,5]]^2)
 
-MHEM_S1  <- (m1M_S1[[1,4]] - m1M_S1[[2,4]]) / sqrt(m1M_S1[[1,5]]^2 + m1M_S1[[2,5]]^2)
-MHEF_S1  <- (m1F_S1[[1,4]] - m1F_S1[[2,4]]) / sqrt(m1F_S1[[1,5]]^2 + m1F_S1[[2,5]]^2)
+MHEM_A3  <- (m1M_A3[[1,4]] - m1M_A3[[2,4]]) / sqrt(m1M_A3[[1,5]]^2 + m1M_A3[[2,5]]^2)
+MHEF_A3  <- (m1F_A3[[1,4]] - m1F_A3[[2,4]]) / sqrt(m1F_A3[[1,5]]^2 + m1F_A3[[2,5]]^2)
 
-WHEM_S1  <- (m2M_S1[[1,4]] - m2M_S1[[2,4]]) / sqrt(m2M_S1[[1,5]]^2 + m2M_S1[[2,5]]^2)
-WHEF_S1  <- (m2F_S1[[1,4]] - m2F_S1[[2,4]]) / sqrt(m2F_S1[[1,5]]^2 + m2F_S1[[2,5]]^2)
+WHEM_A3  <- (m2M_A3[[1,4]] - m2M_A3[[2,4]]) / sqrt(m2M_A3[[1,5]]^2 + m2M_A3[[2,5]]^2)
+WHEF_A3  <- (m2F_A3[[1,4]] - m2F_A3[[2,4]]) / sqrt(m2F_A3[[1,5]]^2 + m2F_A3[[2,5]]^2)
 
-EEM_S1   <- (m3M_S1[[1,4]] - m3M_S1[[2,4]]) / sqrt(m3M_S1[[1,5]]^2 + m3M_S1[[2,5]]^2)
-EEF_S1   <- (m3F_S1[[1,4]] - m3F_S1[[2,4]]) / sqrt(m3F_S1[[1,5]]^2 + m3F_S1[[2,5]]^2)
+EEM_A3   <- (m3M_A3[[1,4]] - m3M_A3[[2,4]]) / sqrt(m3M_A3[[1,5]]^2 + m3M_A3[[2,5]]^2)
+EEF_A3   <- (m3F_A3[[1,4]] - m3F_A3[[2,4]]) / sqrt(m3F_A3[[1,5]]^2 + m3F_A3[[2,5]]^2)
 
 ## Calculate p values
-p_MHE_S1  <- 2*pnorm(-abs(MHE_S1)) 
-p_WHE_S1  <- 2*pnorm(-abs(WHE_S1)) 
-p_EE_S1   <- 2*pnorm(-abs(EE_S1)) 
+p_MHE_A3  <- 2*pnorm(-abs(MHE_A3)) 
+p_WHE_A3  <- 2*pnorm(-abs(WHE_A3)) 
+p_EE_A3   <- 2*pnorm(-abs(EE_A3)) 
 
-p_MHEM_S1 <- 2*pnorm(-abs(MHEM_S1)) 
-p_MHEF_S1 <- 2*pnorm(-abs(MHEF_S1)) 
+p_MHEM_A3 <- 2*pnorm(-abs(MHEM_A3)) 
+p_MHEF_A3 <- 2*pnorm(-abs(MHEF_A3)) 
 
-p_WHEM_S1 <- 2*pnorm(-abs(WHEM_S1)) 
-p_WHEF_S1 <- 2*pnorm(-abs(WHEF_S1)) 
+p_WHEM_A3 <- 2*pnorm(-abs(WHEM_A3)) 
+p_WHEF_A3 <- 2*pnorm(-abs(WHEF_A3)) 
 
-p_EEM_S1  <- 2*pnorm(-abs(EEM_S1)) 
-p_EEF_S1  <- 2*pnorm(-abs(EEF_S1)) 
+p_EEM_A3  <- 2*pnorm(-abs(EEM_A3)) 
+p_EEF_A3  <- 2*pnorm(-abs(EEF_A3)) 
 
 
 ## Man Higher Earner
-message("All p = ",    round(p_MHE_S1,   digits = 3))
-message("Men p = ",    round(p_MHEM_S1,  digits = 3)) 
-message("Women p = ",  round(p_MHEF_S1,  digits = 3)) 
+message("All p = ",    round(p_MHE_A3,   digits = 3))
+message("Men p = ",    round(p_MHEM_A3,  digits = 3)) 
+message("Women p = ",  round(p_MHEF_A3,  digits = 3)) 
 
 ## Woman Higher Earner
-message("All p = ",    round(p_WHE_S1,   digits = 3))
-message("Men p = ",    round(p_WHEM_S1,  digits = 3)) 
-message("Women p = ",  round(p_WHEF_S1,  digits = 3)) 
+message("All p = ",    round(p_WHE_A3,   digits = 3))
+message("Men p = ",    round(p_WHEM_A3,  digits = 3)) 
+message("Women p = ",  round(p_WHEF_A3,  digits = 3)) 
 
 ## Equal Earners
-message("All p = ",    round(p_EE_S1,    digits = 3))
-message("Men p = ",    round(p_EEM_S1,   digits = 3)) 
-message("Women p = ",  round(p_EEF_S1,   digits = 3)) 
+message("All p = ",    round(p_EE_A3,    digits = 3))
+message("Men p = ",    round(p_EEM_A3,   digits = 3)) 
+message("Women p = ",  round(p_EEF_A3,   digits = 3)) 
 
 ## Test for statistical sig. between men and women (within decision)
 ### Calculate Z scores 
-MHEH_S1   <- (m1M_S1[[1,4]] - m1F_S1[[1,4]]) / sqrt(m1M_S1[[1,5]]^2 + m1F_S1[[1,5]]^2)
-MHEL_S1   <- (m1M_S1[[2,4]] - m1F_S1[[2,4]]) / sqrt(m1M_S1[[2,5]]^2 + m1F_S1[[2,5]]^2)
+MHEH_A3   <- (m1M_A3[[1,4]] - m1F_A3[[1,4]]) / sqrt(m1M_A3[[1,5]]^2 + m1F_A3[[1,5]]^2)
+MHEL_A3   <- (m1M_A3[[2,4]] - m1F_A3[[2,4]]) / sqrt(m1M_A3[[2,5]]^2 + m1F_A3[[2,5]]^2)
 
-WHEH_S1   <- (m2M_S1[[1,4]] - m2F_S1[[1,4]]) / sqrt(m2M_S1[[1,5]]^2 + m2F_S1[[1,5]]^2)
-WHEL_S1   <- (m2M_S1[[2,4]] - m2F_S1[[2,4]]) / sqrt(m2M_S1[[2,5]]^2 + m2F_S1[[2,5]]^2)
+WHEH_A3   <- (m2M_A3[[1,4]] - m2F_A3[[1,4]]) / sqrt(m2M_A3[[1,5]]^2 + m2F_A3[[1,5]]^2)
+WHEL_A3   <- (m2M_A3[[2,4]] - m2F_A3[[2,4]]) / sqrt(m2M_A3[[2,5]]^2 + m2F_A3[[2,5]]^2)
 
-EEH_S1    <- (m3M_S1[[1,4]] - m3F_S1[[1,4]]) / sqrt(m3M_S1[[1,5]]^2 + m3F_S1[[1,5]]^2)
-EEL_S1    <- (m3M_S1[[2,4]] - m3F_S1[[2,4]]) / sqrt(m3M_S1[[2,5]]^2 + m3F_S1[[2,5]]^2)
+EEH_A3    <- (m3M_A3[[1,4]] - m3F_A3[[1,4]]) / sqrt(m3M_A3[[1,5]]^2 + m3F_A3[[1,5]]^2)
+EEL_A3    <- (m3M_A3[[2,4]] - m3F_A3[[2,4]]) / sqrt(m3M_A3[[2,5]]^2 + m3F_A3[[2,5]]^2)
 
 ### Calculate p values
-p_MHEH_S1  <- 2*pnorm(-abs(MHEH_S1)) 
-p_MHEL_S1  <- 2*pnorm(-abs(MHEL_S1)) 
+p_MHEH_A3  <- 2*pnorm(-abs(MHEH_A3)) 
+p_MHEL_A3  <- 2*pnorm(-abs(MHEL_A3)) 
 
-p_WHEH_S1 <- 2*pnorm(-abs(WHEH_S1)) 
-p_WHEL_S1 <- 2*pnorm(-abs(WHEL_S1)) 
+p_WHEH_A3 <- 2*pnorm(-abs(WHEH_A3)) 
+p_WHEL_A3 <- 2*pnorm(-abs(WHEL_A3)) 
 
-p_EEH_S1  <- 2*pnorm(-abs(EEH_S1)) 
-p_EEL_S1  <- 2*pnorm(-abs(EEL_S1)) 
+p_EEH_A3  <- 2*pnorm(-abs(EEH_A3)) 
+p_EEL_A3  <- 2*pnorm(-abs(EEL_A3)) 
 
 ### Man Higher Earner
-message("High-stakes p = ",    round(p_MHEH_S1,  digits = 3))
-message("Low-stakes  p = ",    round(p_MHEL_S1,  digits = 3)) 
+message("High-stakes p = ",    round(p_MHEH_A3,  digits = 3))
+message("Low-stakes  p = ",    round(p_MHEL_A3,  digits = 3)) 
 
 ### Woman Higher Earner
-message("High-stakes p = ",    round(p_WHEH_S1,  digits = 3))
-message("Low-stakes  p = ",    round(p_WHEL_S1,  digits = 3)) 
+message("High-stakes p = ",    round(p_WHEH_A3,  digits = 3))
+message("Low-stakes  p = ",    round(p_WHEL_A3,  digits = 3)) 
 
 ### Equal Earners
-message("High-stakes p = ",    round(p_EEH_S1,   digits = 3))
-message("Low-stakes  p = ",    round(p_EEL_S1,   digits = 3)) 
+message("High-stakes p = ",    round(p_EEH_A3,   digits = 3))
+message("Low-stakes  p = ",    round(p_EEL_A3,   digits = 3)) 
 
 ## Create list for 3 panels
-panels_S1 <- list(
-  "Man Higher Earner"   = list("All" = m1_S1, "Men" = m1M_S1, "Women" = m1F_S1),
-  "Woman Higher Earner" = list("All" = m2_S1, "Men" = m2M_S1, "Women" = m2F_S1),
-  "Equal Earners"       = list("All" = m3_S1, "Men" = m3M_S1, "Women" = m3F_S1))
+panels_A3 <- list(
+  "Man Higher Earner"   = list("All" = m1_A3, "Men" = m1M_A3, "Women" = m1F_A3),
+  "Woman Higher Earner" = list("All" = m2_A3, "Men" = m2M_A3, "Women" = m2F_A3),
+  "Equal Earners"       = list("All" = m3_A3, "Men" = m3M_A3, "Women" = m3F_A3))
 
 ## Create pretty labels
 coef_map <- c(
   "per.1"    = "High Stakes",
   "per.2"   = "Low Stakes")
 
-## Produce Table 02
+## Produce Table A3
 modelsummary(
-  panels_S1,
+  panels_A3,
   shape = "rbind",
   coef_map = coef_map,
   gof_map = NA,
@@ -639,7 +637,7 @@ data_figA$type <- factor(data_figA$type,
                          ordered = FALSE)
 
 figA <- data_figA %>%
-  ggplot(aes(x = category, y = pct, fill = fairness)) +
+  ggplot(aes(x = category, y = pct, fill = fct_rev(fairness))) +
   geom_col(position = "fill",
            width = 0.6) +
   facet_grid(type ~ .,
@@ -675,54 +673,3 @@ figA
 ggsave(filename = file.path(figDir, "figA.png"), figA, 
        width=6, height=4, units="in", dpi=300, bg = 'white')
 
-################################################################################
-# Supplementary Materials
-################################################################################
-
-# Section A --------------------------------------------------------------------
-
-#Calculate AME for vignette marital status, relationship duration, and parental status
-
-
-# ------------------------------------------------------------------------------
-# code that may be useful still but not part of workflow
-
-### export to stata for FE models (Table C)
-femodels <- quantdata %>%
-  select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
-         relinc, organize, mar, child, dur, high, gender, relate, parent, 
-         raceeth, educ, employ, inc, age, low, order, weight)
-
-write_dta(femodels , path = file.path(outDir, "femodels.dta")) 
-
-### -- sensitivity test -- include order of decider*gender of decider
-quantdata <- quantdata %>%
-  mutate(orderN= case_when (order == "Same"  ~ 0,
-                            order == "Mixed" ~ 1))
-
-logit1o <- glm(dum1 ~ per1 * orderN + relinc + organize + mar + child + dur + high + 
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-logit2o <- glm(dum2 ~ per2 * orderN + relinc + organize + mar + child + dur + low +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-
-AME1o <- summary(margins(logit1o, 
-                         variables = "per1",
-                         at = list(orderN= 0:1)))
-AME2o <- summary(margins(logit2o, 
-                         variables = "per2",
-                         at = list(orderN= 0:1)))
-AME1o 
-AME2o
-
-## Other interactions per reviewer B -------------------------------------------
-
-### interactions
-logit5a <- glm(dum1 ~ per1 * child + relinc + organize + mar + dur + high +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")
-
-logit5b <- glm(dum2 ~ per2 * child + relinc + organize + mar + dur + order + low +
-                 gender+relate+parent+raceeth+educ+employ+inc+age,
-               quantdata, family="binomial")

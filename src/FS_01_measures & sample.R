@@ -245,25 +245,6 @@ data$parent <- factor(data$parent,
 # Prep the vignette variables for analysis
 ################################################################################
 
-## relate/parent condition -----------------------------------------------------
-table(data$mar, data$child)
-
-data <- data %>%
-  mutate(
-    marpar = case_when(
-      mar  == "are married"   & child == "one child together" ~ "Married/Parent",
-      mar  == "are married"   & child == "no children"        ~ "Married/No kids",
-      mar  == "live together" & child == "one child together" ~ "Cohabit/Parent",
-      mar  == "live together" & child == "no children"        ~ "Cohabit/No kids",
-      TRUE                                                    ~  NA_character_ 
-    ))
-
-data$marpar <- factor(data$marpar, 
-                      levels  = c("Cohabit/No kids", "Cohabit/Parent",
-                                  "Married/No kids", "Married/Parent"), 
-                      ordered = FALSE)
-table(data$marpar)
-
 ## relative earnings condition ------------------------------------------------------
 table(data$relinc)
 
@@ -299,6 +280,25 @@ data$earner <- factor(data$earner,
                       levels  = c("Higher earner", "Lower earner",
                                   "Equal earners"), 
                       ordered = FALSE)
+
+## relate/parent condition -----------------------------------------------------
+table(data$mar, data$child)
+
+data <- data %>%
+  mutate(
+    marpar = case_when(
+      mar  == "are married"   & child == "one child together" ~ "Married/Parent",
+      mar  == "are married"   & child == "no children"        ~ "Married/No kids",
+      mar  == "live together" & child == "one child together" ~ "Cohabit/Parent",
+      mar  == "live together" & child == "no children"        ~ "Cohabit/No kids",
+      TRUE                                                    ~  NA_character_ 
+    ))
+
+data$marpar <- factor(data$marpar, 
+                      levels  = c("Cohabit/No kids", "Cohabit/Parent",
+                                  "Married/No kids", "Married/Parent"), 
+                      ordered = FALSE)
+table(data$marpar)
 
 ## duration condition ----------------------------------------------------------
 table(data$dur)

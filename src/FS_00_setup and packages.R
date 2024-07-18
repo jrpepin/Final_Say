@@ -14,8 +14,7 @@ library("pacman")                  # Load pacman package
 pacman::p_load(
        here,            # relative file paths
        devtools,        # loading github packages
-       dplyr, 
-       tidyr, 
+       tidyverse,       # dplyr tidyr forcats stringr tibble ggplot2
        haven,           # import spss data with labels & export Stata data
        expss,           # add variable labels 
        sjlabelled,      # convert labels to factors
@@ -26,12 +25,10 @@ pacman::p_load(
        nnet,            # multinomial models
        kableExtra,      # make tables
        huxtable,        # make tables with extra rows
-       tibble,          # convert row names to column
        marginaleffects, # average marginal effects
        broom.helpers,   # tibbles of AME
        effects,         # predicted prob. w/ CI
        cowplot,         # graphing
-       ggplot2,         # graphing
        treemapify,      # tree maps
        ggeffects,       # predicted probabilities
        effects,         # required for ggeffects
@@ -51,7 +48,6 @@ pacman::p_load(
        colorspace,      # color palettes of figures
        hunspell,
        stringi,
-       stringr,
        # LDA Analysis
        magrittr,
        tm,
