@@ -66,9 +66,9 @@ mSTEMMED <-  Matrix::sparseMatrix(i=matSTEMMED $i,
                                   dims=c(matSTEMMED $nrow, matSTEMMED $ncol),
                                   dimnames = matSTEMMED $dimnames)
 
-#####################################################################################
+################################################################################
 # Fitting Model
-#####################################################################################
+################################################################################
 # Fit a 1 through 20 LDA models and Compare Coherence
 k_list <- seq(1,20, by=1)
 
@@ -119,12 +119,13 @@ fig1 <- coherence_mat %>%
 
 fig1
 
-ggsave(filename = file.path(figDir, "fig1.png"), fig1, width=6, height=4, units="in", dpi=300, bg = 'white')
+ggsave(filename = file.path(figDir, "fig1.png"), fig1, 
+       width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
-#####################################################################################
+################################################################################
 # Selected 7 Topic Model
-#####################################################################################
+################################################################################
 set.seed(376)
 model <- FitLdaModel(dtm             = mSTEMMED, 
                      k               = 7,    
@@ -142,7 +143,7 @@ coherence
 names(model)
 mean(model$coherence)
 
-# Figure 3. Word Cloud  -----------------------------------------------------------
+# Figure 3. Top Words ----------------------------------------------------------
 
 ## Table of top words
 model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
@@ -163,16 +164,18 @@ top7terms <- topterms %>%
          "Money Matters (13%)"         = "t_6", 
          "Work Together (13%)"         = "t_7")
 
-write_xlsx(top7terms ,  path = file.path(outDir, "Table03_topterms7topicfair.xlsx"))
+write_xlsx(top7terms ,  
+           path = file.path(outDir, "Table03_topterms7topicfair.xlsx"))
 
-## Table of Phi, which is where top words come from. Used to plot words in word clouds or dot plots
+## Table of Phi, which is where top words come from.
 phi<-model$phi
 phi<-data.frame(phi)
 write_xlsx(phi,  path = file.path(outDir, "phi7topic.xlsx"))
 
 ## Combine topterms and phi values
 df1 <- topterms %>%
-  pivot_longer(cols = starts_with("t_"), names_to = "topic", values_to = "word")
+  pivot_longer(cols = starts_with("t_"), 
+               names_to = "topic", values_to = "word")
 
 df2 <- data.frame(t(phi[-1]))
 df2 <- tibble::rownames_to_column(df2, "word")
@@ -180,13 +183,13 @@ df2 <- tibble::rownames_to_column(df2, "word")
 df2 <- df2 %>%
   pivot_longer(!word, names_to = "topic", values_to = "phi")
 
-clouddata <- left_join(df1, df2) %>%
+data_fig3 <- left_join(df1, df2) %>%
   dplyr::arrange(desc(phi))
 
 # Clean dataset
 
 ## topic order is based on frequency of topics for items + frequency of topics for activities
-clouddata <- clouddata %>% # label topics
+data_fig3 <- data_fig3 %>% # label topics
   mutate(topic = case_when(
     topic == "t_1" ~ "Topic 2:\nAssured Acquiescence (15%)",
     topic == "t_2" ~ "Topic 6:\nMan Has Final Say (8%)",
@@ -196,7 +199,7 @@ clouddata <- clouddata %>% # label topics
     topic == "t_6" ~ "Topic 3:\nMoney Matters (13%)",
     topic == "t_7" ~ "Topic 4:\nWork Together (13%)"))
 
-clouddata$topic <- factor(clouddata$topic,
+data_fig3$topic <- factor(data_fig3$topic,
                           levels = c("Topic 1:\nPractical Efficiency (34%)",
                                      "Topic 2:\nAssured Acquiescence (15%)",
                                      "Topic 3:\nMoney Matters (13%)",
@@ -207,7 +210,7 @@ clouddata$topic <- factor(clouddata$topic,
                           ordered = FALSE)
 ## Create bargraphs
 
-fig3 <- clouddata %>%
+fig3 <- data_fig3 %>%
   filter(as.numeric(rank) < 11) %>%
   filter(!is.na(phi)) %>%
   ggplot(aes(x = phi, y = reorder_within(word, phi, topic))) +
@@ -227,12 +230,13 @@ fig3 <- clouddata %>%
 
 fig3
 
-ggsave(file.path(figDir, "fig3.png"), fig3, height = 8, width = 6, units="in",dpi = 300, bg = 'white')
+ggsave(file.path(figDir, "fig3.png"), fig3, 
+       height = 8, width = 6, units="in",dpi = 300, bg = 'white')
 
 
-#####################################################################################
+################################################################################
 # Topic Modeling Regression Tables
-#####################################################################################
+################################################################################
 
 ## Assigning observations probabilities of topics
 set.seed(376)
@@ -253,7 +257,8 @@ write_xlsx(assignments,  path = file.path(outDir, "assignments.xlsx"))
 ## create wide data
 assign <- left_join(qualdataFULL, assignments) %>%
   select(-c(qual, wN, same, topic, fair)) %>%
-  pivot_wider(names_from = x, values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
+  pivot_wider(names_from  = x, 
+              values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
 
 colnames(assign) <- sub("_qual1", "_item", colnames(assign))
 colnames(assign) <- sub("_qual2", "_act", colnames(assign))
@@ -261,19 +266,22 @@ colnames(assign) <- sub("_qual2", "_act", colnames(assign))
 lcadata <- left_join(assign, data) ## Join tables
 
 
-# MULTI-NOMIAL REGRESSIONS --------------------------------------------------------
+# MULTI-NOMIAL REGRESSIONS -----------------------------------------------------
 
 ## Assign topics
-groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", "t_5_item", "t_6_item", "t_7_item")
-lcadata$top_i <- max.col(lcadata[groups_i], "first") #tie breakers go to first class
+groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", 
+              "t_5_item", "t_6_item", "t_7_item")
+lcadata$top_i <- max.col(lcadata[groups_i], "first") #tie breakers to 1st class
 lcadata$top_i <- as.factor(lcadata$top_i)
 
-groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", "t_5_act", "t_6_act", "t_7_act")
-lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers go to first class
+groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", 
+              "t_5_act", "t_6_act", "t_7_act")
+lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers to 1st class
 lcadata$top_a <- as.factor(lcadata$top_a)
 
 lcadata <- lcadata %>% 
-  select(CaseID, fair1, fair2, qual1, top_i, qual2, top_a, longid, everything()) # reorder columns
+  select(CaseID, fair1, fair2, qual1, top_i, qual2, top_a, 
+         longid, everything()) # reorder columns
 
 ## Get topic frequency
 freq_i <- table(lcadata$top_i)  # frequency of each topic for items
@@ -295,9 +303,14 @@ levels(lcadata$top_i)[levels(lcadata$top_i)=="5"] <- "Taking Turns"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="6"] <- "Money Matters"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="7"] <- "Work Together"
 
-
-lcadata$top_i <- factor(lcadata$top_i, levels = c("Practical Efficiency", "Assured Acquiescence", "Money Matters", "Work Together",
-                                                  "Taking Turns", "Man Has Final Say", "Happy Wife Happy Life"))
+lcadata$top_i <- factor(lcadata$top_i, 
+                        levels = c("Practical Efficiency", 
+                                   "Assured Acquiescence", 
+                                   "Money Matters", 
+                                   "Work Together",
+                                   "Taking Turns", 
+                                   "Man Has Final Say", 
+                                   "Happy Wife Happy Life"))
 
 levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Assured Acquiescence"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Man Has Final Say"
@@ -307,8 +320,14 @@ levels(lcadata$top_a)[levels(lcadata$top_a)=="5"] <- "Taking Turns"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="6"] <- "Money Matters"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="7"] <- "Work Together"
 
-lcadata$top_a <- factor(lcadata$top_a, levels = c("Practical Efficiency", "Assured Acquiescence", "Money Matters", "Work Together",
-                                                  "Taking Turns", "Man Has Final Say", "Happy Wife Happy Life"))
+lcadata$top_a <- factor(lcadata$top_a, 
+                        levels = c("Practical Efficiency", 
+                                   "Assured Acquiescence", 
+                                   "Money Matters", 
+                                   "Work Together",
+                                   "Taking Turns",
+                                   "Man Has Final Say", 
+                                   "Happy Wife Happy Life"))
 
 #creating predictor for respondents' preferred decision-maker
 lcadata<- lcadata%>%
@@ -333,9 +352,12 @@ table(lcadata$dum2)
 table(lcadata$top_i)
 
 #outputing to dta for multinom table in Stata because we don't know how to do it yet in R :D
-#write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
+write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
 
-## FIGURE 4 -------------------------------------------------------------------------------------------------
+# Save data to a file so I can start troubleshooting from here
+saveRDS(lcadata, file = file.path(outDir,"lcadataMultinomTopics.rds"))
+
+## FIGURE 4 --------------------------------------------------------------------
 
 data_fig4 <- lcadata %>%
   select(CaseID, top_i, top_a) %>%
@@ -351,7 +373,9 @@ data_fig4$decision[data_fig4$decision == "top_a"] <- "Activity"
 fig4 <- data_fig4 %>%
   ggplot(aes(fill=topic, y=decision, x=prop)) + 
   geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
-  geom_text(aes(label = weights::rd(prop, digits =2)), position = position_fill(reverse = TRUE, vjust = .5), color = "white") +
+  geom_text(aes(label = weights::rd(prop, digits =2)), 
+            position = position_fill(reverse = TRUE, 
+                                     vjust = .5), color = "white") +
   theme_minimal(12) +
   scale_fill_grey() +
 #  scale_fill_discrete_qualitative(palette = "Dark 3") +
@@ -365,9 +389,10 @@ fig4 <- data_fig4 %>%
 
 fig4
 
-ggsave(filename = file.path(figDir, "fig4.png"), fig4, width=8, height=5, units="in", dpi=300, bg = 'white')
+ggsave(filename = file.path(figDir, "fig4.png"), fig4, 
+       width=8, height=5, units="in", dpi=300, bg = 'white')
 
-# MULTINOMIALS -------------------------------------------------------------------------------------------------
+# MULTINOMIALS -----------------------------------------------------------------
 ### Purchase
 mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
@@ -376,9 +401,10 @@ mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + it
 mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
                       gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
 
-## Table A4 ------------------------------------------------------------------------------------------------
+## Table A4 --------------------------------------------------------------------
 ### Purchase
-mep_A4 <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "relinc")
+mep_A4 <- marginaleffects::avg_slopes(mn_item, type = "probs", 
+                                      variables = c("iperson"), by = "relinc")
 mep_A4 <- as_tibble(mep_A4) %>%
   select(group, relinc, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
@@ -387,7 +413,8 @@ mep_A4 <- as_tibble(mep_A4) %>%
 kable(mep_A4, "simple")
 
 ### Activity
-mea_A4 <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "relinc")
+mea_A4 <- marginaleffects::avg_slopes(mn_act, type = "probs", 
+                                      variables = c("aperson"), by = "relinc")
 mea_A4 <- as_tibble(mea_A4) %>%
   select(group, relinc, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
@@ -395,7 +422,7 @@ mea_A4 <- as_tibble(mea_A4) %>%
          std.error=round(std.error, digits = 3))
 kable(mea_A4, "simple")
 
-## FIGURE 5 -------------------------------------------------------------------------------------------------
+## FIGURE 5 --------------------------------------------------------------------
 
 ## Create an object with predicted probabilities
 ### https://community.rstudio.com/t/plotting-confidence-intervals-with-ggeffects-for-multinom/54354
@@ -448,9 +475,13 @@ data_fig5$response.level[data_fig5$response.level == "Man Has Final Say"]       
 data_fig5$response.level[data_fig5$response.level == "Happy Wife Happy Life"]   <- "Happy Wife\nHappy Life"
 
 data_fig5$response.level <- factor(data_fig5$response.level, 
-                                    levels = c("Practical\nEfficiency", "Assured\nAcquiescence", 
-                                               "Money\nMatters", "Work\nTogether",
-                                               "Taking\nTurns", "Man Has\nFinal Say", "Happy Wife\nHappy Life"))
+                                    levels = c("Practical\nEfficiency", 
+                                               "Assured\nAcquiescence", 
+                                               "Money\nMatters", 
+                                               "Work\nTogether",
+                                               "Taking\nTurns", 
+                                               "Man Has\nFinal Say", 
+                                               "Happy Wife\nHappy Life"))
 
 p1_fig5 <- data_fig5 %>%
   filter(response.level == "Practical\nEfficiency" | response.level == "Assured\nAcquiescence" |
@@ -528,9 +559,10 @@ fig5
 ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300, bg = 'white')
 
 
-## Table A5 ------------------------------------------------------------------------------------------------
+## Table A5 --------------------------------------------------------------------
 ### Purchase (same multinom from Table A4)
-mep_A5 <- marginaleffects::avg_slopes(mn_item, type = "probs", variables = c("iperson"), by = "gender")
+mep_A5 <- marginaleffects::avg_slopes(mn_item, type = "probs", 
+                                      variables = c("iperson"), by = "gender")
 mep_A5 <- as_tibble(mep_A5) %>%
   select(group, gender, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
@@ -539,7 +571,8 @@ mep_A5 <- as_tibble(mep_A5) %>%
 kable(mep_A5, "simple")
 
 ### Activity (same multinom from Table A4)
-mea_A5 <- marginaleffects::avg_slopes(mn_act, type = "probs", variables = c("aperson"), by = "gender")
+mea_A5 <- marginaleffects::avg_slopes(mn_act, type = "probs", 
+                                      variables = c("aperson"), by = "gender")
 mea_A5 <- as_tibble(mea_A5) %>%
   select(group, gender, estimate, std.error, p.value) %>%
   mutate(estimate=round(estimate, digits = 2),
@@ -548,7 +581,7 @@ mea_A5 <- as_tibble(mea_A5) %>%
 kable(mea_A5, "simple")
 
 
-## Table A6 ------------------------------------------------------------------------------------------------
+## Table A6 --------------------------------------------------------------------
 
 lcadata$ipref <- ifelse(lcadata$ipref == "Prefer Anthony", 1, 0)
 lcadata$apref <- ifelse(lcadata$apref == "Prefer Anthony", 1, 0)

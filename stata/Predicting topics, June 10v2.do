@@ -1,19 +1,19 @@
 //Predicting topics used to explain fairness decision
 
+global outDir "C:\Users\Joanna\Dropbox\Repositories\Final_Say\output"
 
 //------------------------------------------------------------------------------------------------------------
 //Importing and shaping data
-	use "$outDir/lcadataMultinomTopics", clear
+use "$outDir/lcadataMultinomTopics", clear
 
 //structure of data = 2 obs per respondent, but still in wide form. need to fix that...
 	destring CaseID, replace
-
 
 	collapse (firstnm) t_1_item (firstnm) t_2_item (firstnm) t_3_item (firstnm) t_4_item (firstnm) t_5_item (firstnm) t_6_item (firstnm) t_7_item ///
 			(firstnm) t_1_act (firstnm) t_2_act (firstnm) t_3_act (firstnm) t_4_act (firstnm) t_5_act (firstnm) t_6_act (firstnm) t_7_act ///
 			(firstnm) top_i (firstnm) top_a ///
 			, by(CaseID)
-			
+	
 	generate wide = 1
 			
 	save "$outDir/wideTopics.dta", replace
@@ -39,21 +39,22 @@
 //Reshaping to long form.
 	use "$outDir/wideTopicsFull.dta", clear
 
-	generate perI = 2-iperson
-	generate perA = 2-aperson
+	cap drop per1 per2
+	generate per1 = 2-iperson
+	generate per2 = 2-aperson
 	label define michelleref 0 "Anthony" 1 "Michelle"
-	label values perI michelleref
-	label values perA michelleref
+	label values per1 michelleref
+	label values per2 michelleref
 
 
-	foreach var in ifair afair {
+	foreach var in fair1 fair2 {
 	replace `var' = 5-`var'
 	label drop `var'
 	label define `var'lab 1 "very unfair" 2 "seomwhat unfair" 3 "somehwat fair" 4 "very fair"
 	label values `var' `var'lab
 	}
-	tab2 idum ifair, nol
-	tab2 adum afair, nol
+	tab2 dum1 fair1, nol
+	tab2 dum2 fair2, nol
 
 
 	rename t_* t*
@@ -61,12 +62,6 @@
 	rename *_act *_2
 	rename top_i top_1
 	rename top_a top_2
-	rename perI per1
-	rename idum dum1
-	rename ifair fair1
-	rename perA per2
-	rename adum dum2
-	rename afair fair2
 	encode ipref, generate(pref1)
 	encode apref, generate(pref2)
 
