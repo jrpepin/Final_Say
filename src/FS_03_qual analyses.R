@@ -266,8 +266,6 @@ colnames(assign) <- sub("_qual2", "_act", colnames(assign))
 lcadata <- left_join(assign, data) ## Join tables
 
 
-# MULTI-NOMIAL REGRESSIONS -----------------------------------------------------
-
 ## Assign topics
 groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", 
               "t_5_item", "t_6_item", "t_7_item")
