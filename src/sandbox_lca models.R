@@ -1,69 +1,11 @@
 # Restore the object
 ## generated from line 358 in FS_03_qual analyses.R
-lcadata <- readRDS(file = file.path(outDir,"lcadataMultinomTopics.rds"))
+##lcadata <- readRDS(file = file.path(outDir,"lcadataMultinomTopics.rds"))
 
-## Need matched data
-tally <- lcadata %>% 
-  group_by(CaseID) %>%
-  tally() 
 
-lcadata <- left_join(lcadata, tally)
-
-### Function to drop opposite decision variables
-not_all_na <- function(x) any(!is.na(x))
-
-### Decision 1
-lca1 <- lcadata               %>%
-  group_by(CaseID)            %>%
-  filter(n == 2)              %>%    # keep matched decisions
-  mutate(row = row_number())  %>%
-  filter(row==1)              %>%    # keep decision 1 rows
-  select(where(not_all_na))   %>%    # keep decision 1 variables
-  select(!c(fair2, qual2, 
-            aperson, dum2, 
-            per2, apref))     %>%
-  rename(fair     = fair1,
-         qual     = qual1,
-         person   = iperson,
-         dum      = dum1,
-         per      = per1,
-         pref     = ipref)    %>%
-  mutate(decision = "high")
-
-  #### Remove everything from the second underscore onwards
-  colnames(lca1) <- sub("(_[^_]+){1}$", "", colnames(lca1))
-
-### Decision 2
-  lca2 <- lcadata               %>%
-    group_by(CaseID)            %>%
-    filter(n == 2)              %>%    # keep matched decisions
-    mutate(row = row_number())  %>%
-    filter(row==2)              %>%    # keep decision 2 rows
-    select(where(not_all_na))   %>%    # keep decision 2 variables
-    select(!c(fair1, qual1,
-              iperson, dum1, 
-              per1, ipref))     %>%
-    rename(fair     = fair2,
-           qual     = qual2,
-           person   = aperson,
-           dum      = dum2,
-           per      = per2,
-           pref     = apref)    %>%
-    mutate(decision = "low")
-  
-  #### Remove everything from the second underscore onwards
-  colnames(lca2) <- sub("(_[^_]+){1}$", "", colnames(lca2))
-  
-# Append data frames together
-data_lca <- rbind(lca1, lca2)  # 7434 matched person decisions
-
-## Arrange column and row order
-data_lca <- data_lca                  %>% 
-  select(CaseID, decision, fair, dum, per, qual, starts_with("t_"), 
-         everything())                %>%
-  mutate(CaseID = as.numeric(CaseID)) %>%
-  arrange(CaseID)                     %>%
-  mutate(CaseID = as.character(CaseID))
+################################################################################
+# Topic Modeling Regression Tables
+################################################################################
 
 # Predict each topic -----------------------------------------------------------
 
@@ -72,11 +14,14 @@ dv <- names(c(select(data_lca %>% ungroup(), starts_with("t_"))))
 
 ## Create pdata frames
 pdata_m1 <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Man higher-earner"),   index = c("CaseID"))
+                          filter(relinc == "Man higher-earner"),   
+                        index = c("CaseID"))
 pdata_m2 <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Woman higher-earner"), index = c("CaseID"))
+                          filter(relinc == "Woman higher-earner"), 
+                        index = c("CaseID"))
 pdata_m3 <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Equal earners"),       index = c("CaseID"))
+                          filter(relinc == "Equal earners"),       
+                        index = c("CaseID"))
 
 ## Create the plm functions
 plms_mhe <- function(dv){
@@ -120,6 +65,66 @@ ame_mhe  <- lapply(mods_mhe, give_me_ame)
 ame_whe  <- lapply(mods_whe, give_me_ame) 
 ame_ee   <- lapply(mods_ee,  give_me_ame) 
 
+#### add relinc indicator
+ame_mhe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+       ame_mhe, "Men higher-earner", SIMPLIFY = FALSE)
+
+ame_whe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_whe, "Woman higher-earner", SIMPLIFY = FALSE)
+
+ame_ee<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_ee, "Equal earner", SIMPLIFY = FALSE)
+
+# Appendix Table A4 ------------------------------------------------------------
+## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
+## Decision Type, and Vignette Couple’s Relative Income
+
+p1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
+             gof_map = NA, output = "huxtable") 
+p2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+p3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+ht <-  cbind(p1, p2, p3)
+
+
+ht %>%
+  select(c("decision", "  ", "Men higher-earner / 0", "Men higher-earner / 1", 
+           "Woman higher-earner / 0", "Woman higher-earner / 1",
+           "Equal earner / 0", "Equal earner / 1")) %>%
+  insert_row(c(" ", " ", 
+               "Anthony\nDecides", "Michelle\nDecides",
+               "Anthony\nDecides", "Michelle\nDecides", 
+               "Anthony\nDecides", "Michelle\nDecides"), after = 1)  %>%
+  huxtable::as_flextable() %>%
+  delete_rows(i = 1, part = "body") %>%
+  add_header_row(values = c("Decision", "Topic", "Men higher-earner", 
+                            "Women higher-earner", "Equal earners"),
+                 colwidths = c(1, 1, 2, 2, 2), top = TRUE) %>%
+  flextable::align(align = "center", part = "header")
+
+
+
+
+
+# Not working
+
+ames <- c(ame_mhe, ame_whe, ame_ee)
+
+topics <- list("t1" = ames[[1]],  "t2" = ames[[2]],  "t3" = ames[[3]],
+               "t4" = ames[[4]],  "t5" = ames[[5]],  "t6" = ames[[6]],  "t7"  = ames[[7]],
+               "t1" = ames[[8]],  "t2" = ames[[9]],  "t3" = ames[[10]],
+               "t4" = ames[[11]], "t5" = ames[[12]], "t6" = ames[[13]], "t7" = ames[[14]],
+               "t1" = ames[[15]], "t2" = ames[[16]], "t3" = ames[[17]],
+               "t4" = ames[[18]], "t5" = ames[[19]], "t6" = ames[[20]], "t7" = ames[[21]])
+
+modelsummary(topics, shape = decision + per ~ relinc + model,
+             gof_map = NA, output = "gt") 
+
+
+
+# For plotting
+
 #### put them into a dataframe
 df_mhe <- bind_rows(ame_mhe, .id = "topic")
 df_whe <- bind_rows(ame_whe, .id = "topic")
@@ -129,7 +134,7 @@ df_mhe$relinc <- "Man higher-earner"
 df_whe$relinc <- "Woman higher-earner"
 df_ee$relinc  <- "Equal earners"
 
-data_ame <- rbind(df_mhe, df_whe, df_ee)  # 7434 matched person decisions
+data_ame <- rbind(df_mhe, df_whe, df_ee)
 
 
 # ------------------------------------------------------------------------------

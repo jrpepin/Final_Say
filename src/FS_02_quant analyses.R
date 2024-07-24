@@ -575,7 +575,7 @@ panels_A3 <- list(
 ## Create pretty labels
 coef_map <- c(
   "per.1"    = "High Stakes",
-  "per.2"   = "Low Stakes")
+  "per.2"    = "Low Stakes")
 
 ## Produce Table A3
 modelsummary(

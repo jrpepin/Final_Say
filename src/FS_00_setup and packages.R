@@ -111,7 +111,6 @@ rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downlo
 projDir <- here::here()                           # File path to this project's directory
 dataDir <- here::here("../../Data/TESS")          # Name of folder where the TESS data was downloaded
 srcDir  <- "src"                                  # Name of the sub-folder where we will save our source code (R scripts)
-funDir  <- "src/functions"                        # File path where we will save our functions
 qualDir <- "src/qual"                             # File path where saved qualitative coding results
 outDir  <- "output"                               # Name of the sub-folder where we will save results
 figDir  <- "figs"                                 # Name of the sub-folder where we will save generated figures

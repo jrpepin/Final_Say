@@ -41,7 +41,7 @@ corpus <- tm_map(corpus, removeWords,
                    "fair", "unfair" 
                  ))
 
-corpus <- tm_map(corpus, removeWords, stopwords::stopwords('english')) # or should we use tm::stopwords?
+corpus <- tm_map(corpus, removeWords, stopwords::stopwords('english')) 
 
 corpusSTEMMED <- tm_map(corpus, stemDocument)
 
@@ -89,17 +89,17 @@ model_list <- TmParallelApply(X = k_list, FUN = function(k){
 }, export= ls(), # c("m"), 
 cpus = 4) 
 
-
 # Get average coherence for each model
 coherence_mat <- data.frame(k = sapply(model_list, function(x) nrow(x$phi)), 
-                            coherence = sapply(model_list, function(x) mean(x$coherence)), 
+                            coherence = sapply(model_list, function(x) 
+                              mean(x$coherence)), 
                             stringsAsFactors = FALSE)
 coherence_mat
 plot(coherence_mat, type = "o")
 write_xlsx(coherence_mat, path = file.path(outDir, "coherence.xlsx"))
 
 
-# Figure 1. Coherence plot ----------------------------------------------------------
+# Figure 1. Coherence plot -----------------------------------------------------
 
 fig1 <- coherence_mat %>%
   ggplot(aes(x = k, y = coherence)) +
@@ -123,9 +123,7 @@ ggsave(filename = file.path(figDir, "fig1.png"), fig1,
        width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
-################################################################################
-# Selected 7 Topic Model
-################################################################################
+## Selected 7 Topic Model ------------------------------------------------------
 set.seed(376)
 model <- FitLdaModel(dtm             = mSTEMMED, 
                      k               = 7,    
@@ -143,73 +141,137 @@ coherence
 names(model)
 mean(model$coherence)
 
-# Figure 3. Top Words ----------------------------------------------------------
+
+## Assigning probabilities of topics to observations (theta)
+set.seed(376)
+theta <- data.frame(predict(model, mSTEMMED,
+                            iterations = 1000, 
+                            burnin     = 100))   %>%
+  tibble::rownames_to_column("longid") %>%
+  mutate(longid = as_numeric(longid))
+
+head(theta) # probability
+
+## create wide data
+lcadata <- left_join(qualdataFULL, theta) %>%
+  select(-c(qual, wN, same, topic, fair)) %>%
+  pivot_wider(names_from  = x, 
+              values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
+
+
+lcadata <- left_join(lcadata, data) ## Join tables
+
+## Need matched data
+tally <- lcadata %>% 
+  group_by(CaseID) %>%
+  tally() 
+
+lcadata <- left_join(lcadata, tally)
+
+### Function to drop opposite decision variables
+not_all_na <- function(x) any(!is.na(x))
+
+### Decision 1
+lca1 <- lcadata               %>%
+  group_by(CaseID)            %>%
+  filter(n == 2)              %>%    # keep matched decisions
+  mutate(row = row_number())  %>%
+  filter(row==1)              %>%    # keep decision 1 rows
+  select(where(not_all_na))   %>%    # keep decision 1 variables
+  select(!c(fair2, qual2, 
+            aperson, dum2, 
+            per2))     %>%
+  rename(fair     = fair1,
+         qual     = qual1,
+         person   = iperson,
+         dum      = dum1,
+         per      = per1)    %>%
+  mutate(decision = "high")
+
+#### Remove everything from the second underscore onwards
+colnames(lca1) <- sub("(_[^_]+){1}$", "", colnames(lca1))
+
+### Decision 2
+lca2 <- lcadata               %>%
+  group_by(CaseID)            %>%
+  filter(n == 2)              %>%    # keep matched decisions
+  mutate(row = row_number())  %>%
+  filter(row==2)              %>%    # keep decision 2 rows
+  select(where(not_all_na))   %>%    # keep decision 2 variables
+  select(!c(fair1, qual1,
+            iperson, dum1, 
+            per1))     %>%
+  rename(fair     = fair2,
+         qual     = qual2,
+         person   = aperson,
+         dum      = dum2,
+         per      = per2)    %>%
+  mutate(decision = "low")
+
+#### Remove everything from the second underscore onwards
+colnames(lca2) <- sub("(_[^_]+){1}$", "", colnames(lca2))
+
+# Append data frames together
+data_lca <- rbind(lca1, lca2)  # 7434 matched person decisions
+
+## Arrange column and row order
+data_lca <- data_lca                  %>% 
+  select(CaseID, decision, fair, dum, per, qual, starts_with("t_"), 
+         everything())                %>%
+  mutate(CaseID = as.numeric(CaseID)) %>%
+  arrange(CaseID)                     %>%
+  mutate(CaseID = as.character(CaseID))
+
+## Get topic frequency -- Average theta!
+data_lca %>%
+  ungroup %>%
+  summarise_at(vars(t_1:t_7), mean, na.rm = TRUE)
 
 ## Table of top words
 model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
 t(model$top_terms)
-topterms         <- data.frame(model$top_terms)
-topterms         <- tibble::rownames_to_column(topterms, "rank") 
 
-head(topterms)
-topterms
-
-top7terms <- topterms %>%
-  select(rank, t_1, t_2, t_3, t_4, t_5, t_6, t_7) %>% 
-  rename("Assured Acquiescence (15%)"  = "t_1",
-         "Man has Final Say (8%)"      = "t_2",
-         "Practical Efficiency (34%)"  = "t_3",
-         "Happy Wife Happy Life (7%)"  = "t_4",
-         "Taking Turns (9%)"           = "t_5",
-         "Money Matters (13%)"         = "t_6", 
-         "Work Together (13%)"         = "t_7")
-
-write_xlsx(top7terms ,  
-           path = file.path(outDir, "Table03_topterms7topicfair.xlsx"))
-
-## Table of Phi, which is where top words come from.
-phi<-model$phi
-phi<-data.frame(phi)
-write_xlsx(phi,  path = file.path(outDir, "phi7topic.xlsx"))
-
-## Combine topterms and phi values
-df1 <- topterms %>%
+topterms <- data.frame(model$top_terms) %>%
+  rownames_to_column("rank") %>%
   pivot_longer(cols = starts_with("t_"), 
                names_to = "topic", values_to = "word")
 
-df2 <- data.frame(t(phi[-1]))
-df2 <- tibble::rownames_to_column(df2, "word")
+## Table of Phi, which is where top words come from.
+phi <- data.frame(model$phi)
 
-df2 <- df2 %>%
+phi <- data.frame(t(phi[-1])) %>%
+  rownames_to_column("word")  %>%
   pivot_longer(!word, names_to = "topic", values_to = "phi")
 
-data_fig3 <- left_join(df1, df2) %>%
+
+# Figure 3. Top Words ----------------------------------------------------------
+
+## Combine topterms and phi values
+data_fig3 <- left_join(topterms, phi) %>%
   dplyr::arrange(desc(phi))
 
-# Clean dataset
+### topic order is based on Average theta
 
-## topic order is based on frequency of topics for items + frequency of topics for activities
+### function to keep factor order
+fct_case_when <- function(...) {
+  args <- as.list(match.call())
+  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
+  levels <- levels[!is.na(levels)]
+  factor(dplyr::case_when(...), levels=levels)
+} 
+
 data_fig3 <- data_fig3 %>% # label topics
-  mutate(topic = case_when(
-    topic == "t_1" ~ "Topic 2:\nAssured Acquiescence (15%)",
-    topic == "t_2" ~ "Topic 6:\nMan Has Final Say (8%)",
-    topic == "t_3" ~ "Topic 1:\nPractical Efficiency (34%)",
-    topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (7%)",
-    topic == "t_5" ~ "Topic 5:\nTaking Turns (9%)",
-    topic == "t_6" ~ "Topic 3:\nMoney Matters (13%)",
-    topic == "t_7" ~ "Topic 4:\nWork Together (13%)"))
+  mutate(topic = fct_case_when(
+    topic == "t_3" ~ "Topic 1:\nPractical Efficiency (.19)",
+    topic == "t_1" ~ "Topic 2:\nGive & Take (.18)",
+    topic == "t_6" ~ "Topic 3:\nMoney Matters (.16)",
+    topic == "t_7" ~ "Topic 4:\nWork Together (.16)",
+    topic == "t_5" ~ "Topic 5:\nTaking Turns (.12)",
+    topic == "t_2" ~ "Topic 6:\nMan Has Final Say (.10)",
+    topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (.09)"), ordered = F)
 
-data_fig3$topic <- factor(data_fig3$topic,
-                          levels = c("Topic 1:\nPractical Efficiency (34%)",
-                                     "Topic 2:\nAssured Acquiescence (15%)",
-                                     "Topic 3:\nMoney Matters (13%)",
-                                     "Topic 4:\nWork Together (13%)",
-                                     "Topic 5:\nTaking Turns (9%)",
-                                     "Topic 6:\nMan Has Final Say (8%)",
-                                     "Topic 7:\nHappy Wife, Happy Life (7%)"), 
-                          ordered = FALSE)
+
 ## Create bargraphs
-
 fig3 <- data_fig3 %>%
   filter(as.numeric(rank) < 11) %>%
   filter(!is.na(phi)) %>%
@@ -232,6 +294,18 @@ fig3
 
 ggsave(file.path(figDir, "fig3.png"), fig3, 
        height = 8, width = 6, units="in",dpi = 300, bg = 'white')
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ################################################################################
@@ -293,7 +367,7 @@ freqs <- freqs %>%
 freqs
 
 # Rename topics
-levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Assured Acquiescence"
+levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Give & Take"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Man Has Final Say"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Practical Efficiency"
 levels(lcadata$top_i)[levels(lcadata$top_i)=="4"] <- "Happy Wife Happy Life"
@@ -303,14 +377,14 @@ levels(lcadata$top_i)[levels(lcadata$top_i)=="7"] <- "Work Together"
 
 lcadata$top_i <- factor(lcadata$top_i, 
                         levels = c("Practical Efficiency", 
-                                   "Assured Acquiescence", 
+                                   "Give & Take", 
                                    "Money Matters", 
                                    "Work Together",
                                    "Taking Turns", 
                                    "Man Has Final Say", 
                                    "Happy Wife Happy Life"))
 
-levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Assured Acquiescence"
+levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Give & Take"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Man Has Final Say"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Practical Efficiency"
 levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Happy Wife Happy Life"
@@ -320,7 +394,7 @@ levels(lcadata$top_a)[levels(lcadata$top_a)=="7"] <- "Work Together"
 
 lcadata$top_a <- factor(lcadata$top_a, 
                         levels = c("Practical Efficiency", 
-                                   "Assured Acquiescence", 
+                                   "Give & Take", 
                                    "Money Matters", 
                                    "Work Together",
                                    "Taking Turns",
@@ -465,7 +539,7 @@ data_fig5$type     <- factor(data_fig5$type, levels = c("Purchase", "Activity"),
 data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Man higher-earner", "Woman higher-earner", "Equal earners"), ordered = FALSE)
 
 data_fig5$response.level[data_fig5$response.level == "Practical Efficiency"]    <- "Practical\nEfficiency"
-data_fig5$response.level[data_fig5$response.level == "Assured Acquiescence"]    <- "Assured\nAcquiescence"
+data_fig5$response.level[data_fig5$response.level == "Give & Take"]    <- "Assured\nAcquiescence"
 data_fig5$response.level[data_fig5$response.level == "Money Matters"]           <- "Money\nMatters"
 data_fig5$response.level[data_fig5$response.level == "Work Together"]           <- "Work\nTogether"
 data_fig5$response.level[data_fig5$response.level == "Taking Turns"]            <- "Taking\nTurns"
