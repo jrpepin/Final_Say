@@ -214,6 +214,8 @@ colnames(lca2) <- sub("(_[^_]+){1}$", "", colnames(lca2))
 # Append data frames together
 data_lca <- rbind(lca1, lca2)  # 7434 matched person decisions
 
+data_lca$decision <- as.factor(data_lca$decision)
+
 ## Arrange column and row order
 data_lca <- data_lca                  %>% 
   select(CaseID, decision, fair, dum, per, qual, starts_with("t_"), 
@@ -306,7 +308,9 @@ ggsave(file.path(figDir, "fig3.png"), fig3,
 ## List of topics
 dv <- names(c(select(data_lca %>% ungroup(), starts_with("t_"))))
 
-## Create pdata frames
+## Prepare data for plm
+
+### All
 pdata_m1 <- pdata.frame(data_lca %>% 
                           filter(relinc == "Man higher-earner"),   
                         index = c("CaseID"))
@@ -317,7 +321,31 @@ pdata_m3 <- pdata.frame(data_lca %>%
                           filter(relinc == "Equal earners"),       
                         index = c("CaseID"))
 
+### Men
+pdata_m1M <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Man higher-earner"   & gender == "Male"),   
+                        index = c("CaseID"))
+pdata_m2M <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Woman higher-earner" & gender == "Male"), 
+                        index = c("CaseID"))
+pdata_m3M <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Equal earners"       & gender == "Male"),       
+                        index = c("CaseID"))
+
+### Women
+pdata_m1W <- pdata.frame(data_lca %>% 
+                           filter(relinc == "Man higher-earner"   & gender == "Female"),   
+                         index = c("CaseID"))
+pdata_m2W <- pdata.frame(data_lca %>% 
+                           filter(relinc == "Woman higher-earner" & gender == "Female"), 
+                         index = c("CaseID"))
+pdata_m3W <- pdata.frame(data_lca %>% 
+                           filter(relinc == "Equal earners"       & gender == "Female"),       
+                         index = c("CaseID"))
+
 ## Create the plm functions
+
+### All
 plms_mhe <- function(dv){
   formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
   plm(formula, data = pdata_m1, model = "within")
@@ -333,19 +361,78 @@ plms_ee  <- function(dv){
   plm(formula, data = pdata_m3, model = "within")
 }
 
+### Men
+plms_mheM <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m1M, model = "within")
+}
+
+plms_wheM <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m2M, model = "within")
+}
+
+plms_eeM  <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m3M, model = "within")
+}
+
+### Women
+plms_mheW <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m1W, model = "within")
+}
+
+plms_wheW <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m2W, model = "within")
+}
+
+plms_eeW  <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m3W, model = "within")
+}
+
+
 ## Run the fixed effects models (loop over topics as DVs)
-fe_mhe   <- lapply(dv, plms_mhe) # Man higher-earner
-fe_whe   <- lapply(dv, plms_whe) # Woman higher-earner
-fe_ee    <- lapply(dv, plms_ee)  # Equal earners
+fe_mhe    <- lapply(dv, plms_mhe)  # Man higher-earner
+fe_whe    <- lapply(dv, plms_whe)  # Woman higher-earner
+fe_ee     <- lapply(dv, plms_ee)   # Equal earners
 
-mods_mhe <- list(fe_mhe[[1]], fe_mhe[[2]], fe_mhe[[3]], fe_mhe[[4]],
-                 fe_mhe[[5]], fe_mhe[[6]], fe_mhe[[7]])
+fe_mheM   <- lapply(dv, plms_mheM) # Man higher-earner
+fe_wheM   <- lapply(dv, plms_wheM) # Woman higher-earner
+fe_eeM    <- lapply(dv, plms_eeM)  # Equal earners
 
-mods_whe <- list(fe_whe[[1]], fe_whe[[2]], fe_whe[[3]], fe_whe[[4]],
-                 fe_whe[[5]], fe_whe[[6]], fe_whe[[7]])
+fe_mheW   <- lapply(dv, plms_mheW) # Man higher-earner
+fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
+fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
 
-mods_ee  <- list(fe_ee[[1]],  fe_ee[[2]],  fe_ee[[3]],  fe_ee[[4]],
-                 fe_ee[[5]],  fe_ee[[6]],  fe_ee[[7]])
+mods_mhe  <- list(fe_mhe[[1]],  fe_mhe[[2]],  fe_mhe[[3]],  fe_mhe[[4]],
+                  fe_mhe[[5]],  fe_mhe[[6]],  fe_mhe[[7]])
+
+mods_whe  <- list(fe_whe[[1]],  fe_whe[[2]],  fe_whe[[3]],  fe_whe[[4]],
+                  fe_whe[[5]],  fe_whe[[6]],  fe_whe[[7]])
+
+mods_ee   <- list(fe_ee[[1]],   fe_ee[[2]],   fe_ee[[3]],   fe_ee[[4]],
+                  fe_ee[[5]],   fe_ee[[6]],   fe_ee[[7]])
+
+mods_mheM <- list(fe_mheM[[1]], fe_mheM[[2]], fe_mheM[[3]], fe_mheM[[4]],
+                  fe_mheM[[5]], fe_mheM[[6]], fe_mheM[[7]])
+
+mods_wheM <- list(fe_wheM[[1]], fe_wheM[[2]], fe_wheM[[3]], fe_wheM[[4]],
+                  fe_wheM[[5]], fe_wheM[[6]], fe_wheM[[7]])
+
+mods_eeM  <- list(fe_eeM[[1]],  fe_eeM[[2]],  fe_eeM[[3]],  fe_eeM[[4]],
+                  fe_eeM[[5]],  fe_eeM[[6]],  fe_eeM[[7]])
+
+mods_mheW <- list(fe_mheW[[1]], fe_mheW[[2]], fe_mheW[[3]], fe_mheW[[4]],
+                  fe_mheW[[5]], fe_mheW[[6]], fe_mheW[[7]])
+
+mods_wheW <- list(fe_wheW[[1]], fe_wheW[[2]], fe_wheW[[3]], fe_wheW[[4]],
+                  fe_wheW[[5]], fe_wheW[[6]], fe_wheW[[7]])
+
+mods_eeW  <- list(fe_eeW[[1]],  fe_eeW[[2]],  fe_eeW[[3]],  fe_eeW[[4]],
+                  fe_eeW[[5]],  fe_eeW[[6]],  fe_eeW[[7]])
 
 ## Average Marginal Effects of the models
 
@@ -359,15 +446,41 @@ ame_mhe  <- lapply(mods_mhe, give_me_ame)
 ame_whe  <- lapply(mods_whe, give_me_ame) 
 ame_ee   <- lapply(mods_ee,  give_me_ame) 
 
+ame_mheM <- lapply(mods_mheM, give_me_ame) 
+ame_wheM <- lapply(mods_wheM, give_me_ame) 
+ame_eeM  <- lapply(mods_eeM,  give_me_ame) 
+
+ame_mheW <- lapply(mods_mheW, give_me_ame) 
+ame_wheW <- lapply(mods_wheW, give_me_ame) 
+ame_eeW  <- lapply(mods_eeW,  give_me_ame)
+
 #### add relinc indicator
-ame_mhe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_mhe, "Men higher-earner", SIMPLIFY = FALSE)
+ame_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_mhe,  "Men higher-earner",    SIMPLIFY = FALSE)
 
-ame_whe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_whe, "Women higher-earner", SIMPLIFY = FALSE)
+ame_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_whe,  "Women higher-earner", SIMPLIFY = FALSE)
 
-ame_ee<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                ame_ee, "Equal earner", SIMPLIFY = FALSE)
+ame_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                ame_ee,    "Equal earner",        SIMPLIFY = FALSE)
+
+ame_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
+
+ame_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
+
+ame_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                ame_eeM,   "Equal earner",        SIMPLIFY = FALSE)
+
+ame_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
+
+ame_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_wheW, "Women higher-earner", SIMPLIFY = FALSE)
+
+ame_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  ame_eeW,   "Equal earner",        SIMPLIFY = FALSE)
 
 # Figure 4 ---------------------------------------------------------------------
 
@@ -376,10 +489,10 @@ df_mhe <- bind_rows(ame_mhe, .id = "topic")
 df_whe <- bind_rows(ame_whe, .id = "topic")
 df_ee  <- bind_rows(ame_ee,  .id = "topic")
 
-data_ame <- rbind(df_mhe, df_whe, df_ee)
+data_fig4 <- rbind(df_mhe, df_whe, df_ee)
 
-data_fig4 <- data_ame %>% # label topics
-  mutate(
+data_fig4 <- data_fig4 %>% 
+  mutate( 
     topic = fct_case_when(
       topic == "3" ~ "Practical Efficiency",
       topic == "1" ~ "Give & Take",
@@ -410,7 +523,7 @@ p1 <- data_fig4 %>%
   theme_minimal(13) +
   scale_fill_grey(name = " ") +
   scale_y_discrete(labels = NULL, breaks = NULL) +
-  scale_x_continuous(limits = c(-.22, .15)) +
+  scale_x_continuous(limits = c(-.22, .22)) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
         axis.text.x=element_blank(),
@@ -435,7 +548,7 @@ p2 <- data_fig4 %>%
   theme_minimal(13) +
   scale_fill_grey(name = " ") +
   scale_y_discrete(labels = NULL, breaks = NULL) +
-  scale_x_continuous(limits = c(-.22, .15)) +
+  scale_x_continuous(limits = c(-.22, .22)) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
         strip.text.x = element_blank(),
@@ -446,7 +559,7 @@ p2 <- data_fig4 %>%
         subtitle = "Low-stakes decisions")
 
 g1 <- ggplotGrob(p1)
-g2 <- ggplotGrob(p2)
+g2 <- ggplotGrob(p2) ## this is cutting off data?!?!?!
 g <- rbind(g1, g2, size = "first")
 g$widths <- unit.pmax(g1$widths, g2$widths)
 grid.newpage()
@@ -457,6 +570,62 @@ png(file.path(figDir, "fig4.png"),
     width = 850, height = 580, pointsize=16) 
 grid.draw(g) 
 dev.off()
+
+
+# Figure 5 ---------------------------------------------------------------------
+
+## Create predicted probabilities datesets
+pp1M <- ggpredict(plm1M, terms = c("per", "decision"))
+pp1M$relinc <- "Man higher-earner"
+pp1M$gender <- "Men"
+pp1F <- ggpredict(plm1F, terms = c("per", "decision"))
+pp1F$relinc <- "Man higher-earner"
+pp1F$gender <- "Women"
+
+
+
+
+
+
+
+
+
+
+#### put them into a dataframe -- WRONG -- THIS IS THE AME NOT THE PP
+df_mheM <- bind_rows(ame_mheM, .id = "topic")
+df_wheM <- bind_rows(ame_wheM, .id = "topic")
+df_eeM  <- bind_rows(ame_eeM,  .id = "topic")
+
+df_mheW <- bind_rows(ame_mheW, .id = "topic")
+df_wheW <- bind_rows(ame_wheW, .id = "topic")
+df_eeW  <- bind_rows(ame_eeW,  .id = "topic")
+
+data_ameM <- rbind(df_mheM, df_wheM, df_eeM)
+data_ameW <- rbind(df_mheW, df_wheW, df_eeW)
+
+data_ameM$gender <- "Men"
+data_ameW$gender <- "Women"
+
+data_fig5 <- rbind(data_ameM, data_ameW)
+
+data_fig5 <- data_fig5 %>% # label topics
+  mutate(
+    topic = fct_case_when(
+      topic == "3" ~ "Practical Efficiency",
+      topic == "1" ~ "Give & Take",
+      topic == "6" ~ "Money Matters",
+      topic == "7" ~ "Work Together",
+      topic == "5" ~ "Taking Turns",
+      topic == "2" ~ "Man Has Final Say",
+      topic == "4" ~ "Happy Wife, Happy Life"),
+    decider = fct_case_when(
+      per   == 1   ~ "She decided",
+      per   == 0   ~ "He decided"),
+    earner = fct_case_when(
+      relinc == "Men higher-earner"    ~ "Men higher-earner",
+      relinc == "Women higher-earner"  ~ "Women higher-earner",
+      relinc == "Equal earner"         ~ "Equal earners"))
+
 
 
 ################################################################################
