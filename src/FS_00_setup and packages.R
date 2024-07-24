@@ -37,6 +37,7 @@ pacman::p_load(
        ggrepel,         # graphing
        ggpubr, 
        ggtext,          # Color labels in ggtitle
+       gtable,          # Combine plots
        scales,          # percentages for ggplots axes
        officer,         # producing word output
        modelsummary,    # producing word tables

@@ -297,204 +297,222 @@ ggsave(file.path(figDir, "fig3.png"), fig3,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 ################################################################################
 # Topic Modeling Regression Tables
 ################################################################################
 
-## Assigning observations probabilities of topics
-set.seed(376)
-assign <- predict(model, mSTEMMED,
-                  iterations = 1000, 
-                  burnin     = 100)
+# Predict each topic -----------------------------------------------------------
 
-head(assign) # assign
+## List of topics
+dv <- names(c(select(data_lca %>% ungroup(), starts_with("t_"))))
 
-## create tibble
-assignments <- data.frame(assign)
-assignments <- tibble::rownames_to_column(assignments, "longid") 
-assignments$longid <- as_numeric(assignments$longid)
-head(assignments)
-write_xlsx(assignments,  path = file.path(outDir, "assignments.xlsx"))
+## Create pdata frames
+pdata_m1 <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Man higher-earner"),   
+                        index = c("CaseID"))
+pdata_m2 <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Woman higher-earner"), 
+                        index = c("CaseID"))
+pdata_m3 <- pdata.frame(data_lca %>% 
+                          filter(relinc == "Equal earners"),       
+                        index = c("CaseID"))
 
+## Create the plm functions
+plms_mhe <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m1, model = "within")
+}
 
-## create wide data
-assign <- left_join(qualdataFULL, assignments) %>%
-  select(-c(qual, wN, same, topic, fair)) %>%
-  pivot_wider(names_from  = x, 
-              values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
+plms_whe <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m2, model = "within")
+}
 
-colnames(assign) <- sub("_qual1", "_item", colnames(assign))
-colnames(assign) <- sub("_qual2", "_act", colnames(assign))
+plms_ee  <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m3, model = "within")
+}
 
-lcadata <- left_join(assign, data) ## Join tables
+## Run the fixed effects models (loop over topics as DVs)
+fe_mhe   <- lapply(dv, plms_mhe) # Man higher-earner
+fe_whe   <- lapply(dv, plms_whe) # Woman higher-earner
+fe_ee    <- lapply(dv, plms_ee)  # Equal earners
 
+mods_mhe <- list(fe_mhe[[1]], fe_mhe[[2]], fe_mhe[[3]], fe_mhe[[4]],
+                 fe_mhe[[5]], fe_mhe[[6]], fe_mhe[[7]])
 
-## Assign topics
-groups_i <- c("t_1_item", "t_2_item", "t_3_item", "t_4_item", 
-              "t_5_item", "t_6_item", "t_7_item")
-lcadata$top_i <- max.col(lcadata[groups_i], "first") #tie breakers to 1st class
-lcadata$top_i <- as.factor(lcadata$top_i)
+mods_whe <- list(fe_whe[[1]], fe_whe[[2]], fe_whe[[3]], fe_whe[[4]],
+                 fe_whe[[5]], fe_whe[[6]], fe_whe[[7]])
 
-groups_a <- c("t_1_act", "t_2_act", "t_3_act", "t_4_act", 
-              "t_5_act", "t_6_act", "t_7_act")
-lcadata$top_a <- max.col(lcadata[groups_a], "first") #tie breakers to 1st class
-lcadata$top_a <- as.factor(lcadata$top_a)
+mods_ee  <- list(fe_ee[[1]],  fe_ee[[2]],  fe_ee[[3]],  fe_ee[[4]],
+                 fe_ee[[5]],  fe_ee[[6]],  fe_ee[[7]])
 
-lcadata <- lcadata %>% 
-  select(CaseID, fair1, fair2, qual1, top_i, qual2, top_a, 
-         longid, everything()) # reorder columns
+## Average Marginal Effects of the models
 
-## Get topic frequency
-freq_i <- table(lcadata$top_i)  # frequency of each topic for items
-freq_a <- table(lcadata$top_a)  # frequency of each topic for activities
-freqs  <- data.frame(t(rbind(freq_i, freq_a))) 
-freqs  <- tibble::rownames_to_column(freqs, "topic")
-freqs$row_sum <- rowSums(freqs[ , c(2,3)], na.rm=TRUE)
-freqs <- freqs %>%
-  mutate(total=sum(row_sum),
-         prop=percent(row_sum/total, accuracy = 1))
-freqs
+### Create the function
+give_me_ame <- function(model){
+  avg_slopes(model, variables = c("dum"), by = c("decision", "per"))
+}
 
-# Rename topics
-levels(lcadata$top_i)[levels(lcadata$top_i)=="1"] <- "Give & Take"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="2"] <- "Man Has Final Say"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="3"] <- "Practical Efficiency"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="4"] <- "Happy Wife Happy Life"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="5"] <- "Taking Turns"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="6"] <- "Money Matters"
-levels(lcadata$top_i)[levels(lcadata$top_i)=="7"] <- "Work Together"
+#### estimate the AMEs
+ame_mhe  <- lapply(mods_mhe, give_me_ame) 
+ame_whe  <- lapply(mods_whe, give_me_ame) 
+ame_ee   <- lapply(mods_ee,  give_me_ame) 
 
-lcadata$top_i <- factor(lcadata$top_i, 
-                        levels = c("Practical Efficiency", 
-                                   "Give & Take", 
-                                   "Money Matters", 
-                                   "Work Together",
-                                   "Taking Turns", 
-                                   "Man Has Final Say", 
-                                   "Happy Wife Happy Life"))
+#### add relinc indicator
+ame_mhe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_mhe, "Men higher-earner", SIMPLIFY = FALSE)
 
-levels(lcadata$top_a)[levels(lcadata$top_a)=="1"] <- "Give & Take"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="2"] <- "Man Has Final Say"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="3"] <- "Practical Efficiency"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="4"] <- "Happy Wife Happy Life"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="5"] <- "Taking Turns"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="6"] <- "Money Matters"
-levels(lcadata$top_a)[levels(lcadata$top_a)=="7"] <- "Work Together"
+ame_whe<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 ame_whe, "Women higher-earner", SIMPLIFY = FALSE)
 
-lcadata$top_a <- factor(lcadata$top_a, 
-                        levels = c("Practical Efficiency", 
-                                   "Give & Take", 
-                                   "Money Matters", 
-                                   "Work Together",
-                                   "Taking Turns",
-                                   "Man Has Final Say", 
-                                   "Happy Wife Happy Life"))
+ame_ee<- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                ame_ee, "Equal earner", SIMPLIFY = FALSE)
 
-#creating predictor for respondents' preferred decision-maker
-lcadata<- lcadata%>%
+# Figure 4 ---------------------------------------------------------------------
+
+#### put them into a dataframe
+df_mhe <- bind_rows(ame_mhe, .id = "topic")
+df_whe <- bind_rows(ame_whe, .id = "topic")
+df_ee  <- bind_rows(ame_ee,  .id = "topic")
+
+data_ame <- rbind(df_mhe, df_whe, df_ee)
+
+data_fig4 <- data_ame %>% # label topics
   mutate(
-    ipref = case_when(
-      iperson== "Michelle" & dum1 == 1       			~ "Prefer Michelle",
-      iperson== "Anthony"  & dum1 == 0       			~ "Prefer Michelle",
-      iperson== "Michelle" & dum1 == 0       			~ "Prefer Anthony",
-      iperson== "Anthony"  & dum1 == 1       			~ "Prefer Anthony",
-    ))
+    topic = fct_case_when(
+      topic == "3" ~ "Practical Efficiency",
+      topic == "1" ~ "Give & Take",
+      topic == "6" ~ "Money Matters",
+      topic == "7" ~ "Work Together",
+      topic == "5" ~ "Taking Turns",
+      topic == "2" ~ "Man Has Final Say",
+      topic == "4" ~ "Happy Wife, Happy Life"),
+    decider = fct_case_when(
+      per   == 1   ~ "She decided",
+      per   == 0   ~ "He decided"),
+    earner = fct_case_when(
+      relinc == "Men higher-earner"    ~ "Men higher-earner",
+      relinc == "Women higher-earner"  ~ "Women higher-earner",
+      relinc == "Equal earner"         ~ "Equal earners"))
 
-lcadata<- lcadata%>%
-  mutate(
-    apref = case_when(
-      aperson== "Michelle" & dum2 == 1       			~ "Prefer Michelle",
-      aperson== "Anthony"  & dum2 == 0       			~ "Prefer Michelle",
-      aperson== "Michelle" & dum2 == 0       			~ "Prefer Anthony",
-      aperson== "Anthony"  & dum2 == 1       			~ "Prefer Anthony",
-    ))
-table(lcadata$apref )
-table(lcadata$dum2)
-table(lcadata$top_i)
+p1 <- data_fig4 %>%
+  filter(decision == "high") %>%
+  ggplot(aes(x = estimate, y = decider, fill = decider)) +
+  geom_col(width = 0.8, position = position_dodge(0.7)) +
+  geom_text(aes(x = estimate + .01 * sign(estimate), 
+                label = ifelse(p.value < .05, "*", " ")), 
+            position = position_dodge(width = 0.9), 
+            size = 3.5 , angle = 90) +
+  facet_grid(reorder(topic, -estimate) ~ earner,
+             space = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  scale_fill_grey(name = " ") +
+  scale_y_discrete(labels = NULL, breaks = NULL) +
+  scale_x_continuous(limits = c(-.22, .15)) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        axis.text.x=element_blank(),
+        legend.position     = "none") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs( title = "Average marginal effects of topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type",
+        x        = " ", 
+        y        = " ",
+        subtitle = "High-stakes decisions")
 
-#outputing to dta for multinom table in Stata because we don't know how to do it yet in R :D
-write_dta(lcadata, path = file.path(outDir, "lcadataMultinomTopics.dta")) 
-
-# Save data to a file so I can start troubleshooting from here
-saveRDS(lcadata, file = file.path(outDir,"lcadataMultinomTopics.rds"))
-
-## FIGURE 4 --------------------------------------------------------------------
-
-data_fig4 <- lcadata %>%
-  select(CaseID, top_i, top_a) %>%
-  pivot_longer(!CaseID, names_to = "decision", values_to = "topic") %>%
-  drop_na(topic) %>%
-  group_by(decision, topic) %>%
-  summarise(n = n()) %>%
-  mutate(prop = n / sum(n))
-
-data_fig4$decision[data_fig4$decision == "top_i"] <- "Purchase"
-data_fig4$decision[data_fig4$decision == "top_a"] <- "Activity"
-
-fig4 <- data_fig4 %>%
-  ggplot(aes(fill=topic, y=decision, x=prop)) + 
-  geom_bar(position=position_fill(reverse = TRUE), stat="identity") +
-  geom_text(aes(label = weights::rd(prop, digits =2)), 
-            position = position_fill(reverse = TRUE, 
-                                     vjust = .5), color = "white") +
-  theme_minimal(12) +
-  scale_fill_grey() +
-#  scale_fill_discrete_qualitative(palette = "Dark 3") +
-  theme(legend.position = "top",
-        axis.text.y = element_text(face="bold"),
-        plot.title.position = "plot") +
+p2 <- data_fig4 %>%
+  filter(decision == "low") %>%
+  ggplot(aes(x = estimate, y = decider, fill = decider)) +
+  geom_col(width = 0.8, position = position_dodge(0.7)) +
+  geom_text(aes(x = estimate + .01 * sign(estimate), 
+                label = ifelse(p.value < .05, "*", " ")), 
+            position = position_dodge(width = 0.9), 
+            size = 3.5 , angle = 90) +
+  facet_grid(reorder(topic, -estimate) ~ earner,
+             space = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  scale_fill_grey(name = " ") +
+  scale_y_discrete(labels = NULL, breaks = NULL) +
+  scale_x_continuous(limits = c(-.22, .15)) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        strip.text.x = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
   labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Topic probability by decision type")
+        y        = " ",
+        subtitle = "Low-stakes decisions")
 
-fig4
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2)
+g <- rbind(g1, g2, size = "first")
+g$widths <- unit.pmax(g1$widths, g2$widths)
+grid.newpage()
+grid.draw(g)
 
-ggsave(filename = file.path(figDir, "fig4.png"), fig4, 
-       width=8, height=5, units="in", dpi=300, bg = 'white')
+### save Figure 4
+png(file.path(figDir, "fig4.png"), 
+    width = 850, height = 580, pointsize=16) 
+grid.draw(g) 
+dev.off()
 
-# MULTINOMIALS -----------------------------------------------------------------
-### Purchase
-mn_item <- multinom(top_i ~ iperson * relinc + organize + mar + child + dur + item + 
-                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
 
-### Activity
-mn_act  <- multinom(top_a ~ aperson * relinc + organize + mar + child + dur + order + activity + 
-                      gender+relate+parent+raceeth+educ+employ+incdum+age, data = lcadata)
+################################################################################
+# Appendix (quant)
+################################################################################
 
-## Table A4 --------------------------------------------------------------------
-### Purchase
-mep_A4 <- marginaleffects::avg_slopes(mn_item, type = "probs", 
-                                      variables = c("iperson"), by = "relinc")
-mep_A4 <- as_tibble(mep_A4) %>%
-  select(group, relinc, estimate, std.error, p.value) %>%
-  mutate(estimate=round(estimate, digits = 2),
-         std.error=round(std.error, digits = 2),
-         std.error=round(std.error, digits = 3))
-kable(mep_A4, "simple")
+# Appendix Table A4 ------------------------------------------------------------
+## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
+## Decision Type, and Vignette Couple’s Relative Income
 
-### Activity
-mea_A4 <- marginaleffects::avg_slopes(mn_act, type = "probs", 
-                                      variables = c("aperson"), by = "relinc")
-mea_A4 <- as_tibble(mea_A4) %>%
-  select(group, relinc, estimate, std.error, p.value) %>%
-  mutate(estimate=round(estimate, digits = 2),
-         std.error=round(std.error, digits = 2),
-         std.error=round(std.error, digits = 3))
-kable(mea_A4, "simple")
+p1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable") 
+p2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+p3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+data_tableA4 <-  cbind(p1, p2, p3)
 
-## FIGURE 5 --------------------------------------------------------------------
+
+## control docx formatting output
+sect_properties <- prop_section(
+  page_size = page_size(orient = "landscape",
+                        width = 8.3, height = 11.7),
+  type = "continuous",
+  page_margins = page_mar())
+
+
+data_tableA4 %>%
+  select(c("decision", "  ", "Men higher-earner / 0", "Men higher-earner / 1", 
+           "Woman higher-earner / 0", "Woman higher-earner / 1",
+           "Equal earner / 0", "Equal earner / 1")) %>%
+  insert_row(c(" ", " ", 
+               "Anthony\nDecides", "Michelle\nDecides",
+               "Anthony\nDecides", "Michelle\nDecides", 
+               "Anthony\nDecides", "Michelle\nDecides"), after = 1)  %>%
+  huxtable::as_flextable() %>%
+  delete_rows(i = 1, part = "body") %>%
+  add_header_row(values = c("Decision", "Topic", "Men higher-earner", 
+                            "Women higher-earner", "Equal earners"),
+                 colwidths = c(1, 1, 2, 2, 2), top = TRUE) %>%
+  flextable::align(align = "center", part = "header") %>%
+  add_footer_lines("Notes: N=7,956 person-decisions. Coefficients are the marginal effects of perceiving a decision as fair on topic prevalence (theta) in respondents' open-ended explanations, calculated from respondent-level fixed effects models with interaction between decision-maker gender and perception of fairness. Independent models applied by relative income. * p < .05, ** p < .01, *** p < .001; 2 tailed tests. Standard errors in parentheses.") %>%
+  set_table_properties(layout = "autofit") %>%
+  save_as_docx(path = file.path(outDir, "finalsay_tableA4.docx"))
+
+
+
+
+
+
+
+
+
+
+
+## OLD FIGURE 5 ----------------------------------------------------------------
 
 ## Create an object with predicted probabilities
 ### https://community.rstudio.com/t/plotting-confidence-intervals-with-ggeffects-for-multinom/54354
@@ -629,45 +647,3 @@ fig5 <- ggarrange(p1_fig5, p2_fig5,
 fig5
 
 ggsave(filename = file.path(figDir, "fig5.png"), fig5, width=6.5, height=8, units="in", dpi=300, bg = 'white')
-
-
-## Table A5 --------------------------------------------------------------------
-### Purchase (same multinom from Table A4)
-mep_A5 <- marginaleffects::avg_slopes(mn_item, type = "probs", 
-                                      variables = c("iperson"), by = "gender")
-mep_A5 <- as_tibble(mep_A5) %>%
-  select(group, gender, estimate, std.error, p.value) %>%
-  mutate(estimate=round(estimate, digits = 2),
-         std.error=round(std.error, digits = 2),
-         std.error=round(std.error, digits = 3))
-kable(mep_A5, "simple")
-
-### Activity (same multinom from Table A4)
-mea_A5 <- marginaleffects::avg_slopes(mn_act, type = "probs", 
-                                      variables = c("aperson"), by = "gender")
-mea_A5 <- as_tibble(mea_A5) %>%
-  select(group, gender, estimate, std.error, p.value) %>%
-  mutate(estimate=round(estimate, digits = 2),
-         std.error=round(std.error, digits = 2),
-         std.error=round(std.error, digits = 3))
-kable(mea_A5, "simple")
-
-
-## Table A6 --------------------------------------------------------------------
-
-lcadata$ipref <- ifelse(lcadata$ipref == "Prefer Anthony", 1, 0)
-lcadata$apref <- ifelse(lcadata$apref == "Prefer Anthony", 1, 0)
-
-### Purchase
-logitP_A6 <- glm(ipref ~ top_i + relinc + organize + mar + child + dur + item +
-                gender+relate+parent+raceeth+educ+employ+incdum+age,
-              lcadata, family="binomial")
-
-summary(margins(logitP_A6, variables = c("top_i")))
-
-### Activity
-logitA_A6 <- glm(apref ~ top_a + relinc + organize + mar + child + dur + item +
-                   gender+relate+parent+raceeth+educ+employ+incdum+age,
-                 lcadata, family="binomial")
-
-summary(margins(logitA_A6, variables = c("top_a")))
