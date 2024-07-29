@@ -407,32 +407,6 @@ fe_mheW   <- lapply(dv, plms_mheW) # Man higher-earner
 fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
 fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
 
-mods_mhe  <- list(fe_mhe[[1]],  fe_mhe[[2]],  fe_mhe[[3]],  fe_mhe[[4]],
-                  fe_mhe[[5]],  fe_mhe[[6]],  fe_mhe[[7]])
-
-mods_whe  <- list(fe_whe[[1]],  fe_whe[[2]],  fe_whe[[3]],  fe_whe[[4]],
-                  fe_whe[[5]],  fe_whe[[6]],  fe_whe[[7]])
-
-mods_ee   <- list(fe_ee[[1]],   fe_ee[[2]],   fe_ee[[3]],   fe_ee[[4]],
-                  fe_ee[[5]],   fe_ee[[6]],   fe_ee[[7]])
-
-mods_mheM <- list(fe_mheM[[1]], fe_mheM[[2]], fe_mheM[[3]], fe_mheM[[4]],
-                  fe_mheM[[5]], fe_mheM[[6]], fe_mheM[[7]])
-
-mods_wheM <- list(fe_wheM[[1]], fe_wheM[[2]], fe_wheM[[3]], fe_wheM[[4]],
-                  fe_wheM[[5]], fe_wheM[[6]], fe_wheM[[7]])
-
-mods_eeM  <- list(fe_eeM[[1]],  fe_eeM[[2]],  fe_eeM[[3]],  fe_eeM[[4]],
-                  fe_eeM[[5]],  fe_eeM[[6]],  fe_eeM[[7]])
-
-mods_mheW <- list(fe_mheW[[1]], fe_mheW[[2]], fe_mheW[[3]], fe_mheW[[4]],
-                  fe_mheW[[5]], fe_mheW[[6]], fe_mheW[[7]])
-
-mods_wheW <- list(fe_wheW[[1]], fe_wheW[[2]], fe_wheW[[3]], fe_wheW[[4]],
-                  fe_wheW[[5]], fe_wheW[[6]], fe_wheW[[7]])
-
-mods_eeW  <- list(fe_eeW[[1]],  fe_eeW[[2]],  fe_eeW[[3]],  fe_eeW[[4]],
-                  fe_eeW[[5]],  fe_eeW[[6]],  fe_eeW[[7]])
 
 ## Average Marginal Effects of the models
 
@@ -442,36 +416,36 @@ give_me_ame <- function(model){
 }
 
 #### estimate the AMEs
-ame_mhe  <- lapply(mods_mhe, give_me_ame) 
-ame_whe  <- lapply(mods_whe, give_me_ame) 
-ame_ee   <- lapply(mods_ee,  give_me_ame) 
+ame_mhe  <- lapply(fe_mhe, give_me_ame) 
+ame_whe  <- lapply(fe_whe, give_me_ame) 
+ame_ee   <- lapply(fe_ee,  give_me_ame) 
 
-ame_mheM <- lapply(mods_mheM, give_me_ame) 
-ame_wheM <- lapply(mods_wheM, give_me_ame) 
-ame_eeM  <- lapply(mods_eeM,  give_me_ame) 
+ame_mheM <- lapply(fe_mheM, give_me_ame) 
+ame_wheM <- lapply(fe_wheM, give_me_ame) 
+ame_eeM  <- lapply(fe_eeM,  give_me_ame) 
 
-ame_mheW <- lapply(mods_mheW, give_me_ame) 
-ame_wheW <- lapply(mods_wheW, give_me_ame) 
-ame_eeW  <- lapply(mods_eeW,  give_me_ame)
+ame_mheW <- lapply(fe_mheW, give_me_ame) 
+ame_wheW <- lapply(fe_wheW, give_me_ame) 
+ame_eeW  <- lapply(fe_eeW,  give_me_ame)
 
 #### add relinc indicator
 ame_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_mhe,  "Men higher-earner",    SIMPLIFY = FALSE)
+                   ame_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
 
 ame_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_whe,  "Women higher-earner", SIMPLIFY = FALSE)
+                   ame_whe,  "Women higher-earner", SIMPLIFY = FALSE)
 
 ame_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                ame_ee,    "Equal earner",        SIMPLIFY = FALSE)
+                   ame_ee,    "Equal earner",       SIMPLIFY = FALSE)
 
 ame_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
+                   ame_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
 
 ame_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
+                   ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
 
 ame_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                ame_eeM,   "Equal earner",        SIMPLIFY = FALSE)
+                   ame_eeM,   "Equal earner",       SIMPLIFY = FALSE)
 
 ame_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                    ame_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
@@ -480,7 +454,7 @@ ame_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                    ame_wheW, "Women higher-earner", SIMPLIFY = FALSE)
 
 ame_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  ame_eeW,   "Equal earner",        SIMPLIFY = FALSE)
+                   ame_eeW,   "Equal earner",       SIMPLIFY = FALSE)
 
 # Figure 4 ---------------------------------------------------------------------
 
@@ -489,7 +463,7 @@ df_mhe <- bind_rows(ame_mhe, .id = "topic")
 df_whe <- bind_rows(ame_whe, .id = "topic")
 df_ee  <- bind_rows(ame_ee,  .id = "topic")
 
-data_fig4 <- rbind(df_mhe, df_whe, df_ee)
+data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee))
 
 data_fig4 <- data_fig4 %>% 
   mutate( 
