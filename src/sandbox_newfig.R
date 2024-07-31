@@ -90,9 +90,9 @@ df_wheW <- bind_rows(pp_wheW, .id = "topic")
 df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
 
 
-data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee, df_mheM, df_wheM, df_eeM, df_mheW, df_wheW, df_eeW))
+data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee, df_mheM, df_wheM, df_eeM, df_mheW, df_wheW, df_eeW))
 
-data_fig5 <- data_fig5 %>% 
+data_fig4 <- data_fig4 %>% 
   mutate( 
     topic = fct_case_when(
       topic == "3" ~ "Practical Efficiency",
@@ -121,13 +121,15 @@ data_fig5 <- data_fig5 %>%
   select(!c(x, group, facet))
 
 
-data_fig5 %>%
-  filter(gender == "All" & stakes == "High") %>%
-  ggplot(aes(x = predicted, y = decider, fill = fair)) +
+
+## Probability of topic combined -- appendix figure? 
+data_fig4 %>%
+  filter(gender == "All") %>%
+  ggplot(aes(x = predicted, y = earner, fill = fair)) +
   geom_col(width = 0.8, position="stack") +
 #  geom_point() +
-  facet_grid(rows   = vars(topic),
-             cols   = vars(earner),
+  facet_grid(rows   = vars(topic, decider),  
+             cols   = vars(stakes),
              space  = "free",
              switch = "y") +
   theme_minimal(13) +
@@ -136,10 +138,93 @@ data_fig5 %>%
         strip.text.y        = element_blank(),
         legend.position     = "bottom") +
   guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
   scale_fill_grey()
 
+
+
+data_fig4 %>%
+  filter(gender == "All" & fair == "Fair") %>%
+  ggplot(aes(x = predicted, y = forcats::fct_rev(decider), fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  #  geom_point() +
+  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+             cols   = vars(stakes), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        strip.text.y        = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ")
+
+## Fair -- gender
+## Make another one for low stakes and put together.
+## this should become figure 4
+data_fig4 %>%
+  filter(fair == "Fair" & stakes == "High" & gender != "All") %>%
+  ggplot(aes(x = predicted, y = forcats::fct_rev(decider), fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  #  geom_point() +
+  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+             cols   = vars(gender), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        strip.text.y        = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs( x        = " ", 
+        y        = " ",
+        subtitle = "High-stakes decisions")
+
+
+
+## only for fair!
+data_fig4 %>%
+  filter(fair == "Fair" & gender != "All") %>%
+  ggplot(aes(x = predicted, y = stakes)) +
+  geom_line() +
+  geom_point(aes(shape = gender), size = 2) +
+  facet_grid(rows   = vars(decider, topic),
+             cols   = vars(earner),
+             space  = "free",
+             switch = "y") +
+  scale_y_discrete(limits=rev, position = "right") +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Predicted probability of topic usage for high and low stakes decisions evaluated as fair",
+        subtitle = "by respondent gender, and vignette gender and relative earnings") +
+  theme_minimal() +
+  scale_shape_manual(values=c(1, 19), name = " ") +
+  theme(axis.text.x         = element_text(size = 10),
+        strip.text.x        = element_text(face = "bold", size = 10),
+        strip.text.y        = element_text(angle = 0, size = 10),
+        strip.text.y.left   = element_text(angle = 0),
+        axis.title          = element_text(size = 10), 
+        axis.text           = element_text(size = 8), 
+        plot.margin         = unit(c(.1,.5,.1,.5),"cm"),
+        legend.position     = "top",
+        plot.title.position = "plot",
+        axis.line           = element_line(size = 4, colour = "white"),
+        panel.spacing       = unit(.5, "lines"),
+        panel.grid.major.y  = element_line(colour="#f2f2f2", size=7),
+        panel.grid.minor.x  = element_blank(),
+        panel.border        = element_blank())
+
+
+
+  
 ## clear that bars add to 1, but unreadable in black & white
-data_fig5 %>%
+data_fig4 %>%
   filter(gender == "All") %>%
   ggplot(aes(x = predicted, y = decider, fill = topic)) +
   geom_col(width = 0.8, position="stack") +
@@ -155,36 +240,3 @@ data_fig5 %>%
         legend.position     = "bottom") +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_grey()
-
-
-data_fig5 %>%
-  filter(gender == "All" & fair == "Fair") %>%
-  ggplot(aes(x = predicted, y = earner)) +
-  geom_line() +
-  geom_point(aes(color = decider), size = 2) +
-  facet_grid(rows   = vars(topic),
-             cols   = vars(stakes),
-             space  = "free",
-             switch = "y") +
-  scale_y_discrete(limits=rev, position = "right") +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Predicted probability of topic usage for high and low stakes decisions",
-        subtitle = "by vignette gender and relative earnings") +
-  theme_minimal() +
-  theme(axis.text.x         = element_text(size = 10),
-        strip.text.x        = element_text(face = "bold", size = 10),
-        strip.text.y        = element_text(angle = 0, size = 10),
-        strip.text.y.left   = element_text(angle = 0),
-        axis.title          = element_text(size = 10), 
-        axis.text           = element_text(size = 8), 
-        plot.margin         = unit(c(.1,.5,.1,.5),"cm"),
-        legend.position     = "top",
-        plot.title.position = "plot",
-        axis.line           = element_line(size = 4, colour = "white"),
-        panel.spacing       = unit(.5, "lines"),
-        panel.grid.major.y  = element_line(colour="#f2f2f2", size=7),
-        panel.grid.minor.x  = element_blank(),
-        panel.border        = element_blank())
-  

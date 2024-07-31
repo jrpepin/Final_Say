@@ -302,7 +302,7 @@ fig2 <- data_fig2 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = "Respondents'\ngender",
-        title    = "Predicted percent of respondents who said the decision was somewhat or very fair",
+        title    = "Predicted percent of respondents who rated the decision as somewhat or very fair",
         subtitle = "By decision type, vignette couples' relative income and decision-maker gender, and respondent gender",
         caption  = "Predicted percentages calculated from respondent-fixed effects linear probability models (see Appendix Table A3). 
         Independent models applied by vignette couple’s relative income and respondent gender.") 

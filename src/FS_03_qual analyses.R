@@ -297,8 +297,6 @@ fig3
 ggsave(file.path(figDir, "fig3.png"), fig3, 
        height = 8, width = 6, units="in",dpi = 300, bg = 'white')
 
-
-
 ################################################################################
 # Topic Modeling Regression Tables
 ################################################################################
@@ -407,6 +405,191 @@ fe_mheW   <- lapply(dv, plms_mheW) # Man higher-earner
 fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
 fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
 
+# Figure 4 ---------------------------------------------------------------------
+### Create the function
+pp <- function(model){
+  ggpredict(model, terms = c("dum", "per", "decision"))
+}
+
+#### estimate the predicted probabilities
+pp_mhe   <- lapply(fe_mhe,  pp) # men-higher-earner R=ALL
+pp_mheM  <- lapply(fe_mheM, pp) # men-higher-earner R=Man
+pp_mheW  <- lapply(fe_mheW, pp) # men-higher-earner R=Woman
+
+pp_whe   <- lapply(fe_whe,  pp) # women-higher-earner R=ALL
+pp_wheM  <- lapply(fe_wheM, pp) # women-higher-earner R=Man
+pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
+
+pp_ee   <- lapply(fe_ee,  pp)   # equal earners R=ALL
+pp_eeM  <- lapply(fe_eeM, pp)   # equal earners R=Man
+pp_eeW  <- lapply(fe_eeW, pp)   # equal earners R=Woman
+
+
+#### add relinc indicator
+pp_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
+
+pp_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_whe,  "Women higher-earner", SIMPLIFY = FALSE)
+
+pp_ee  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 pp_ee,    "Equal earner",       SIMPLIFY = FALSE)
+
+pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
+
+pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
+
+pp_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 pp_eeM,   "Equal earner",       SIMPLIFY = FALSE)
+
+pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
+
+pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
+
+pp_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                 pp_eeW,   "Equal earner",       SIMPLIFY = FALSE)
+
+
+#### add R gender indicator
+pp_mhe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_mhe,  "All",   SIMPLIFY = FALSE)
+
+pp_whe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_whe,  "All",   SIMPLIFY = FALSE)
+
+pp_ee  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                 pp_ee,    "All",   SIMPLIFY = FALSE)
+
+pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_mheM, "Men",   SIMPLIFY = FALSE)
+
+pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_wheM, "Men",   SIMPLIFY = FALSE)
+
+pp_eeM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                 pp_eeM,   "Men",   SIMPLIFY = FALSE)
+
+pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_mheW, "Women", SIMPLIFY = FALSE)
+
+pp_wheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_wheW, "Women", SIMPLIFY = FALSE)
+
+pp_eeW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                 pp_eeW,   "Women", SIMPLIFY = FALSE)
+
+#### put them into a dataframe
+df_mhe  <- bind_rows(pp_mhe,  .id = "topic")
+df_whe  <- bind_rows(pp_whe,  .id = "topic")
+df_ee   <- bind_rows(pp_ee,   .id = "topic")
+
+df_mheM <- bind_rows(pp_mheM, .id = "topic")
+df_wheM <- bind_rows(pp_wheM, .id = "topic")
+df_eeM  <- bind_rows(pp_eeM,  .id = "topic")
+
+df_mheW <- bind_rows(pp_mheW, .id = "topic")
+df_wheW <- bind_rows(pp_wheW, .id = "topic")
+df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
+
+
+data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee, 
+                             df_mheM, df_wheM, df_eeM, 
+                             df_mheW, df_wheW, df_eeW))
+
+data_fig4 <- data_fig4 %>% 
+  mutate( 
+    topic = fct_case_when(
+      topic == "3" ~ "Practical Efficiency",
+      topic == "1" ~ "Give & Take",
+      topic == "6" ~ "Money Matters",
+      topic == "7" ~ "Work Together",
+      topic == "5" ~ "Taking Turns",
+      topic == "2" ~ "Man Has Final Say",
+      topic == "4" ~ "Happy Wife, Happy Life"),
+    decider = fct_case_when(
+      group == 0   ~ "He decided",
+      group == 1   ~ "She decided"),
+    fair = fct_case_when(
+      x     == 1   ~ "Fair",
+      x     == 0   ~ "Unfair"),
+    newest = case_when(
+      fair == "Fair"   ~ predicted,
+      fair == "Unfair" ~ -predicted),
+    stakes = fct_case_when(
+      facet == "high" ~ "High",
+      facet == "low"  ~ "Low"),
+    earner = fct_case_when(
+      relinc == "Men higher-earner"    ~ "Men higher-earner",
+      relinc == "Women higher-earner"  ~ "Women higher-earner",
+      relinc == "Equal earner"         ~ "Equal earners")) %>%
+  select(!c(x, group, facet))
+
+
+
+p1 <- data_fig4 %>%
+  filter(fair == "Fair" & gender != "All" & stakes == "High") %>%
+  ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+#        axis.text.y         = element_blank(),
+        strip.text.y        = element_blank(),
+        legend.position     = "none") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs(title     = "Predicted probability of topic for decisions rated somewhat or very fair\nby decision type, vignette couples' relative income and decision-maker gender, and respondent gender\n ",
+       x        = " ", 
+       y        = " ",
+        subtitle = "High-stakes decisions")
+
+p2 <- data_fig4 %>%
+  filter(fair == "Fair" & gender != "All" & stakes == "Low") %>%
+  ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  #  geom_point() +
+  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+#        axis.text.y         = element_blank(),
+        strip.text.y        = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs( x        = " ", 
+        y        = " ",
+        subtitle = "Low-stakes decisions")
+
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2) 
+g_fig4 <- rbind(g1, g2, size = "first")
+g_fig4$widths <- unit.pmax(g1$widths, g2$widths)
+grid.newpage()
+grid.draw(g_fig4)
+
+### save Figure 4
+png(file.path(figDir, "fig4.png"), 
+    width = 850, height = 580, pointsize=16) 
+grid.draw(g_fig4) 
+dev.off()
+
+
+
+# Figure 5 ---------------------------------------------------------------------
 
 ## Average Marginal Effects of the models
 
@@ -445,7 +628,7 @@ ame_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                    ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
 
 ame_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_eeM,   "Equal earner",       SIMPLIFY = FALSE)
+                  ame_eeM,   "Equal earner",       SIMPLIFY = FALSE)
 
 ame_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                    ame_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
@@ -454,18 +637,16 @@ ame_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                    ame_wheW, "Women higher-earner", SIMPLIFY = FALSE)
 
 ame_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_eeW,   "Equal earner",       SIMPLIFY = FALSE)
-
-# Figure 4 ---------------------------------------------------------------------
+                  ame_eeW,   "Equal earner",       SIMPLIFY = FALSE)
 
 #### put them into a dataframe
 df_mhe <- bind_rows(ame_mhe, .id = "topic")
 df_whe <- bind_rows(ame_whe, .id = "topic")
 df_ee  <- bind_rows(ame_ee,  .id = "topic")
 
-data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee))
+data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee))
 
-data_fig4 <- data_fig4 %>% 
+data_fig5 <- data_fig5 %>% 
   mutate( 
     topic = fct_case_when(
       topic == "3" ~ "Practical Efficiency",
@@ -483,7 +664,7 @@ data_fig4 <- data_fig4 %>%
       relinc == "Women higher-earner"  ~ "Women higher-earner",
       relinc == "Equal earner"         ~ "Equal earners"))
 
-p1 <- data_fig4 %>%
+p3 <- data_fig5 %>%
   filter(decision == "high") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
   geom_col(width = 0.8, position = position_dodge(0.7)) +
@@ -502,13 +683,13 @@ p1 <- data_fig4 %>%
         strip.text.y.left   = element_text(angle = 0),
         axis.text.x=element_blank(),
         legend.position     = "none") +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  labs( title = "Average marginal effects of topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type",
+  guides(fill    = guide_legend(reverse = TRUE)) +
+  labs(title     = "Average marginal effects of relationship of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
         x        = " ", 
         y        = " ",
         subtitle = "High-stakes decisions")
 
-p2 <- data_fig4 %>%
+p4 <- data_fig5 %>%
   filter(decision == "low") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
   geom_col(width = 0.8, position = position_dodge(0.7)) +
@@ -530,115 +711,21 @@ p2 <- data_fig4 %>%
   guides(fill = guide_legend(reverse = TRUE)) +
   labs( x        = " ", 
         y        = " ",
-        subtitle = "Low-stakes decisions")
+        subtitle = "Low-stakes decisions",
+        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair")
 
-g1 <- ggplotGrob(p1)
-g2 <- ggplotGrob(p2) ## this is cutting off data?!?!?!
-g <- rbind(g1, g2, size = "first")
-g$widths <- unit.pmax(g1$widths, g2$widths)
+g3 <- ggplotGrob(p3)
+g4 <- ggplotGrob(p4) ## this is cutting off data?!?!?!
+g_fig5 <- rbind(g3, g4, size = "first")
+g_fig5$widths <- unit.pmax(g3$widths, g4$widths)
 grid.newpage()
-grid.draw(g)
+grid.draw(g_fig5)
 
-### save Figure 4
-png(file.path(figDir, "fig4.png"), 
+### save Figure 5
+png(file.path(figDir, "fig5.png"), 
     width = 850, height = 580, pointsize=16) 
-grid.draw(g) 
+grid.draw(g_fig5) 
 dev.off()
-
-
-# Figure 5 ---------------------------------------------------------------------
-
-### Create the function to loop over models for predicted probabilities
-pp <- function(model){
-  ggpredict(model, terms = c("dum", "per", "decision"))
-}
-
-#### estimate the predicted probabilities
-pp_mheM  <- lapply(fe_mheM, pp) # men-higher-earner R=Man
-pp_mheW  <- lapply(fe_mheW, pp) # men-higher-earner R=Woman
-
-pp_wheM  <- lapply(fe_wheM, pp) # women-higher-earner R=Man
-pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
-
-pp_eeM  <- lapply(fe_eeM, pp)   # equal earners R=Man
-pp_eeW  <- lapply(fe_eeW, pp)   # equal earners R=Woman
-
-
-#### add relinc indicator
-pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
-
-pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
-
-pp_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeM,   "Equal earner",       SIMPLIFY = FALSE)
-
-pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
-
-pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
-
-pp_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeW,   "Equal earner",       SIMPLIFY = FALSE)
-
-
-#### add R gender indicator
-pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_mheM, "Men",   SIMPLIFY = FALSE)
-
-pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_wheM, "Men",   SIMPLIFY = FALSE)
-
-pp_eeM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeM,   "Men",   SIMPLIFY = FALSE)
-
-pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_mheW, "Women", SIMPLIFY = FALSE)
-
-pp_wheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_wheW, "Women", SIMPLIFY = FALSE)
-
-pp_eeW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeW,   "Women", SIMPLIFY = FALSE)
-
-#### put them into a dataframe
-df_mheM <- bind_rows(pp_mheM, .id = "topic")
-df_wheM <- bind_rows(pp_wheM, .id = "topic")
-df_eeM  <- bind_rows(pp_eeM,  .id = "topic")
-
-df_mheW <- bind_rows(pp_mheW, .id = "topic")
-df_wheW <- bind_rows(pp_wheW, .id = "topic")
-df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
-
-
-data_fig5 <- as_tibble(rbind(df_mheM, df_wheM, df_eeM, df_mheW, df_wheW, df_eeW))
-
-data_fig5 <- data_fig5 %>% 
-  mutate( 
-    topic = fct_case_when(
-      topic == "3" ~ "Practical Efficiency",
-      topic == "1" ~ "Give & Take",
-      topic == "6" ~ "Money Matters",
-      topic == "7" ~ "Work Together",
-      topic == "5" ~ "Taking Turns",
-      topic == "2" ~ "Man Has Final Say",
-      topic == "4" ~ "Happy Wife, Happy Life"),
-    decider = fct_case_when(
-      group == 1   ~ "She decided",
-      group == 0   ~ "He decided"),
-    fair = fct_case_when(
-      x     == 0   ~ "Unfair",
-      x     == 1   ~ "Fair"),
-    stakes = fct_case_when(
-      facet == "high" ~ "High",
-      facet == "low"  ~ "low"),
-    earner = fct_case_when(
-      relinc == "Men higher-earner"    ~ "Men higher-earner",
-      relinc == "Women higher-earner"  ~ "Women higher-earner",
-      relinc == "Equal earner"         ~ "Equal earners")) %>%
-  select(!c(x, group, facet))
 
 
 
