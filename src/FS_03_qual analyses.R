@@ -224,6 +224,9 @@ data_lca <- data_lca                  %>%
   arrange(CaseID)                     %>%
   mutate(CaseID = as.character(CaseID))
 
+## export to Excel
+write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
+
 ## Get topic frequency -- Average theta!
 data_lca %>%
   ungroup %>%
@@ -252,8 +255,6 @@ phi <- data.frame(t(phi[-1])) %>%
 data_fig3 <- left_join(topterms, phi) %>%
   dplyr::arrange(desc(phi))
 
-### topic order is based on Average theta
-
 ### function to keep factor order
 fct_case_when <- function(...) {
   args <- as.list(match.call())
@@ -262,13 +263,13 @@ fct_case_when <- function(...) {
   factor(dplyr::case_when(...), levels=levels)
 } 
 
-data_fig3 <- data_fig3 %>% # label topics
+data_fig3 <- data_fig3 %>% # label topics -- topic order is based on mean theta
   mutate(topic = fct_case_when(
     topic == "t_3" ~ "Topic 1:\nAccommodate (.19)",
-    topic == "t_1" ~ "Topic 2:\nConsensual (.18)",
-    topic == "t_7" ~ "Topic 3:\nJoint Participation (.16)",
+    topic == "t_1" ~ "Topic 2:\nBalanced Sacrifice (.18)",
+    topic == "t_7" ~ "Topic 3:\nConsensus (.16)",
     topic == "t_6" ~ "Topic 4:\nMoney Matters (.16)",
-    topic == "t_5" ~ "Topic 5:\nTaking Turns (.12)",
+    topic == "t_5" ~ "Topic 5:\nDecision History (.12)",
     topic == "t_2" ~ "Topic 6:\nMan Has Final Say (.10)",
     topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (.09)"), ordered = F)
 
@@ -406,6 +407,149 @@ fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
 fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
 
 # Figure 4 ---------------------------------------------------------------------
+
+## Average Marginal Effects of the models
+
+## Create the function
+give_me_ame <- function(model){
+  avg_slopes(model, variables = c("dum"), by = c("decision", "per"))
+}
+
+## estimate the AMEs
+ame_mhe  <- lapply(fe_mhe, give_me_ame) 
+ame_whe  <- lapply(fe_whe, give_me_ame) 
+ame_ee   <- lapply(fe_ee,  give_me_ame) 
+
+ame_mheM <- lapply(fe_mheM, give_me_ame) 
+ame_wheM <- lapply(fe_wheM, give_me_ame) 
+ame_eeM  <- lapply(fe_eeM,  give_me_ame) 
+
+ame_mheW <- lapply(fe_mheW, give_me_ame) 
+ame_wheW <- lapply(fe_wheW, give_me_ame) 
+ame_eeW  <- lapply(fe_eeW,  give_me_ame)
+
+## add relinc indicator
+ame_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
+
+ame_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_whe,  "Women higher-earner", SIMPLIFY = FALSE)
+
+ame_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_ee,    "Equal earner",       SIMPLIFY = FALSE)
+
+ame_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
+
+ame_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
+
+ame_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  ame_eeM,   "Equal earner",       SIMPLIFY = FALSE)
+
+ame_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
+
+ame_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                   ame_wheW, "Women higher-earner", SIMPLIFY = FALSE)
+
+ame_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  ame_eeW,   "Equal earner",       SIMPLIFY = FALSE)
+
+## put them into a data frame
+df_mhe <- bind_rows(ame_mhe, .id = "topic")
+df_whe <- bind_rows(ame_whe, .id = "topic")
+df_ee  <- bind_rows(ame_ee,  .id = "topic")
+
+data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee))
+
+## tidy the data frame
+data_fig4 <- data_fig4 %>% 
+  mutate( 
+    topic = fct_case_when(
+      topic == "3" ~ "Accommodate",
+      topic == "1" ~ "Balanced Sacrifice",
+      topic == "7" ~ "Consensus",
+      topic == "6" ~ "Money Matters",
+      topic == "5" ~ "Decision History",
+      topic == "2" ~ "Man Has Final Say",
+      topic == "4" ~ "Happy Wife, Happy Life"),
+    decider = fct_case_when(
+      per   == 1   ~ "She decided",
+      per   == 0   ~ "He decided"),
+    earner = fct_case_when(
+      relinc == "Men higher-earner"    ~ "Men higher-earner",
+      relinc == "Women higher-earner"  ~ "Women higher-earner",
+      relinc == "Equal earner"         ~ "Equal earners"))
+
+## create high stakes plot
+p1 <- data_fig4 %>%
+  filter(decision == "high") %>%
+  ggplot(aes(x = estimate, y = decider, fill = decider)) +
+  geom_col(width = 0.8, position = position_dodge(0.7)) +
+  geom_text(aes(x = estimate + .01 * sign(estimate), 
+                label = ifelse(p.value < .05, "*", " ")), 
+            position = position_dodge(width = 0.9), 
+            size = 3.5 , angle = 90) +
+  facet_grid(reorder(topic, -estimate) ~ earner,
+             space = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  scale_fill_grey(name = " ") +
+  scale_y_discrete(labels = NULL, breaks = NULL) +
+  scale_x_continuous(limits = c(-.3, .3)) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        axis.text.x=element_blank(),
+        legend.position     = "none") +
+  guides(fill    = guide_legend(reverse = TRUE)) +
+  labs(title     = "Average marginal effects of relationship of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
+       x        = " ", 
+       y        = " ",
+       subtitle = "High-stakes decisions")
+
+## create low stakes plot
+p2 <- data_fig4 %>%
+  filter(decision == "low") %>%
+  ggplot(aes(x = estimate, y = decider, fill = decider)) +
+  geom_col(width = 0.8, position = position_dodge(0.7)) +
+  geom_text(aes(x = estimate + .01 * sign(estimate), 
+                label = ifelse(p.value < .05, "*", " ")), 
+            position = position_dodge(width = 0.9), 
+            size = 3.5 , angle = 90) +
+  facet_grid(reorder(topic, -estimate) ~ earner,
+             space = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  scale_fill_grey(name = " ") +
+  scale_y_discrete(labels = NULL, breaks = NULL) +
+  scale_x_continuous(limits = c(-.3, .3)) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        strip.text.x = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs( x        = " ", 
+        y        = " ",
+        subtitle = "Low-stakes decisions",
+        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair")
+
+## combine the plots
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2) ## this is cutting off data?!?!?!
+g_fig4 <- rbind(g1, g2, size = "first")
+g_fig4$widths <- unit.pmax(g1$widths, g2$widths)
+grid.newpage()
+grid.draw(g_fig4)
+
+## save Figure 4
+png(file.path(figDir, "fig4.png"), 
+    width = 850, height = 580, pointsize=16) 
+grid.draw(g_fig4) 
+dev.off()
+
+
+# Figure 5 ---------------------------------------------------------------------
 ## Create the function
 pp <- function(model){
   ggpredict(model, terms = c("dum", "per", "decision"))
@@ -494,18 +638,18 @@ df_mheW <- bind_rows(pp_mheW, .id = "topic")
 df_wheW <- bind_rows(pp_wheW, .id = "topic")
 df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
 
-data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee, 
+data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee, 
                              df_mheM, df_wheM, df_eeM, 
                              df_mheW, df_wheW, df_eeW))
 ## Tidy the new data frame
-data_fig4 <- data_fig4 %>% 
+data_fig5 <- data_fig5 %>% 
   mutate( 
     topic = fct_case_when(
       topic == "3" ~ "Accommodate",
-      topic == "1" ~ "Consensual",
-      topic == "7" ~ "Joint Participation",
+      topic == "1" ~ "Balanced Sacrifice",
+      topic == "7" ~ "Consensus",
       topic == "6" ~ "Money Matters",
-      topic == "5" ~ "Taking Turns",
+      topic == "5" ~ "Decision History",
       topic == "2" ~ "Man Has Final Say",
       topic == "4" ~ "Happy Wife, Happy Life"),
     decider = fct_case_when(
@@ -528,7 +672,7 @@ data_fig4 <- data_fig4 %>%
 
 
 ## Create high stakes plot
-p1 <- data_fig4 %>%
+p3 <- data_fig5 %>%
   filter(fair == "Fair" & gender != "All" & stakes == "High") %>%
   ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
@@ -551,7 +695,7 @@ p1 <- data_fig4 %>%
         subtitle = "High-stakes decisions")
 
 ## Create low stakes plot
-p2 <- data_fig4 %>%
+p4 <- data_fig5 %>%
   filter(fair == "Fair" & gender != "All" & stakes == "Low") %>%
   ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
@@ -574,161 +718,20 @@ p2 <- data_fig4 %>%
         subtitle = "Low-stakes decisions")
 
 ## Create the combined plot
-g1 <- ggplotGrob(p1)
-g2 <- ggplotGrob(p2) 
-g_fig4 <- rbind(g1, g2, size = "first")
-g_fig4$widths <- unit.pmax(g1$widths, g2$widths)
-grid.newpage()
-grid.draw(g_fig4)
-
-### save Figure 4
-png(file.path(figDir, "fig4.png"), 
-    width = 850, height = 580, pointsize=16) 
-grid.draw(g_fig4) 
-dev.off()
-
-
-# Figure 5 ---------------------------------------------------------------------
-
-## Average Marginal Effects of the models
-
-## Create the function
-give_me_ame <- function(model){
-  avg_slopes(model, variables = c("dum"), by = c("decision", "per"))
-}
-
-## estimate the AMEs
-ame_mhe  <- lapply(fe_mhe, give_me_ame) 
-ame_whe  <- lapply(fe_whe, give_me_ame) 
-ame_ee   <- lapply(fe_ee,  give_me_ame) 
-
-ame_mheM <- lapply(fe_mheM, give_me_ame) 
-ame_wheM <- lapply(fe_wheM, give_me_ame) 
-ame_eeM  <- lapply(fe_eeM,  give_me_ame) 
-
-ame_mheW <- lapply(fe_mheW, give_me_ame) 
-ame_wheW <- lapply(fe_wheW, give_me_ame) 
-ame_eeW  <- lapply(fe_eeW,  give_me_ame)
-
-## add relinc indicator
-ame_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
-
-ame_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_whe,  "Women higher-earner", SIMPLIFY = FALSE)
-
-ame_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_ee,    "Equal earner",       SIMPLIFY = FALSE)
-
-ame_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
-
-ame_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_wheM, "Women higher-earner", SIMPLIFY = FALSE)
-
-ame_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  ame_eeM,   "Equal earner",       SIMPLIFY = FALSE)
-
-ame_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
-
-ame_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   ame_wheW, "Women higher-earner", SIMPLIFY = FALSE)
-
-ame_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  ame_eeW,   "Equal earner",       SIMPLIFY = FALSE)
-
-## put them into a data frame
-df_mhe <- bind_rows(ame_mhe, .id = "topic")
-df_whe <- bind_rows(ame_whe, .id = "topic")
-df_ee  <- bind_rows(ame_ee,  .id = "topic")
-
-data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee))
-
-## tidy the data frame
-data_fig5 <- data_fig5 %>% 
-  mutate( 
-    topic = fct_case_when(
-      topic == "3" ~ "Accommodate",
-      topic == "1" ~ "Consensual",
-      topic == "7" ~ "Joint Participation",
-      topic == "6" ~ "Money Matters",
-      topic == "5" ~ "Taking Turns",
-      topic == "2" ~ "Man Has Final Say",
-      topic == "4" ~ "Happy Wife, Happy Life"),
-    decider = fct_case_when(
-      per   == 1   ~ "She decided",
-      per   == 0   ~ "He decided"),
-    earner = fct_case_when(
-      relinc == "Men higher-earner"    ~ "Men higher-earner",
-      relinc == "Women higher-earner"  ~ "Women higher-earner",
-      relinc == "Equal earner"         ~ "Equal earners"))
-
-## create high stakes plot
-p3 <- data_fig5 %>%
-  filter(decision == "high") %>%
-  ggplot(aes(x = estimate, y = decider, fill = decider)) +
-  geom_col(width = 0.8, position = position_dodge(0.7)) +
-  geom_text(aes(x = estimate + .01 * sign(estimate), 
-                label = ifelse(p.value < .05, "*", " ")), 
-            position = position_dodge(width = 0.9), 
-            size = 3.5 , angle = 90) +
-  facet_grid(reorder(topic, -estimate) ~ earner,
-             space = "free",
-             switch = "y") +
-  theme_minimal(13) +
-  scale_fill_grey(name = " ") +
-  scale_y_discrete(labels = NULL, breaks = NULL) +
-  scale_x_continuous(limits = c(-.3, .3)) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        axis.text.x=element_blank(),
-        legend.position     = "none") +
-  guides(fill    = guide_legend(reverse = TRUE)) +
-  labs(title     = "Average marginal effects of relationship of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
-        x        = " ", 
-        y        = " ",
-        subtitle = "High-stakes decisions")
-
-## create low stakes plot
-p4 <- data_fig5 %>%
-  filter(decision == "low") %>%
-  ggplot(aes(x = estimate, y = decider, fill = decider)) +
-  geom_col(width = 0.8, position = position_dodge(0.7)) +
-  geom_text(aes(x = estimate + .01 * sign(estimate), 
-                label = ifelse(p.value < .05, "*", " ")), 
-            position = position_dodge(width = 0.9), 
-            size = 3.5 , angle = 90) +
-  facet_grid(reorder(topic, -estimate) ~ earner,
-             space = "free",
-             switch = "y") +
-  theme_minimal(13) +
-  scale_fill_grey(name = " ") +
-  scale_y_discrete(labels = NULL, breaks = NULL) +
-  scale_x_continuous(limits = c(-.3, .3)) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.x = element_blank(),
-        legend.position     = "bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  labs( x        = " ", 
-        y        = " ",
-        subtitle = "Low-stakes decisions",
-        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair")
-
-## combine the plots
 g3 <- ggplotGrob(p3)
-g4 <- ggplotGrob(p4) ## this is cutting off data?!?!?!
+g4 <- ggplotGrob(p4) 
 g_fig5 <- rbind(g3, g4, size = "first")
 g_fig5$widths <- unit.pmax(g3$widths, g4$widths)
 grid.newpage()
 grid.draw(g_fig5)
 
-## save Figure 5
+### save Figure 5
 png(file.path(figDir, "fig5.png"), 
     width = 850, height = 580, pointsize=16) 
 grid.draw(g_fig5) 
 dev.off()
+
+
 
 
 ################################################################################
@@ -828,24 +831,25 @@ data_fig5$x        <- factor(data_fig5$x, levels = c("She decided", "He decided"
 data_fig5$type     <- factor(data_fig5$type, levels = c("Purchase", "Activity"), ordered = FALSE)
 data_fig5$earnings <- factor(data_fig5$relinc, levels = c("Man higher-earner", "Woman higher-earner", "Equal earners"), ordered = FALSE)
 
-data_fig5$response.level[data_fig5$response.level == "Joint Participation"]     <- "Joint\nParticipation"
+data_fig5$response.level[data_fig5$response.level == "Balanced Sacrifice"]      <- "Balanced\nSacrifice"
+data_fig5$response.level[data_fig5$response.level == "Consensus"]               <- "Consensus"
 data_fig5$response.level[data_fig5$response.level == "Money Matters"]           <- "Money\nMatters"
-data_fig5$response.level[data_fig5$response.level == "Taking Turns"]            <- "Taking\nTurns"
+data_fig5$response.level[data_fig5$response.level == "Decision History"]        <- "Decision\nHistory"
 data_fig5$response.level[data_fig5$response.level == "Man Has Final Say"]       <- "Man Has\nFinal Say"
 data_fig5$response.level[data_fig5$response.level == "Happy Wife Happy Life"]   <- "Happy Wife\nHappy Life"
 
 data_fig5$response.level <- factor(data_fig5$response.level, 
                                     levels = c("Accommodate", 
-                                               "Consensual", 
-                                               "Joint\nParticipation",
+                                               "Balanced\nSacrifice", 
+                                               "Consensus",
                                                "Money\nMatters", 
-                                               "Taking\nTurns", 
+                                               "Decision\nHistory", 
                                                "Man Has\nFinal Say", 
                                                "Happy Wife\nHappy Life"))
 
 p1_fig5 <- data_fig5 %>%
-  filter(response.level == "Accommodate"         | response.level == "Consensual" |
-         response.level =="Joint\nParticipation" | response.level == "Money\nMatters") %>%
+  filter(response.level == "Accommodate"         | response.level == "Balanced\nSacrifice" |
+         response.level =="Consensus"            | response.level == "Money\nMatters") %>%
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
   geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
   geom_point(size = 2.5, shape=21, alpha = 0.7) +
@@ -879,7 +883,7 @@ p1_fig5
 
 
 p2_fig5 <- data_fig5 %>%
-  filter(response.level == "Taking\nTurns" | response.level == "Man Has\nFinal Say" |
+  filter(response.level == "Decision\nHistory" | response.level == "Man Has\nFinal Say" |
            response.level == "Happy Wife\nHappy Life") %>%
   ggplot(aes(x = predicted, y = earnings, fill = x)) +
   geom_errorbar(aes(xmin=conf.low, xmax=conf.high), color="#ADB5BD", width=.4) +
