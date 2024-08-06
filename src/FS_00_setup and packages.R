@@ -96,6 +96,15 @@ conflict_prefer("rename", "dplyr")
 conflict_prefer("arrange", "dplyr")
 conflict_prefer("desc", "dplyr")
 
+
+### function to keep factor order
+fct_case_when <- function(...) {
+  args <- as.list(match.call())
+  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
+  levels <- levels[!is.na(levels)]
+  factor(dplyr::case_when(...), levels=levels)
+} 
+
 ################################################################################
 # Download the data
 ################################################################################
@@ -141,13 +150,5 @@ if (!dir.exists(here::here(qualDir))){
   print("Qualitative data directory already exists!")
 }
 
-
-### function to keep factor order
-fct_case_when <- function(...) {
-  args <- as.list(match.call())
-  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
-  levels <- levels[!is.na(levels)]
-  factor(dplyr::case_when(...), levels=levels)
-} 
 
 message("End of FS_00_setup and packages") # Marks end of R Script

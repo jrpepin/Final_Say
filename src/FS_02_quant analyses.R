@@ -278,7 +278,7 @@ fig2 <- data_fig2 %>%
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#707070") +
   geom_text(position = position_dodge(width = .7),
-            vjust = -0.5,
+            vjust = -1,
             aes(label=sprintf("%1.0f%%", estimate*100))) +
   facet_grid(decision ~ relinc,
              scales="free",
@@ -308,7 +308,7 @@ fig2 <- data_fig2 %>%
 fig2
 
 ggsave(filename = file.path(figDir, "fig2.png"), fig2, 
-       width=9, height=7, units="in", dpi=300, bg = "white")
+       width=9, height=6, units="in", dpi=300, bg = "white")
 
 ################################################################################
 # Appendix (quant)

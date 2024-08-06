@@ -1,8 +1,8 @@
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_03_qual analyses.R
 # William J. Scarborough & Joanna R. Pepin
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # This file analyzes the qualitative responses.
 summary(qualdataFULL)
@@ -264,7 +264,6 @@ data_fig3 <- data_fig3 %>% # label topics -- topic order is based on mean theta
     topic == "t_5" ~ "Topic 5:\nDecision History (.12)",
     topic == "t_2" ~ "Topic 6:\nMan Has Final Say (.10)",
     topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (.09)"), ordered = F)
-
 
 ## Create bargraphs
 fig3 <- data_fig3 %>%
@@ -546,7 +545,7 @@ dev.off()
 
 ### CHANGE THIS TO avg_predictions; TERMS = BY
 pp <- function(model){
-  ggpredict(model, terms = c("dum", "per", "decision"))
+  avg_predictions(model, by = c("dum", "per", "decision"))
 }
 
 ## estimate the predicted probabilities
@@ -561,7 +560,6 @@ pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
 pp_ee    <- lapply(fe_ee,  pp)   # equal earners R=ALL
 pp_eeM   <- lapply(fe_eeM, pp)   # equal earners R=Man
 pp_eeW   <- lapply(fe_eeW, pp)   # equal earners R=Woman
-
 
 ## add relinc indicator
 pp_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
@@ -639,38 +637,41 @@ data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee,
 data_fig5 <- data_fig5 %>% 
   mutate( 
     topic = fct_case_when(
-      topic == "3" ~ "Accommodate",
-      topic == "1" ~ "Balanced Sacrifice",
-      topic == "7" ~ "Consensus",
-      topic == "6" ~ "Money Matters",
-      topic == "5" ~ "Decision History",
-      topic == "2" ~ "Man Has Final Say",
-      topic == "4" ~ "Happy Wife, Happy Life"),
-    decider = fct_case_when(
-      group == 0   ~ "He decided",
-      group == 1   ~ "She decided"),
-    fair = fct_case_when(
-      x     == 1   ~ "Fair",
-      x     == 0   ~ "Unfair"),
-    newest = case_when(
-      fair == "Fair"   ~ predicted,
-      fair == "Unfair" ~ -predicted),
-    stakes = fct_case_when(
-      facet == "high" ~ "High",
-      facet == "low"  ~ "Low"),
-    earner = fct_case_when(
-      relinc == "Men higher-earner"    ~ "Men higher-earner",
-      relinc == "Women higher-earner"  ~ "Women higher-earner",
-      relinc == "Equal earner"         ~ "Equal earners")) %>%
-  select(!c(x, group, facet))
+      topic    == "3" ~ "Accommodate",
+      topic    == "1" ~ "Balanced Sacrifice",
+      topic    == "7" ~ "Consensus",
+      topic    == "6" ~ "Money Matters",
+      topic    == "5" ~ "Decision History",
+      topic    == "2" ~ "Man Has Final Say",
+      topic    == "4" ~ "Happy Wife, Happy Life"),
+    decider    = fct_case_when(
+      per      == 0   ~ "He decided",
+      per      == 1   ~ "She decided"),
+    fair       = fct_case_when(
+      dum      == 1   ~ "Fair",
+      dum      == 0   ~ "Unfair"),
+    newest     = case_when(
+      fair     == "Fair"   ~ estimate,
+      fair     == "Unfair" ~ -estimate),
+    stakes     = fct_case_when(
+      decision == "high"  ~ "High",
+      decision == "low"   ~ "Low"),
+    earner     = fct_case_when(
+      relinc   == "Men higher-earner"    ~ "Men higher-earner",
+      relinc   == "Women higher-earner"  ~ "Women higher-earner",
+      relinc   == "Equal earner"         ~ "Equal earners"),
+    gender     = fct_case_when(
+      gender   == "Women" ~ "Women",
+      gender   == "Men" ~ "Men")) %>%
+    select(!c(rowid, per, dum, decision, rowid_dedup))
 
 
 ## Create high stakes plot
 p3 <- data_fig5 %>%
   filter(fair == "Fair" & gender != "All" & stakes == "High") %>%
-  ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
-  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+  facet_grid(rows   = vars(reorder(topic, -estimate)),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
@@ -691,10 +692,10 @@ p3 <- data_fig5 %>%
 ## Create low stakes plot
 p4 <- data_fig5 %>%
   filter(fair == "Fair" & gender != "All" & stakes == "Low") %>%
-  ggplot(aes(x = predicted, y = forcats::fct_rev(gender), fill = forcats::fct_rev(earner))) +
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
   #  geom_point() +
-  facet_grid(rows   = vars(reorder(topic, -predicted)),  
+  facet_grid(rows   = vars(reorder(topic, -estimate)),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
@@ -726,10 +727,8 @@ grid.draw(g_fig5)
 dev.off()
 
 
-
-
 ################################################################################
-# Appendix (quant)
+# Appendix (qual)
 ################################################################################
 
 # Appendix Table A4 ------------------------------------------------------------
