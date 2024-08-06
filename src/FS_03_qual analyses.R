@@ -255,14 +255,6 @@ phi <- data.frame(t(phi[-1])) %>%
 data_fig3 <- left_join(topterms, phi) %>%
   dplyr::arrange(desc(phi))
 
-### function to keep factor order
-fct_case_when <- function(...) {
-  args <- as.list(match.call())
-  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
-  levels <- levels[!is.na(levels)]
-  factor(dplyr::case_when(...), levels=levels)
-} 
-
 data_fig3 <- data_fig3 %>% # label topics -- topic order is based on mean theta
   mutate(topic = fct_case_when(
     topic == "t_3" ~ "Topic 1:\nAccommodate (.19)",
@@ -551,6 +543,8 @@ dev.off()
 
 # Figure 5 ---------------------------------------------------------------------
 ## Create the function
+
+### CHANGE THIS TO avg_predictions; TERMS = BY
 pp <- function(model){
   ggpredict(model, terms = c("dum", "per", "decision"))
 }
@@ -564,9 +558,9 @@ pp_whe   <- lapply(fe_whe,  pp) # women-higher-earner R=ALL
 pp_wheM  <- lapply(fe_wheM, pp) # women-higher-earner R=Man
 pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
 
-pp_ee   <- lapply(fe_ee,  pp)   # equal earners R=ALL
-pp_eeM  <- lapply(fe_eeM, pp)   # equal earners R=Man
-pp_eeW  <- lapply(fe_eeW, pp)   # equal earners R=Woman
+pp_ee    <- lapply(fe_ee,  pp)   # equal earners R=ALL
+pp_eeM   <- lapply(fe_eeM, pp)   # equal earners R=Man
+pp_eeW   <- lapply(fe_eeW, pp)   # equal earners R=Woman
 
 
 ## add relinc indicator
@@ -576,7 +570,7 @@ pp_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
 pp_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_whe,  "Women higher-earner", SIMPLIFY = FALSE)
 
-pp_ee  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+pp_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                  pp_ee,    "Equal earner",       SIMPLIFY = FALSE)
 
 pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
@@ -585,7 +579,7 @@ pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
 pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
 
-pp_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+pp_eeM  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                  pp_eeM,   "Equal earner",       SIMPLIFY = FALSE)
 
 pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
@@ -594,7 +588,7 @@ pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
 pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
 
-pp_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+pp_eeW  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                  pp_eeW,   "Equal earner",       SIMPLIFY = FALSE)
 
 ## add R gender indicator
@@ -604,7 +598,7 @@ pp_mhe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
 pp_whe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_whe,  "All",   SIMPLIFY = FALSE)
 
-pp_ee  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+pp_ee   <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_ee,    "All",   SIMPLIFY = FALSE)
 
 pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
@@ -613,7 +607,7 @@ pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
 pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_wheM, "Men",   SIMPLIFY = FALSE)
 
-pp_eeM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+pp_eeM  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_eeM,   "Men",   SIMPLIFY = FALSE)
 
 pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
@@ -622,7 +616,7 @@ pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
 pp_wheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_wheW, "Women", SIMPLIFY = FALSE)
 
-pp_eeW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+pp_eeW  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_eeW,   "Women", SIMPLIFY = FALSE)
 
 ## put them into a data frame

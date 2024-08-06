@@ -1,12 +1,12 @@
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # FINAL SAY PROJECT
 # FS_00_setup and packages.R
 # Joanna R. Pepin & William J. Scarborough
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
-#####################################################################################
+################################################################################
 ## Install and load required packages
-#####################################################################################
+################################################################################
 # install.packages("pacman")       # Install pacman package if not installed
 library("pacman")                  # Load pacman package
 
@@ -96,18 +96,18 @@ conflict_prefer("rename", "dplyr")
 conflict_prefer("arrange", "dplyr")
 conflict_prefer("desc", "dplyr")
 
-#####################################################################################
+################################################################################
 # Download the data
-#####################################################################################
+################################################################################
 ## Public Perception of Money in Families
 ## Data can be accessed here: http://tessexperiments.org/study/pepin791
 ## Data import code assumes the researcher downloaded the Stata data files.
 
 rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downloaded
 
-#####################################################################################
+################################################################################
 # Set-up the Directories
-#####################################################################################
+################################################################################
 
 projDir <- here::here()                           # File path to this project's directory
 dataDir <- here::here("../../Data/TESS")          # Name of folder where the TESS data was downloaded
@@ -140,5 +140,14 @@ if (!dir.exists(here::here(qualDir))){
 } else {
   print("Qualitative data directory already exists!")
 }
+
+
+### function to keep factor order
+fct_case_when <- function(...) {
+  args <- as.list(match.call())
+  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
+  levels <- levels[!is.na(levels)]
+  factor(dplyr::case_when(...), levels=levels)
+} 
 
 message("End of FS_00_setup and packages") # Marks end of R Script

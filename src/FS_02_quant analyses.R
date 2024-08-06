@@ -37,7 +37,8 @@ femodels <- quantdata %>%
     names_pattern = "(.*)(.)$",
     values_to = "fair") %>%
   filter(decision == drop2) %>%                                                 # back to 2 rows (decisions) per person
-  select(!c(drop1, drop2))
+  select(!c(drop1, drop2)) %>%
+  mutate(decision = as.factor(decision))
 
 
 # Table 02. --------------------------------------------------------------------
@@ -235,60 +236,57 @@ modelsummary(
 # Figure 02. -------------------------------------------------------------------
 
 ## Create predicted probabilities datesets
-pp1M <- ggpredict(plm1M, terms = c("per", "decision"))
+pp1M <- avg_predictions(plm1M, by = c("per", "decision"))
 pp1M$relinc <- "Man higher-earner"
 pp1M$gender <- "Men"
-pp1F <- ggpredict(plm1F, terms = c("per", "decision"))
+pp1F <- avg_predictions(plm1F, by = c("per", "decision"))
 pp1F$relinc <- "Man higher-earner"
 pp1F$gender <- "Women"
-pp2M <- ggpredict(plm2M, terms = c("per", "decision"))
+pp2M <- avg_predictions(plm2M, by = c("per", "decision"))
 pp2M$relinc <- "Woman higher-earner"
 pp2M$gender <- "Men"
-pp2F <- ggpredict(plm2F, terms = c("per", "decision"))
+pp2F <- avg_predictions(plm2F, by = c("per", "decision"))
 pp2F$relinc <- "Woman higher-earner"
 pp2F$gender <- "Women"
-pp3M <- ggpredict(plm3M, terms = c("per", "decision"))
+pp3M <- avg_predictions(plm3M, by = c("per", "decision"))
 pp3M$relinc <- "Equal earners"
 pp3M$gender <- "Men"
-pp3F <- ggpredict(plm3F, terms = c("per", "decision"))
+pp3F <- avg_predictions(plm3F, by = c("per", "decision"))
 pp3F$relinc <- "Equal earners"
 pp3F$gender <- "Women"
 
 ## Combine and clean the datasets
 data_fig2 <- do.call("rbind", list(pp1M, pp1F, pp2M, pp2F, pp3M, pp3F))
 
-data_fig2$x <-factor(data_fig2$x)
-levels(data_fig2$x)[levels(data_fig2$x)=="0"] <- "He\ndecided"
-levels(data_fig2$x)[levels(data_fig2$x)=="1"] <- "She\ndecided"
-data_fig2$x    <- factor(data_fig2$x, 
-                         levels  = c("He\ndecided", "She\ndecided"), 
-                         ordered = FALSE)
-data_fig2$group <-factor(data_fig2$group)
-levels(data_fig2$group)[levels(data_fig2$group)=="1"] <- "High\nstakes"
-levels(data_fig2$group)[levels(data_fig2$group)=="2"] <- "Low\nstakes"
-data_fig2$group <- factor(data_fig2$group, 
-                          levels  = c("High\nstakes", "Low\nstakes"), 
-                          ordered = FALSE)
-data_fig2$relinc <- factor(data_fig2$relinc,
-                           levels = c("Man higher-earner", 
-                                      "Woman higher-earner", 
-                                      "Equal earners"))
+## tidy the data frame
+data_fig2 <- data_fig2 %>% 
+  mutate( 
+    per = fct_case_when(
+      per   == 0   ~ "He\ndecided",
+      per   == 1   ~ "She\ndecided"),
+    decision = fct_case_when(
+      decision == "1" ~ "High\nstakes",
+      decision == "2" ~ "Low\nstakes"),
+    relinc = fct_case_when(
+      relinc == "Man higher-earner" ~ "Man higher-earner",
+      relinc == "Woman higher-earner" ~ "Woman higher-earner",
+      relinc == "Equal earners" ~ "Equal earners"))
 
 fig2 <- data_fig2 %>%
-  ggplot(aes(x = x, y = predicted, fill = gender)) +
+  ggplot(aes(x = per, y = estimate, fill = gender)) +
   geom_col(width = 0.6, position = position_dodge(0.7)) +
-  #  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
-  #                stat="identity", position=position_dodge(.7), color="#ADB5BD") +
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
+                stat="identity", position=position_dodge(.7), color="#707070") +
   geom_text(position = position_dodge(width = .7),
             vjust = -0.5,
-            aes(label=sprintf("%1.0f%%", predicted*100))) +
-  facet_grid(group ~ relinc,
+            aes(label=sprintf("%1.0f%%", estimate*100))) +
+  facet_grid(decision ~ relinc,
              scales="free",
              space = "free",
              switch = "y") +
   scale_fill_grey() +
   theme_minimal(12) +
-  theme(legend.position     = "right",
+  theme(legend.position     = "bottom",
         panel.grid.major.x  = element_blank(),
         strip.text          = element_text(face = "bold"),
         strip.text.y.left   = element_text(angle = 0),
@@ -298,10 +296,10 @@ fig2 <- data_fig2 %>%
         plot.caption        = element_text(face = "italic", color = "#707070"),
         plot.title          = ggtext::element_markdown(),
         plot.title.position = "plot") +
-  scale_y_continuous(labels=scales::percent, limits = c(0, .8)) +
+  scale_y_continuous(labels=scales::percent, limits = c(0, .88)) +
   labs( x        = " ", 
         y        = " ", 
-        fill     = "Respondents'\ngender",
+        fill     = "Respondents' gender",
         title    = "Predicted percent of respondents who rated the decision as somewhat or very fair",
         subtitle = "By decision type, vignette couples' relative income and decision-maker gender, and respondent gender",
         caption  = "Predicted percentages calculated from respondent-fixed effects linear probability models (see Appendix Table A3). 
@@ -310,7 +308,7 @@ fig2 <- data_fig2 %>%
 fig2
 
 ggsave(filename = file.path(figDir, "fig2.png"), fig2, 
-       width=9, height=6, units="in", dpi=300, bg = "white")
+       width=9, height=7, units="in", dpi=300, bg = "white")
 
 ################################################################################
 # Appendix (quant)
