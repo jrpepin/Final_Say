@@ -523,7 +523,7 @@ p2 <- data_fig4 %>%
   labs( x        = " ", 
         y        = " ",
         subtitle = "Low-stakes decisions",
-        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair")
+        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair\n * = p <.05 difference between probability of fair and unfair")
 
 ## combine the plots
 g1 <- ggplotGrob(p1)
