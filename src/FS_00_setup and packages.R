@@ -96,6 +96,9 @@ conflict_prefer("rename", "dplyr")
 conflict_prefer("arrange", "dplyr")
 conflict_prefer("desc", "dplyr")
 
+################################################################################
+# Functions
+################################################################################
 
 ### function to keep factor order
 fct_case_when <- function(...) {
@@ -112,7 +115,7 @@ fct_case_when <- function(...) {
 ## Data can be accessed here: http://tessexperiments.org/study/pepin791
 ## Data import code assumes the researcher downloaded the Stata data files.
 
-rawdata <- "TESS3_217_Pepin_Client.sav"           # Name of the data file downloaded
+rawdata <- "TESS3_217_Pepin_Client.sav"       # Name of the downloaded data file 
 
 ################################################################################
 # Set-up the Directories
