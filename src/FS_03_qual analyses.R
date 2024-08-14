@@ -301,6 +301,9 @@ dv <- names(c(select(data_lca %>% ungroup(), starts_with("t_"))))
 ## Prepare data for plm
 
 ### All
+
+pdata_m0 <- pdata.frame(data_lca,                  ## all relinc
+                        index = c("CaseID"))
 pdata_m1 <- pdata.frame(data_lca %>% 
                           filter(relinc == "Man higher-earner"),   
                         index = c("CaseID"))
@@ -312,30 +315,41 @@ pdata_m3 <- pdata.frame(data_lca %>%
                         index = c("CaseID"))
 
 ### Men
+pdata_m0M <- pdata.frame(data_lca %>% 
+                           filter(gender == "Male"),               ## all relinc
+                         index = c("CaseID"))
 pdata_m1M <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Man higher-earner"   & gender == "Male"),   
+                          filter(gender == "Male" & relinc == "Man higher-earner"),   
                         index = c("CaseID"))
 pdata_m2M <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Woman higher-earner" & gender == "Male"), 
+                          filter(gender == "Male" & relinc == "Woman higher-earner"), 
                         index = c("CaseID"))
 pdata_m3M <- pdata.frame(data_lca %>% 
-                          filter(relinc == "Equal earners"       & gender == "Male"),       
+                          filter(gender == "Male" & relinc == "Equal earners"),       
                         index = c("CaseID"))
 
 ### Women
+pdata_m0W <- pdata.frame(data_lca %>% 
+                           filter(gender == "Female"),              # all relinc
+                         index = c("CaseID"))
 pdata_m1W <- pdata.frame(data_lca %>% 
-                           filter(relinc == "Man higher-earner"   & gender == "Female"),   
+                           filter(gender == "Female" & relinc == "Man higher-earner"),   
                          index = c("CaseID"))
 pdata_m2W <- pdata.frame(data_lca %>% 
-                           filter(relinc == "Woman higher-earner" & gender == "Female"), 
+                           filter(gender == "Female" & relinc == "Woman higher-earner"), 
                          index = c("CaseID"))
 pdata_m3W <- pdata.frame(data_lca %>% 
-                           filter(relinc == "Equal earners"       & gender == "Female"),       
+                           filter(gender == "Female" & relinc == "Equal earners"),       
                          index = c("CaseID"))
 
 ## Create the plm functions
 
 ### All
+plms_all <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m0, model = "within")
+}
+
 plms_mhe <- function(dv){
   formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
   plm(formula, data = pdata_m1, model = "within")
@@ -352,6 +366,11 @@ plms_ee  <- function(dv){
 }
 
 ### Men
+plms_allM <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m0M, model = "within")
+}
+
 plms_mheM <- function(dv){
   formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
   plm(formula, data = pdata_m1M, model = "within")
@@ -368,6 +387,11 @@ plms_eeM  <- function(dv){
 }
 
 ### Women
+plms_allW <- function(dv){
+  formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
+  plm(formula, data = pdata_m0W, model = "within")
+}
+
 plms_mheW <- function(dv){
   formula <- as.formula(paste(dv, "~ dum + per + decision + (dum * per) + (dum * decision) + (per * decision) + (dum * per * decision)"))
   plm(formula, data = pdata_m1W, model = "within")
@@ -385,14 +409,17 @@ plms_eeW  <- function(dv){
 
 
 ## Run the fixed effects models (loop over topics as DVs)
+fe_all    <- lapply(dv, plms_all)  # All earners
 fe_mhe    <- lapply(dv, plms_mhe)  # Man higher-earner
 fe_whe    <- lapply(dv, plms_whe)  # Woman higher-earner
 fe_ee     <- lapply(dv, plms_ee)   # Equal earners
 
+fe_allM   <- lapply(dv, plms_allM) # All earners
 fe_mheM   <- lapply(dv, plms_mheM) # Man higher-earner
 fe_wheM   <- lapply(dv, plms_wheM) # Woman higher-earner
 fe_eeM    <- lapply(dv, plms_eeM)  # Equal earners
 
+fe_allW   <- lapply(dv, plms_allW) # All earners
 fe_mheW   <- lapply(dv, plms_mheW) # Man higher-earner
 fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
 fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
@@ -543,25 +570,33 @@ dev.off()
 # Figure 5 ---------------------------------------------------------------------
 ## Create the function
 
-### CHANGE THIS TO avg_predictions; TERMS = BY
-pp <- function(model){
+### Predicted Probabilities
+give_me_pp  <- function(model){
   avg_predictions(model, by = c("dum", "per", "decision"))
 }
 
 ## estimate the predicted probabilities
-pp_mhe   <- lapply(fe_mhe,  pp) # men-higher-earner R=ALL
-pp_mheM  <- lapply(fe_mheM, pp) # men-higher-earner R=Man
-pp_mheW  <- lapply(fe_mheW, pp) # men-higher-earner R=Woman
+pp_all   <- lapply(fe_all,  give_me_pp) # all earners R=ALL
+pp_allM  <- lapply(fe_allM, give_me_pp) # all earners R=Man
+pp_allW  <- lapply(fe_allW, give_me_pp) # all earners R=Woman
 
-pp_whe   <- lapply(fe_whe,  pp) # women-higher-earner R=ALL
-pp_wheM  <- lapply(fe_wheM, pp) # women-higher-earner R=Man
-pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
+pp_mhe   <- lapply(fe_mhe,  give_me_pp) # men-higher-earner R=ALL
+pp_mheM  <- lapply(fe_mheM, give_me_pp) # men-higher-earner R=Man
+pp_mheW  <- lapply(fe_mheW, give_me_pp) # men-higher-earner R=Woman
 
-pp_ee    <- lapply(fe_ee,  pp)   # equal earners R=ALL
-pp_eeM   <- lapply(fe_eeM, pp)   # equal earners R=Man
-pp_eeW   <- lapply(fe_eeW, pp)   # equal earners R=Woman
+pp_whe   <- lapply(fe_whe,  give_me_pp) # women-higher-earner R=ALL
+pp_wheM  <- lapply(fe_wheM, give_me_pp) # women-higher-earner R=Man
+pp_wheW  <- lapply(fe_wheW, give_me_pp) # women-higher-earner R=Woman
+
+pp_ee    <- lapply(fe_ee,   give_me_pp) # equal earners R=ALL
+pp_eeM   <- lapply(fe_eeM,  give_me_pp) # equal earners R=Man
+pp_eeW   <- lapply(fe_eeW,  give_me_pp) # equal earners R=Woman
 
 ## add relinc indicator
+
+pp_all  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_all,  "All earners",         SIMPLIFY = FALSE)
+
 pp_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
 
@@ -569,7 +604,10 @@ pp_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_whe,  "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_ee,    "Equal earner",       SIMPLIFY = FALSE)
+                 pp_ee,    "Equal earner",        SIMPLIFY = FALSE)
+
+pp_allM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_allM, "All earners",         SIMPLIFY = FALSE)
 
 pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
@@ -578,7 +616,10 @@ pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_eeM  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeM,   "Equal earner",       SIMPLIFY = FALSE)
+                 pp_eeM,   "Equal earner",        SIMPLIFY = FALSE)
+
+pp_allW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
+                  pp_allW, "All earners",         SIMPLIFY = FALSE)
 
 pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
@@ -587,9 +628,12 @@ pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_eeW  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeW,   "Equal earner",       SIMPLIFY = FALSE)
+                 pp_eeW,   "Equal earner",        SIMPLIFY = FALSE)
 
 ## add R gender indicator
+pp_all  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_all,  "All",   SIMPLIFY = FALSE)
+
 pp_mhe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_mhe,  "All",   SIMPLIFY = FALSE)
 
@@ -599,6 +643,9 @@ pp_whe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
 pp_ee   <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_ee,    "All",   SIMPLIFY = FALSE)
 
+pp_allM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_allM, "Men",   SIMPLIFY = FALSE)
+
 pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_mheM, "Men",   SIMPLIFY = FALSE)
 
@@ -607,6 +654,9 @@ pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
 
 pp_eeM  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_eeM,   "Men",   SIMPLIFY = FALSE)
+
+pp_allW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
+                  pp_allW, "Women", SIMPLIFY = FALSE)
 
 pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_mheW, "Women", SIMPLIFY = FALSE)
@@ -618,21 +668,24 @@ pp_eeW  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                  pp_eeW,   "Women", SIMPLIFY = FALSE)
 
 ## put them into a data frame
+df_all  <- bind_rows(pp_all,  .id = "topic")
 df_mhe  <- bind_rows(pp_mhe,  .id = "topic")
 df_whe  <- bind_rows(pp_whe,  .id = "topic")
 df_ee   <- bind_rows(pp_ee,   .id = "topic")
 
+df_allM <- bind_rows(pp_allM, .id = "topic")
 df_mheM <- bind_rows(pp_mheM, .id = "topic")
 df_wheM <- bind_rows(pp_wheM, .id = "topic")
 df_eeM  <- bind_rows(pp_eeM,  .id = "topic")
 
+df_allW <- bind_rows(pp_allW, .id = "topic")
 df_mheW <- bind_rows(pp_mheW, .id = "topic")
 df_wheW <- bind_rows(pp_wheW, .id = "topic")
 df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
 
-data_fig5 <- as_tibble(rbind(df_mhe, df_whe, df_ee, 
-                             df_mheM, df_wheM, df_eeM, 
-                             df_mheW, df_wheW, df_eeW))
+data_fig5 <- as_tibble(rbind(df_all,  df_mhe,  df_whe,  df_ee, 
+                             df_allM, df_mheM, df_wheM, df_eeM, 
+                             df_allW, df_mheW, df_wheW, df_eeW))
 ## Tidy the new data frame
 data_fig5 <- data_fig5 %>% 
   mutate( 
@@ -657,18 +710,20 @@ data_fig5 <- data_fig5 %>%
       decision == "high"  ~ "High",
       decision == "low"   ~ "Low"),
     earner     = fct_case_when(
+      relinc   == "All earners"          ~ "All earners",
       relinc   == "Men higher-earner"    ~ "Men higher-earner",
       relinc   == "Women higher-earner"  ~ "Women higher-earner",
       relinc   == "Equal earner"         ~ "Equal earners"),
     gender     = fct_case_when(
+      gender   == "All"   ~ "All",
       gender   == "Women" ~ "Women",
-      gender   == "Men" ~ "Men")) %>%
-    select(!c(rowid, per, dum, decision, rowid_dedup))
-
+      gender   == "Men"   ~ "Men")) %>%
+    select(!c(rowid, per, dum, decision, rowid_dedup, relinc))
 
 ## Create high stakes plot
 p3 <- data_fig5 %>%
-  filter(fair == "Fair" & gender != "All" & stakes == "High") %>%
+  filter(gender != "All" & earner != "All earners" & 
+         fair  == "Fair" & stakes == "High") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
   facet_grid(rows   = vars(reorder(topic, -estimate)),  
@@ -691,7 +746,8 @@ p3 <- data_fig5 %>%
 
 ## Create low stakes plot
 p4 <- data_fig5 %>%
-  filter(fair == "Fair" & gender != "All" & stakes == "Low") %>%
+  filter(gender != "All" & earner != "All earners" & 
+         fair  == "Fair" & stakes == "Low") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
   #  geom_point() +
@@ -726,6 +782,12 @@ png(file.path(figDir, "fig5.png"),
 grid.draw(g_fig5) 
 dev.off()
 
+
+## Test Respondent gender differences
+
+data_gen <- data_fig5 %>%
+  filter(earner == "All earners" & gender != "All" & fair == "Fair") %>%
+  arrange(topic, stakes, decider)
 
 ################################################################################
 # Appendix (qual)
