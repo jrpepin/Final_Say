@@ -433,7 +433,7 @@ num <-nrow(quantdata) #number of observations
 tabS2 # show table
 
 read_docx() %>% 
-  body_add_par(paste("Table 02. Weighted Bivariate Statistics of Perceptions of Fairness in Decision Making 
+  body_add_par(paste("Table S2. Bivariate Statistics of Perceptions of Fairness in Decision Making 
                by Type of Decision (N = ", num,")", sep="")) %>% 
   body_add_flextable(value = tabS2) %>% 
   print(target = file.path(outDir, "finalsay_tableS2.docx")) # save table
@@ -576,7 +576,7 @@ coef_map <- c(
   "per.2"    = "Low Stakes")
 
 ## Produce Table S3
-modelsummary(
+tabS3 <- modelsummary(
   panels_S3,
   shape = "rbind",
   coef_map = coef_map,
@@ -599,13 +599,20 @@ modelsummary(
   set_bottom_border(row = c(1,8,14), col = everywhere)            %>%
   set_align(row = c(3, 5, 9, 11, 15, 17), 1, "center")            %>%
   huxtable::as_flextable()                                        %>%
-  add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses. There were no statistically significant gender difference (p < .05).") %>%
-  save_as_docx(path = file.path(outDir, "finalsay_tableS3.docx"))
+  add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses. There were no statistically significant gender difference (p < .05).")
+
+num <-nrow(quantdata) #number of observations
+
+read_docx() %>% 
+  body_add_par(paste("Table S3. Marginal Effects of Woman Deciding on Perceptions of Fairness by Relative Income of Vignette Couple and Decision Type", sep="")) %>% 
+  body_add_flextable(value = tabS3) %>% 
+  print(target = file.path(outDir, "finalsay_tableS3.docx")) # save table
+
 
 # Supplementary Figure A. ------------------------------------------------------
 ## Fairness Evaluation by high/low Presented to Respondent
 
-data_figA <- quantdata %>%
+data_figS1 <- quantdata %>%
   select("CaseID", "high", "low", "fair1", "fair2") %>%
   # Create long data for high/low fairness vars
   pivot_longer(
@@ -627,14 +634,14 @@ data_figA <- quantdata %>%
   mutate(pct = prop.table(n)) %>%
   ungroup()
 
-data_figA$type[data_figA$type == "high"] <-"High\nstakes"
-data_figA$type[data_figA$type == "low"] <-"Low\nstakes"
+data_figS1$type[data_figS1$type == "high"] <-"High\nstakes"
+data_figS1$type[data_figS1$type == "low"] <-"Low\nstakes"
 
-data_figA$type <- factor(data_figA$type, 
+data_figS1$type <- factor(data_figS1$type, 
                          levels  = c("High\nstakes", "Low\nstakes"), 
                          ordered = FALSE)
 
-figA <- data_figA %>%
+figS1 <- data_figS1 %>%
   ggplot(aes(x = category, y = pct, fill = fct_rev(fairness))) +
   geom_col(position = "fill",
            width = 0.6) +
@@ -666,8 +673,8 @@ figA <- data_figA %>%
         title    = "Fairness evaluation for high and low stake decisions",
         subtitle = "How fair do you think the decision was?")
 
-figA   
+figS1   
 
-ggsave(filename = file.path(figDir, "figA.png"), figA, 
+ggsave(filename = file.path(figDir, "figS1.png"), figS1, 
        width=6, height=4, units="in", dpi=300, bg = 'white')
 
