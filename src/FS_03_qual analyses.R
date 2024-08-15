@@ -820,17 +820,44 @@ dev.off()
 ################################################################################
 
 # Supplementary Table S4 -------------------------------------------------------
+## Average Probabilistic Coherence for LDA Models with Independent Topic Models 
+## by Decision-Type
+
+# ?!?! Still need to add
+
+# Supplementary Table S5 -------------------------------------------------------
+## Highest-ranking Word Stems Per Topics, 
+## Independent LDA on High-Stakes and Low-Stakes Decisions
+
+# ?!?! Still need to add
+
+# Supplementary Table S6 -------------------------------------------------------
 ## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
 ## Decision Type, and Vignette Couple’s Relative Income
 
-p1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable") 
-p2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable")
-p3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable")
-data_tableS4 <-  cbind(p1, p2, p3)
+# ?!?! These topics are out of order. 
+# ?!?! significance stars are currently missing
 
+s1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable") 
+s2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+s3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
+                   gof_map = NA, output = "huxtable")
+data_tableS6 <-  cbind(s1, s2, s3)
+
+data_tableS6 <- data_tableS6 %>%
+  rename(topic = 3) %>%
+  mutate( 
+    topic = fct_case_when(
+      topic    == "(3)" ~ "Accommodate",
+      topic    == "(1)" ~ "Balanced Sacrifice",
+      topic    == "(7)" ~ "Consensus",
+      topic    == "(6)" ~ "Money Matters",
+      topic    == "(5)" ~ "Decision History",
+      topic    == "(2)" ~ "Man Has Final Say",
+      topic    == "(4)" ~ "Happy Wife, Happy Life"))
+    
 
 ## control docx formatting output
 sect_properties <- prop_section(
@@ -840,9 +867,9 @@ sect_properties <- prop_section(
   page_margins = page_mar())
 
 
-data_tableS4 %>%
-  select(c("decision", "  ", "Men higher-earner / 0", "Men higher-earner / 1", 
-           "Woman higher-earner / 0", "Woman higher-earner / 1",
+tabS6 <- data_tableS6 %>%
+  select(c("decision", topic, "Men higher-earner / 0", "Men higher-earner / 1", 
+           "Women higher-earner / 0", "Women higher-earner / 1",
            "Equal earner / 0", "Equal earner / 1")) %>%
   insert_row(c(" ", " ", 
                "Anthony\nDecides", "Michelle\nDecides",
@@ -855,5 +882,105 @@ data_tableS4 %>%
                  colwidths = c(1, 1, 2, 2, 2), top = TRUE) %>%
   flextable::align(align = "center", part = "header") %>%
   add_footer_lines("Notes: N=7,956 person-decisions. Coefficients are the marginal effects of perceiving a decision as fair on topic prevalence (theta) in respondents' open-ended explanations, calculated from respondent-level fixed effects models with interaction between decision-maker gender and perception of fairness. Independent models applied by relative income. * p < .05, ** p < .01, *** p < .001; 2 tailed tests. Standard errors in parentheses.") %>%
-  set_table_properties(layout = "autofit") %>%
-  save_as_docx(path = file.path(outDir, "finalsay_tableS4.docx"))
+  set_table_properties(layout = "autofit") 
+
+read_docx() %>% 
+  body_add_par(paste("Table S6. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
+  body_add_flextable(value = tabS6) %>% 
+  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
+
+# Supplement Figure S2 ---------------------------------------------------------
+
+## Predicted probability of topic for decisions rated somewhat or very fair\n
+## by decision type, vignette couples' relative income and decision-maker gender, 
+## and respondent gender\n 
+
+
+## Test respondent gender differences ------------------------------------------
+data_gen_S <- data_fig5 %>%
+  filter(earner == "All earners" & gender != "All" & fair == "Unfair") %>%
+  arrange(topic, stakes, decider)
+
+gen_output_S <- NULL # create empty df for test results
+
+for (i in seq(1, nrow(data_gen_S), by = 2)) {
+  topic   <- data_gen_S[i, 1]
+  decider <- data_gen_S[i, 10]
+  stakes  <- data_gen_S[i, 13]
+  estimate    <- ((data_gen_S[i, 2] - data_gen_S[i + 1, 2]) / 
+                    sqrt(data_gen_S[i, 3]^2 + data_gen_S[i + 1, 3]^2))
+  p       <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  gen_output_S  <- rbind(gen_output_S, data.frame(topic, decider, stakes, estimate, p))
+}
+
+gen_output_S <- gen_output_S %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
+
+gen_output_S[!(is.na(gen_output_S$sig)), ] # show only statistically sig. gender differences
+
+## Create high stakes plot
+p5 <- data_fig5 %>%
+  filter(gender != "All" & earner != "All earners" & 
+           fair  == "Unfair" & stakes == "High") %>%
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  facet_grid(rows   = vars(reorder(topic, -estimate)),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        #        axis.text.y         = element_blank(),
+        strip.text.y        = element_blank(),
+        legend.position     = "none") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs(title     = "Predicted probability of topic for decisions rated somewhat or very unfair\nby decision type, vignette couples' relative income and decision-maker gender, and respondent gender\n ",
+       x        = " ", 
+       y        = " ",
+       subtitle = "High-stakes decisions")
+
+## Create low stakes plot
+p6 <- data_fig5 %>%
+  filter(gender != "All" & earner != "All earners" & 
+           fair  == "Unfair" & stakes == "Low") %>%
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.8, position="stack") +
+  #  geom_point() +
+  facet_grid(rows   = vars(reorder(topic, -estimate)),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(13) +
+  theme(plot.title.position = "plot",
+        strip.text.y.left   = element_text(angle = 0),
+        #        axis.text.y         = element_blank(),
+        strip.text.y        = element_blank(),
+        legend.position     = "bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs( x        = " ", 
+        y        = " ",
+        subtitle = "Low-stakes decisions")
+
+## Create the combined plot
+g5 <- ggplotGrob(p5)
+g6 <- ggplotGrob(p6) 
+g_figS2 <- rbind(g5, g6, size = "first")
+g_figS2$widths <- unit.pmax(g5$widths, g6$widths)
+grid.newpage()
+grid.draw(g_figS2)
+
+### save Supplementary figure 2
+png(file.path(figDir, "figS2.png"), 
+    width = 850, height = 580, pointsize=16) 
+grid.draw(g_figS2) 
+dev.off()
+
