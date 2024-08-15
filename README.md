@@ -9,7 +9,7 @@ Data can be accessed here: http://tessexperiments.org/study/pepin791
   
 ## Software requirements  
   
-R version 4.3.0 (2023-04-21 ucrt)  
+R version 4.4.0 (2024-04-24 ucrt) -- "Puppy Cup" 
   
 Install the pacman package if not already installed [ install.packages("pacman") ].  
 This is required to download and install most of the other packages used in this repository.  
@@ -30,9 +30,9 @@ FS_02_quant analyses
   
 * Table 02  
 * Figure 02  
-* Appendix Table A  
-* Appendix Table B  
-* Appendix Figure A  
+* Supplementary Table 1  
+* Supplementary Table 2  
+* Supplementary Figure 1  
   
 FS_03_qual analyses  
   
