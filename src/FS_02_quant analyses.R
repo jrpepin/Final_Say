@@ -120,15 +120,15 @@ m3F$term <- paste(m3F$term, m3F$decision, sep= ".")
 
 ## Test for statistical sig. between high and low stakes decisions
 ### Calculate Z scores 
-  MHE    <- (m1[[1,4]] - m1[[2,4]]) / sqrt(m1[[1,5]]^2 + m1[[2,5]]^2)
+  MHE    <- (m1[[1,4]]  - m1[[2,4]])  / sqrt(m1[[1,5]]^2  + m1[[2,5]]^2)
   MHEM   <- (m1M[[1,4]] - m1M[[2,4]]) / sqrt(m1M[[1,5]]^2 + m1M[[2,5]]^2)
   MHEF   <- (m1F[[1,4]] - m1F[[2,4]]) / sqrt(m1F[[1,5]]^2 + m1F[[2,5]]^2)
 
-  WHE    <- (m2[[1,4]] - m2[[2,4]]) / sqrt(m2[[1,5]]^2 + m2[[2,5]]^2)
+  WHE    <- (m2[[1,4]]  - m2[[2,4]])  / sqrt(m2[[1,5]]^2  + m2[[2,5]]^2)
   WHEM   <- (m2M[[1,4]] - m2M[[2,4]]) / sqrt(m2M[[1,5]]^2 + m2M[[2,5]]^2)
   WHEF   <- (m2F[[1,4]] - m2F[[2,4]]) / sqrt(m2F[[1,5]]^2 + m2F[[2,5]]^2)
  
-  EE     <- (m3[[1,4]] - m3[[2,4]]) / sqrt(m3[[1,5]]^2 + m3[[2,5]]^2)
+  EE     <- (m3[[1,4]]  - m3[[2,4]])  / sqrt(m3[[1,5]]^2  + m3[[2,5]]^2)
   EEM    <- (m3M[[1,4]] - m3M[[2,4]]) / sqrt(m3M[[1,5]]^2 + m3M[[2,5]]^2)
   EEF    <- (m3F[[1,4]] - m3F[[2,4]]) / sqrt(m3F[[1,5]]^2 + m3F[[2,5]]^2)
 

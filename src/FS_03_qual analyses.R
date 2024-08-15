@@ -123,7 +123,10 @@ ggsave(filename = file.path(figDir, "fig1.png"), fig1,
        width=6, height=4, units="in", dpi=300, bg = 'white')
 
 
-## Selected 7 Topic Model ------------------------------------------------------
+################################################################################
+# Selected 7 Topic Model 
+################################################################################
+
 set.seed(376)
 model <- FitLdaModel(dtm             = mSTEMMED, 
                      k               = 7,    
@@ -550,7 +553,9 @@ p2 <- data_fig4 %>%
   labs( x        = " ", 
         y        = " ",
         subtitle = "Low-stakes decisions",
-        caption = "Positive coefficients = more likely used when rated fair\nNegative coefficients = more likely used when rated unfair\n * = p <.05 difference between probability of fair and unfair")
+        caption = "Positive coefficients = more likely to be used when rated fair
+        Negative coefficients = more likely to be used when rated unfair 
+        * = p <.05 difference between probability of fair and unfair")
 
 ## combine the plots
 g1 <- ggplotGrob(p1)
@@ -720,6 +725,33 @@ data_fig5 <- data_fig5 %>%
       gender   == "Men"   ~ "Men")) %>%
     select(!c(rowid, per, dum, decision, rowid_dedup, relinc))
 
+
+## Test respondent gender differences ------------------------------------------
+data_gen <- data_fig5 %>%
+  filter(earner == "All earners" & gender != "All" & fair == "Fair") %>%
+  arrange(topic, stakes, decider)
+
+gen_output <- NULL # create empty df for test results
+
+for (i in seq(1, nrow(data_gen), by = 2)) {
+  topic   <- data_gen[i, 1]
+  decider <- data_gen[i, 10]
+  stakes  <- data_gen[i, 13]
+  estimate    <- ((data_gen[i, 2] - data_gen[i + 1, 2]) / 
+                    sqrt(data_gen[i, 3]^2 + data_gen[i + 1, 3]^2))
+  p       <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  gen_output  <- rbind(gen_output, data.frame(topic, decider, stakes, estimate, p))
+}
+
+gen_output <- gen_output %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
+
+gen_output[!(is.na(gen_output$sig)), ] # show only statistically sig. gender differences
+
 ## Create high stakes plot
 p3 <- data_fig5 %>%
   filter(gender != "All" & earner != "All earners" & 
@@ -783,11 +815,7 @@ grid.draw(g_fig5)
 dev.off()
 
 
-## Test Respondent gender differences
 
-data_gen <- data_fig5 %>%
-  filter(earner == "All earners" & gender != "All" & fair == "Fair") %>%
-  arrange(topic, stakes, decider)
 
 ################################################################################
 # Appendix (qual)
