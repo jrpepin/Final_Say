@@ -117,12 +117,16 @@ read_docx() %>%
 
 ### TOP WORDS ------------------------------------------------------------------
 
-in_list2  <- list(out_list[[1]], out_list[[2]])
-out_list3 <- lapply(in_list2, function(mSTEMMED){
+nested_list <- list(
+  list(m = out_list[[1]], k = 7),
+  list(m = out_list[[2]], k = 8))
+
+out_list3 <- lapply(nested_list, function(matrix){
   
 set.seed(376)
-model <- FitLdaModel(dtm             = mSTEMMED, 
-                     k               = 7,    
+
+model <- FitLdaModel(dtm             = matrix$m, 
+                     k               = matrix$k,    
                      iterations      = 1000, 
                      burnin          = 100, 
                      optimize_alpha  = TRUE,
@@ -165,14 +169,23 @@ theta_sum <- theta %>%
 
 ## Combine topterms and phi values
 words <- left_join(topterms, phi) %>%
-  left_join(., theta_sum) %>%
-  dplyr::arrange(desc(phi))
+  left_join(., theta_sum) 
 
 })
 
+## Combine list into a tidy df
 names(out_list3) <- c("High", "Low") # Rename lists 
 out_list3$`High`[["stakes"]] <- "High-stakes" # Add list identifier
 out_list3$`Low`[["stakes"]]  <- "Low-stakes"
 
-tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`))
+tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
+  arrange(stakes, topic, desc(phi)) %>%
+  mutate(rank = as.numeric(rank)) %>%
+  filter(rank < 11) %>%
+  select(c("topic", "word", "stakes", "rank")) %>%
+  pivot_wider(names_from = topic, values_from = word)
 
+tabS6 <- as_grouped_data(x = tabS6, groups = c("stakes"), columns = NULL) # Group by vignette condition
+
+tabS6 %>%
+  flextable::as_flextable(hide_grouplabel = TRUE) 
