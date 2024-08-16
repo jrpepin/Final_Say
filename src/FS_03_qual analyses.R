@@ -12,7 +12,7 @@ Corpusprep <-data.frame(
   doc_id=qualdataFULL$longid,
   text=qualdataFULL$qual
   ,stringsAsFactors=F)
-str(Corpusprep)
+str(Corpusprep) # Compactly display the internal structure of an R object
 corpus = VCorpus(DataframeSource(Corpusprep))
 
 # cleaning corpus
@@ -45,21 +45,22 @@ corpus <- tm_map(corpus, removeWords, stopwords::stopwords('english'))
 
 corpusSTEMMED <- tm_map(corpus, stemDocument)
 
-writeLines(as.character(corpus[[15]])) # used for text analysis
+writeLines(as.character(corpus[[15]]))         # used for text analysis
 writeLines(as.character(corpusSTEMMED [[15]])) # used for text analysis
-qualdataFULL$qual[15] # compared to this for check 
+qualdataFULL$qual[15]                          # compared to this for check 
 
 #document-term matrix
-mat <- DocumentTermMatrix(corpus)
-matSTEMMED <- DocumentTermMatrix(corpusSTEMMED )
+mat        <- DocumentTermMatrix(corpus)
+matSTEMMED <- DocumentTermMatrix(corpusSTEMMED)
 matSTEMMED
 
 #document-term matrix to different format for fitlda
-m <-  Matrix::sparseMatrix(i=mat$i, 
-                           j=mat$j, 
-                           x=mat$v, 
-                           dims=c(mat$nrow, mat$ncol),
-                           dimnames = mat$dimnames)
+m       <-  Matrix::sparseMatrix(i=mat$i,
+                                 j=mat$j, 
+                                 x=mat$v, 
+                                 dims=c(mat$nrow, mat$ncol),
+                                 dimnames = mat$dimnames)
+
 mSTEMMED <-  Matrix::sparseMatrix(i=matSTEMMED $i, 
                                   j=matSTEMMED $j, 
                                   x=matSTEMMED $v, 
@@ -69,21 +70,21 @@ mSTEMMED <-  Matrix::sparseMatrix(i=matSTEMMED $i,
 ################################################################################
 # Fitting Model
 ################################################################################
-# Fit a 1 through 20 LDA models and Compare Coherence
+# Fit a 1 through 20 LDA models and compare coherence
 k_list <- seq(1,20, by=1)
 
 model_list <- TmParallelApply(X = k_list, FUN = function(k){
   set.seed(376)
-  lda <- FitLdaModel(dtm = mSTEMMED ,
-                     k = k, 
-                     iterations = 1000, 
-                     burnin = 100,
-                     optimize_alpha = TRUE, 
-                     beta = .05, 
+  lda <- FitLdaModel(dtm             = mSTEMMED,
+                     k               = k, 
+                     iterations      = 1000, 
+                     burnin          = 100,
+                     optimize_alpha  = TRUE, 
+                     beta            = .05, 
                      calc_likelihood = FALSE,
-                     calc_coherence = TRUE,
-                     calc_r2 = FALSE,
-                     cpus = 16)
+                     calc_coherence  = TRUE,
+                     calc_r2         = FALSE,
+                     cpus            = 16)
   lda$k <- k
   lda
 }, export= ls(), # c("m"), 
@@ -144,6 +145,66 @@ coherence
 names(model)
 mean(model$coherence)
 
+## Table of top words
+model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
+t(model$top_terms)
+
+topterms <- data.frame(model$top_terms) %>%
+  rownames_to_column("rank") %>%
+  pivot_longer(cols = starts_with("t_"), 
+               names_to = "topic", values_to = "word")
+
+## Table of Phi, which is where top words come from.
+phi <- data.frame(model$phi)
+
+phi <- data.frame(t(phi[-1])) %>%
+  rownames_to_column("word")  %>%
+  pivot_longer(!word, names_to = "topic", values_to = "phi")
+
+
+# Figure 3. Top Words ----------------------------------------------------------
+
+## Combine topterms and phi values
+data_fig3 <- left_join(topterms, phi) %>%
+  dplyr::arrange(desc(phi))
+
+data_fig3 <- data_fig3 %>% # label topics -- topic order is based on mean theta
+  mutate(topic = fct_case_when(
+    topic == "t_3" ~ "Topic 1:\nAccommodate (.19)",
+    topic == "t_1" ~ "Topic 2:\nBalanced Sacrifice (.18)",
+    topic == "t_7" ~ "Topic 3:\nConsensus (.16)",
+    topic == "t_6" ~ "Topic 4:\nMoney Matters (.16)",
+    topic == "t_5" ~ "Topic 5:\nDecision History (.12)",
+    topic == "t_2" ~ "Topic 6:\nMan Has Final Say (.10)",
+    topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (.09)"), ordered = F)
+
+## Create bargraphs
+fig3 <- data_fig3 %>%
+  filter(as.numeric(rank) < 11) %>%
+  filter(!is.na(phi)) %>%
+  ggplot(aes(x = phi, y = reorder_within(word, phi, topic))) +
+  geom_col(width = 0.6) +
+  facet_wrap(~ topic, ncol = 2,
+             scales="free_y") +
+  scale_fill_grey() +
+  scale_y_reordered() +
+  scale_x_continuous(breaks = c(".000" = 0.000, ".025" = 0.025, 
+                                ".050" = 0.050, ".075" = 0.075)) +
+  theme_minimal(12) +
+  labs( x        = " ", 
+        y        = " ", 
+        fill     = " ",
+        title    = "Highest-ranking word stems per topic",
+        subtitle = "Probability of being found in topic (phi)")
+
+fig3
+
+ggsave(file.path(figDir, "fig3.png"), fig3, 
+       height = 8, width = 6, units="in",dpi = 300, bg = 'white')
+
+################################################################################
+# Topic Modeling Regression Tables
+################################################################################
 
 ## Assigning probabilities of topics to observations (theta)
 set.seed(376)
@@ -234,67 +295,6 @@ write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
 data_lca %>%
   ungroup %>%
   summarise_at(vars(t_1:t_7), mean, na.rm = TRUE)
-
-## Table of top words
-model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
-t(model$top_terms)
-
-topterms <- data.frame(model$top_terms) %>%
-  rownames_to_column("rank") %>%
-  pivot_longer(cols = starts_with("t_"), 
-               names_to = "topic", values_to = "word")
-
-## Table of Phi, which is where top words come from.
-phi <- data.frame(model$phi)
-
-phi <- data.frame(t(phi[-1])) %>%
-  rownames_to_column("word")  %>%
-  pivot_longer(!word, names_to = "topic", values_to = "phi")
-
-
-# Figure 3. Top Words ----------------------------------------------------------
-
-## Combine topterms and phi values
-data_fig3 <- left_join(topterms, phi) %>%
-  dplyr::arrange(desc(phi))
-
-data_fig3 <- data_fig3 %>% # label topics -- topic order is based on mean theta
-  mutate(topic = fct_case_when(
-    topic == "t_3" ~ "Topic 1:\nAccommodate (.19)",
-    topic == "t_1" ~ "Topic 2:\nBalanced Sacrifice (.18)",
-    topic == "t_7" ~ "Topic 3:\nConsensus (.16)",
-    topic == "t_6" ~ "Topic 4:\nMoney Matters (.16)",
-    topic == "t_5" ~ "Topic 5:\nDecision History (.12)",
-    topic == "t_2" ~ "Topic 6:\nMan Has Final Say (.10)",
-    topic == "t_4" ~ "Topic 7:\nHappy Wife, Happy Life (.09)"), ordered = F)
-
-## Create bargraphs
-fig3 <- data_fig3 %>%
-  filter(as.numeric(rank) < 11) %>%
-  filter(!is.na(phi)) %>%
-  ggplot(aes(x = phi, y = reorder_within(word, phi, topic))) +
-  geom_col(width = 0.6) +
-  facet_wrap(~ topic, ncol = 2,
-             scales="free_y") +
-  scale_fill_grey() +
-  scale_y_reordered() +
-  scale_x_continuous(breaks = c(".000" = 0.000, ".025" = 0.025, 
-                                ".050" = 0.050, ".075" = 0.075)) +
-  theme_minimal(12) +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Highest-ranking word stems per topic",
-        subtitle = "Probability of being found in topic (phi)")
-
-fig3
-
-ggsave(file.path(figDir, "fig3.png"), fig3, 
-       height = 8, width = 6, units="in",dpi = 300, bg = 'white')
-
-################################################################################
-# Topic Modeling Regression Tables
-################################################################################
 
 # Predict each topic -----------------------------------------------------------
 
@@ -820,18 +820,6 @@ dev.off()
 ################################################################################
 
 # Supplementary Table S4 -------------------------------------------------------
-## Average Probabilistic Coherence for LDA Models with Independent Topic Models 
-## by Decision-Type
-
-# ?!?! Still need to add
-
-# Supplementary Table S5 -------------------------------------------------------
-## Highest-ranking Word Stems Per Topics, 
-## Independent LDA on High-Stakes and Low-Stakes Decisions
-
-# ?!?! Still need to add
-
-# Supplementary Table S6 -------------------------------------------------------
 ## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
 ## Decision Type, and Vignette Couple’s Relative Income
 
@@ -844,9 +832,9 @@ s2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
                    gof_map = NA, output = "huxtable")
 s3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
                    gof_map = NA, output = "huxtable")
-data_tableS6 <-  cbind(s1, s2, s3)
+data_tableS4 <-  cbind(s1, s2, s3)
 
-data_tableS6 <- data_tableS6 %>%
+data_tableS4 <- data_tableS4 %>%
   rename(topic = 3) %>%
   mutate( 
     topic = fct_case_when(
@@ -867,7 +855,7 @@ sect_properties <- prop_section(
   page_margins = page_mar())
 
 
-tabS6 <- data_tableS6 %>%
+tabS4 <- data_tableS4 %>%
   select(c("decision", topic, "Men higher-earner / 0", "Men higher-earner / 1", 
            "Women higher-earner / 0", "Women higher-earner / 1",
            "Equal earner / 0", "Equal earner / 1")) %>%
@@ -885,9 +873,133 @@ tabS6 <- data_tableS6 %>%
   set_table_properties(layout = "autofit") 
 
 read_docx() %>% 
-  body_add_par(paste("Table S6. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
-  body_add_flextable(value = tabS6) %>% 
-  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
+  body_add_par(paste("Table S4. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
+  body_add_flextable(value = tabS4) %>% 
+  print(target = file.path(outDir, "finalsay_tableS4.docx")) # save table
+
+
+# Supplementary Table S5 -------------------------------------------------------
+## Average Probabilistic Coherence for LDA Models with Independent Topic Models 
+## by Decision-Type
+
+# Setup separate data files
+qualdataHIGH <- qualdataFULL %>%
+  filter(x == "qual1")
+
+qualdataLOW <- qualdataFULL %>%
+  filter(x == "qual2")
+
+in_list <- list(qualdataHIGH, qualdataLOW)
+
+# Fit a 1 through 20 LDA models and compare coherence
+out_list <- lapply(in_list, function(df){
+  
+  # generating corpus
+  Corpusprep <-data.frame(
+    doc_id=df$longid,
+    text=df$qual
+    ,stringsAsFactors=F)
+  
+  corpus = VCorpus(DataframeSource(Corpusprep))
+  
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, removeWords, 
+                   c("house", "apartment", "apt", "apt.", 
+                     "mattress", "sleep", "bed", 
+                     "vacation", "travel", 
+                     "weekend", "activities", "activity", 
+                     "movie", "movies", "see", "watch", 
+                     "anthony", "anthonys", "michelle", "michelles", "someone",
+                     "decision", "decisions", "decide", "decides", "decided", 
+                     "make", "makes",
+                     "one", "like", "likes", "liked", "want", "wants",
+                     "opinion",
+                     "get", "just", "can", "cant" , 
+                     "making",
+                     "made", 
+                     "doesnt", "dont", 
+                     "since", "think", "thinks", "thinking", 
+                     "maybe", 
+                     "need", "needs",
+                     "agree", "agrees", "agreement",   
+                     "fair", "unfair" 
+                   ))
+  
+  corpus <- tm_map(corpus, removeWords, stopwords::stopwords('english')) 
+  corpusSTEMMED <- tm_map(corpus, stemDocument)
+  
+  #document-term matrix
+  matSTEMMED <- DocumentTermMatrix(corpusSTEMMED)
+  
+  #document-term matrix to different format for fitlda
+  mSTEMMED <-  Matrix::sparseMatrix(i=matSTEMMED $i, 
+                                    j=matSTEMMED $j, 
+                                    x=matSTEMMED $v, 
+                                    dims=c(matSTEMMED $nrow, matSTEMMED $ncol),
+                                    dimnames = matSTEMMED $dimnames)
+  
+  # Fit a 1 through 20 LDA models
+  k_list <- seq(1,20, by=1)
+  
+  model_list <- TmParallelApply(X = k_list, FUN = function(k){
+    set.seed(376)
+    lda <- FitLdaModel(dtm             = mSTEMMED,
+                       k               = k, 
+                       iterations      = 1000, 
+                       burnin          = 100,
+                       optimize_alpha  = TRUE, 
+                       beta            = .05, 
+                       calc_likelihood = FALSE,
+                       calc_coherence  = TRUE,
+                       calc_r2         = FALSE,
+                       cpus            = 16)
+    lda$k <- k
+    lda
+  }, export= ls(), # c("m"), 
+  cpus = 4) 
+  
+  # Get average coherence for each model
+  coherence_mat <- data.frame(k = sapply(model_list, function(x) nrow(x$phi)), 
+                              coherence = sapply(model_list, function(x) 
+                                mean(x$coherence)), 
+                              stringsAsFactors = FALSE)
+  
+})
+
+names(out_list) <- c("High-stakes", "Low-stakes") # Rename lists 
+
+out_list$`High-stakes`[["stakes"]] <- "High-stakes" # Add list identifier
+out_list$`Low-stakes`[["stakes"]]  <- "Low-stakes"
+
+new_df <- as_tibble(rbind(out_list$`High-stakes`,  out_list$`Low-stakes`))
+
+
+tabS5 <- new_df %>%
+  pivot_wider(names_from = stakes, values_from = coherence) %>%
+  filter(k < 11) %>%
+  rename("Number of Topics" = k) %>%
+  flextable::flextable() %>%
+  colformat_double(digits = 4) %>%
+  add_footer_lines("Note: Shaded cells represent best fitting model by decision type.") %>%
+  set_table_properties(layout = "autofit") %>%
+  flextable::align(i = NULL, j = NULL, align = "center", part = "all") %>%
+  add_header_row(values = c(" ", "Decision Type"),
+                 colwidths = c(1, 2), top = TRUE)
+
+## Note shading cells doesn't work, so must do that manually (sorry)
+read_docx() %>% 
+  body_add_par(paste("Table S5. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
+  body_add_flextable(value = tabS5) %>% 
+  print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
+
+# Supplementary Table S6 -------------------------------------------------------
+## Highest-ranking Word Stems Per Topics, 
+## Independent LDA on High-Stakes and Low-Stakes Decisions
+
+# ?!?! Still need to add
+
 
 # Supplement Figure S2 ---------------------------------------------------------
 
