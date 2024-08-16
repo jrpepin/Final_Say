@@ -5,9 +5,8 @@ qualdataHIGH <- qualdataFULL %>%
 qualdataLOW <- qualdataFULL %>%
   filter(x == "qual2")
 
-in_list <- list(qualdataHIGH, qualdataLOW)
-
-# Fit a 1 through 20 LDA models and compare coherence
+# document-term matrix to different format for fitlda
+in_list  <- list(qualdataHIGH, qualdataLOW)
 out_list <- lapply(in_list, function(df){
   
   # generating corpus
@@ -55,7 +54,13 @@ out_list <- lapply(in_list, function(df){
                                     x=matSTEMMED $v, 
                                     dims=c(matSTEMMED $nrow, matSTEMMED $ncol),
                                     dimnames = matSTEMMED $dimnames)
-  
+})
+
+
+# Fit a 1 through 20 LDA models and compare coherence
+in_list2  <- list(out_list[[1]], out_list[[2]])
+out_list2 <- lapply(in_list2, function(mSTEMMED){
+
   # Fit a 1 through 20 LDA models
   k_list <- seq(1,20, by=1)
   
@@ -109,4 +114,65 @@ read_docx() %>%
   body_add_par(paste("Table S5. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
   body_add_flextable(value = tabS5) %>% 
   print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
+
+### TOP WORDS ------------------------------------------------------------------
+
+in_list2  <- list(out_list[[1]], out_list[[2]])
+out_list3 <- lapply(in_list2, function(mSTEMMED){
+  
+set.seed(376)
+model <- FitLdaModel(dtm             = mSTEMMED, 
+                     k               = 7,    
+                     iterations      = 1000, 
+                     burnin          = 100, 
+                     optimize_alpha  = TRUE,
+                     beta            = .05, 
+                     calc_likelihood = FALSE,
+                     calc_coherence  = TRUE,
+                     calc_r2         = FALSE,
+                     cpus            = 16)
+
+## Table of top words
+model$top_terms  <- GetTopTerms(phi = model$phi, M = 25)
+t(model$top_terms)
+
+topterms <- data.frame(model$top_terms) %>%
+  rownames_to_column("rank") %>%
+  pivot_longer(cols = starts_with("t_"), 
+               names_to = "topic", values_to = "word")
+
+## Table of Phi, which is where top words come from.
+phi <- data.frame(model$phi)
+
+phi <- data.frame(t(phi[-1])) %>%
+  rownames_to_column("word")  %>%
+  pivot_longer(!word, names_to = "topic", values_to = "phi")
+
+## Assigning probabilities of topics to observations (theta)
+set.seed(376)
+theta <- data.frame(predict(model, mSTEMMED,
+                            iterations = 1000, 
+                            burnin     = 100))   %>%
+  tibble::rownames_to_column("longid") %>%
+  mutate(longid = as_numeric(longid))
+
+head(theta) # probability
+
+### topic frequency -- Average theta!
+theta_sum <- theta %>% 
+  summarise_at(vars(!c(longid)), mean, na.rm = TRUE) %>%
+  pivot_longer(everything(), names_to = "topic", values_to = "theta")
+
+## Combine topterms and phi values
+words <- left_join(topterms, phi) %>%
+  left_join(., theta_sum) %>%
+  dplyr::arrange(desc(phi))
+
+})
+
+names(out_list3) <- c("High", "Low") # Rename lists 
+out_list3$`High`[["stakes"]] <- "High-stakes" # Add list identifier
+out_list3$`Low`[["stakes"]]  <- "Low-stakes"
+
+tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`))
 

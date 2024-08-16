@@ -54,7 +54,7 @@ mat        <- DocumentTermMatrix(corpus)
 matSTEMMED <- DocumentTermMatrix(corpusSTEMMED)
 matSTEMMED
 
-#document-term matrix to different format for fitlda
+# document-term matrix to different format for fitlda
 m       <-  Matrix::sparseMatrix(i=mat$i,
                                  j=mat$j, 
                                  x=mat$v, 
@@ -161,6 +161,20 @@ phi <- data.frame(t(phi[-1])) %>%
   rownames_to_column("word")  %>%
   pivot_longer(!word, names_to = "topic", values_to = "phi")
 
+## Assigning probabilities of topics to observations (theta)
+set.seed(376)
+theta <- data.frame(predict(model, mSTEMMED,
+                            iterations = 1000, 
+                            burnin     = 100))   %>%
+  tibble::rownames_to_column("longid") %>%
+  mutate(longid = as_numeric(longid))
+
+head(theta) # probability
+
+### topic frequency -- Average theta!
+theta_sum <- theta %>% 
+  summarise_at(vars(!c(longid)), mean, na.rm = TRUE) %>%
+  pivot_longer(everything(), names_to = "topic", values_to = "theta")
 
 # Figure 3. Top Words ----------------------------------------------------------
 
@@ -206,22 +220,11 @@ ggsave(file.path(figDir, "fig3.png"), fig3,
 # Topic Modeling Regression Tables
 ################################################################################
 
-## Assigning probabilities of topics to observations (theta)
-set.seed(376)
-theta <- data.frame(predict(model, mSTEMMED,
-                            iterations = 1000, 
-                            burnin     = 100))   %>%
-  tibble::rownames_to_column("longid") %>%
-  mutate(longid = as_numeric(longid))
-
-head(theta) # probability
-
 ## create wide data
 lcadata <- left_join(qualdataFULL, theta) %>%
   select(-c(qual, wN, same, topic, fair)) %>%
   pivot_wider(names_from  = x, 
               values_from = c(t_1, t_2, t_3, t_4, t_5, t_6, t_7))
-
 
 lcadata <- left_join(lcadata, data) ## Join tables
 
@@ -291,7 +294,7 @@ data_lca <- data_lca                  %>%
 ## export to Excel
 write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
 
-## Get topic frequency -- Average theta!
+## Check topic frequency -- Average theta!
 data_lca %>%
   ungroup %>%
   summarise_at(vars(t_1:t_7), mean, na.rm = TRUE)
