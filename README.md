@@ -32,7 +32,8 @@ FS_02_quant analyses
 * Figure 02  
 * Supplementary Table 1  
 * Supplementary Table 2
-* Supplementary Table 3 
+* Supplementary Table 3
+* Supplementary Table 4
 * Supplementary Figure 1  
   
 FS_03_qual analyses  
@@ -42,7 +43,7 @@ FS_03_qual analyses
 * Figure 03  
 * Figure 04  
 * Figure 05  
-* Supplementary Table 4
 * Supplementary Table 5
 * Supplementary Table 6
+* Supplementary Table 7
 * Supplementary Figure 2
