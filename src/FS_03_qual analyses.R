@@ -983,12 +983,12 @@ out_list2 <- lapply(in_list2, function(mSTEMMED){
   
 })
 
-names(out_list) <- c("High-stakes", "Low-stakes") # Rename lists 
+names(out_list2) <- c("High-stakes", "Low-stakes") # Rename lists 
 
-out_list$`High-stakes`[["stakes"]] <- "High-stakes" # Add list identifier
-out_list$`Low-stakes`[["stakes"]]  <- "Low-stakes"
+out_list2$`High-stakes`[["stakes"]] <- "High-stakes" # Add list identifier
+out_list2$`Low-stakes`[["stakes"]]  <- "Low-stakes"
 
-new_df <- as_tibble(rbind(out_list$`High-stakes`,  out_list$`Low-stakes`))
+new_df <- as_tibble(rbind(out_list2$`High-stakes`,  out_list2$`Low-stakes`))
 
 
 tabS6 <- new_df %>%
