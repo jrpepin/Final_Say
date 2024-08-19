@@ -822,11 +822,11 @@ dev.off()
 # SUPPLEMENTARY MATERIALS (qual)
 ################################################################################
 
-# Supplementary Table S4 -------------------------------------------------------
+# Supplementary Table S5 -------------------------------------------------------
 ## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
 ## Decision Type, and Vignette Couple’s Relative Income
 
-# ?!?! These topics are out of order. 
+# ?!?! These topics are out of order and unlabeled 
 # ?!?! significance stars are currently missing
 
 s1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
@@ -835,9 +835,9 @@ s2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
                    gof_map = NA, output = "huxtable")
 s3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
                    gof_map = NA, output = "huxtable")
-data_tableS4 <-  cbind(s1, s2, s3)
+data_tableS5 <-  cbind(s1, s2, s3)
 
-data_tableS4 <- data_tableS4 %>%
+data_tableS5 <- data_tableS5 %>%
   rename(topic = 3) %>%
   mutate( 
     topic = fct_case_when(
@@ -858,7 +858,7 @@ sect_properties <- prop_section(
   page_margins = page_mar())
 
 
-tabS4 <- data_tableS4 %>%
+tabS5 <- data_tableS5 %>%
   select(c("decision", topic, "Men higher-earner / 0", "Men higher-earner / 1", 
            "Women higher-earner / 0", "Women higher-earner / 1",
            "Equal earner / 0", "Equal earner / 1")) %>%
@@ -876,12 +876,12 @@ tabS4 <- data_tableS4 %>%
   set_table_properties(layout = "autofit") 
 
 read_docx() %>% 
-  body_add_par(paste("Table S4. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
-  body_add_flextable(value = tabS4) %>% 
-  print(target = file.path(outDir, "finalsay_tableS4.docx")) # save table
+  body_add_par(paste("Table S5. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
+  body_add_flextable(value = tabS5) %>% 
+  print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
 
 
-# Supplementary Table S5 -------------------------------------------------------
+# Supplementary Table S6 -------------------------------------------------------
 ## Average Probabilistic Coherence for LDA Models with Independent Topic Models 
 ## by Decision-Type
 
@@ -979,7 +979,7 @@ out_list$`Low-stakes`[["stakes"]]  <- "Low-stakes"
 new_df <- as_tibble(rbind(out_list$`High-stakes`,  out_list$`Low-stakes`))
 
 
-tabS5 <- new_df %>%
+tabS6 <- new_df %>%
   pivot_wider(names_from = stakes, values_from = coherence) %>%
   filter(k < 11) %>%
   rename("Number of Topics" = k) %>%
@@ -993,11 +993,11 @@ tabS5 <- new_df %>%
 
 ## Note shading cells doesn't work, so must do that manually (sorry)
 read_docx() %>% 
-  body_add_par(paste("Table S5. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
-  body_add_flextable(value = tabS5) %>% 
-  print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
+  body_add_par(paste("Table S6. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
+  body_add_flextable(value = tabS6) %>% 
+  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
 
-# Supplementary Table S6 -------------------------------------------------------
+# Supplementary Table S7 -------------------------------------------------------
 ## Highest-ranking Word Stems Per Topics, 
 ## Independent LDA on High-Stakes and Low-Stakes Decisions
 
@@ -1062,7 +1062,7 @@ names(out_list3) <- c("High", "Low") # Rename lists
 out_list3$`High`[["stakes"]] <- "High-stakes" # Add list identifier
 out_list3$`Low`[["stakes"]]  <- "Low-stakes"
 
-data_tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
+data_tabS7 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, topic, desc(phi)) %>%
   mutate(rank = as.numeric(rank)) %>%
   filter(rank < 11) %>%
@@ -1087,7 +1087,7 @@ data_tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, new_topic, rank)
 
 
-tabS6 <- data_tabS6  %>%
+tabS7 <- data_tabS7  %>%
   select(c("new_topic", "word", "stakes", "rank")) %>%
   pivot_wider(names_from = c(new_topic), values_from = word,
               names_sep = " ",) %>%
@@ -1113,16 +1113,16 @@ tabS6 <- data_tabS6  %>%
   select(c("stakes", "rank", "Topic 1", "Topic 2", "Topic 3", "Topic 4",  
            "Topic 5", "Topic 6", "Topic 7", "Topic 8"))
 
-tabS6 <- as_grouped_data(x = tabS6, groups = c("stakes"), columns = NULL) # Group by vignette condition
+tabS7 <- as_grouped_data(x = tabS7, groups = c("stakes"), columns = NULL) # Group by vignette condition
 
-tabS6 <- tabS6 %>%
+tabS7 <- tabS7 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) 
 
 ## Note shading cells doesn't work, so must do that manually (sorry)
 read_docx() %>% 
-  body_add_par(paste("Table S6. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
-  body_add_flextable(value = tabS6) %>% 
-  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
+  body_add_par(paste("Table S7. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
+  body_add_flextable(value = tabS7) %>% 
+  print(target = file.path(outDir, "finalsay_tableS7.docx")) # save table
 
 
 # Supplement Figure S2 ---------------------------------------------------------
@@ -1140,12 +1140,12 @@ data_gen_S <- data_fig5 %>%
 gen_output_S <- NULL # create empty df for test results
 
 for (i in seq(1, nrow(data_gen_S), by = 2)) {
-  topic   <- data_gen_S[i, 1]
-  decider <- data_gen_S[i, 10]
-  stakes  <- data_gen_S[i, 13]
-  estimate    <- ((data_gen_S[i, 2] - data_gen_S[i + 1, 2]) / 
+  topic         <- data_gen_S[i, 1]
+  decider       <- data_gen_S[i, 10]
+  stakes        <- data_gen_S[i, 13]
+  estimate      <- ((data_gen_S[i, 2] - data_gen_S[i + 1, 2]) / 
                     sqrt(data_gen_S[i, 3]^2 + data_gen_S[i + 1, 3]^2))
-  p       <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
   gen_output_S  <- rbind(gen_output_S, data.frame(topic, decider, stakes, estimate, p))
 }
 
