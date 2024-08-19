@@ -8,7 +8,7 @@
 # Paper Tables and Figures (quant)
 ################################################################################
 # This file analyzes the decision making variables.
-
+  
 ## Specify reference levels
 quantdata$relate   <- relevel(quantdata$relate,   ref = "Never married")
 quantdata$raceeth  <- relevel(quantdata$raceeth,  ref = "White")
@@ -17,187 +17,193 @@ quantdata$employ   <- relevel(quantdata$employ,   ref = "Employed")
 quantdata$inc      <- relevel(quantdata$inc,      ref = "< than $50,000")
 quantdata$earner   <- relevel(quantdata$earner,   ref = "Higher earner")
 quantdata$order    <- relevel(quantdata$order,    ref = "Same")
-
+  
 ## Wide to long
 femodels <- quantdata %>%
-  select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
-         relinc, organize, mar, child, dur, high, gender, relate, parent, 
-         raceeth, educ, employ, inc, age, low, order, weight) %>% 
-  pivot_longer(                                                                 # long 2 numeric variables
-    cols = c(contains('per'), 
-             contains('dum')),
-    names_to = c("vars", "decision"),
-    names_pattern = "(.*)(.)$") %>%
-  pivot_wider(                                                                  # back to 2 rows (decisions) per person
-    names_from = vars,
-    values_from = value) %>%
-  pivot_longer(                                                                 # long factor variable
-    cols = c("fair1", "fair2"),
-    names_to = c("drop1", "drop2"),
-    names_pattern = "(.*)(.)$",
-    values_to = "fair") %>%
-  filter(decision == drop2) %>%                                                 # back to 2 rows (decisions) per person
-  select(!c(drop1, drop2)) %>%
-  mutate(decision = as.factor(decision))
-
-
+    select(CaseID, dum1, dum2, fair1, fair2, per1, per2, 
+           relinc, organize, mar, child, dur, high, gender, relate, parent, 
+           raceeth, educ, employ, inc, age, low, order, weight) %>% 
+    pivot_longer(                                                               # long 2 numeric variables
+      cols = c(contains('per'), 
+               contains('dum')),
+      names_to = c("vars", "decision"),
+      names_pattern = "(.*)(.)$") %>%
+    pivot_wider(                                                                # back to 2 rows (decisions) per person
+      names_from = vars,
+      values_from = value) %>%
+    pivot_longer(                                                               # long factor variable
+      cols = c("fair1", "fair2"),
+      names_to = c("drop1", "drop2"),
+      names_pattern = "(.*)(.)$",
+      values_to = "fair") %>%
+    filter(decision == drop2) %>%                                               # back to 2 rows (decisions) per person
+    select(!c(drop1, drop2)) 
+  
 # Table 02. --------------------------------------------------------------------
 # Average Marginal Effects of Woman Deciding on Perceptions of Fairness 
 # by relative income of vignette couple and decision type
-
+  
 ## Prepare data for plm
-
-### All
-pdata_m1 <- pdata.frame(femodels %>% 
-                          filter(relinc == "Man higher-earner"),   index = c("CaseID"))
-pdata_m2 <- pdata.frame(femodels %>% 
-                          filter(relinc == "Woman higher-earner"), index = c("CaseID"))
-pdata_m3 <- pdata.frame(femodels %>% 
-                          filter(relinc == "Equal earners"),       index = c("CaseID"))
-### Men
-pdata_m1M <- pdata.frame(femodels %>%
-                           filter(relinc == "Man higher-earner"   & gender == "Male"),
-                         index = c("CaseID"))
-pdata_m2M <- pdata.frame(femodels %>% 
-                           filter(relinc == "Woman higher-earner" & gender == "Male"),
-                         index = c("CaseID"))
-pdata_m3M <- pdata.frame(femodels %>% 
-                           filter(relinc == "Equal earners"       & gender == "Male"),
-                         index = c("CaseID"))
-### Women
-pdata_m1F <- pdata.frame(femodels %>% 
-                           filter(relinc == "Man higher-earner"   & gender == "Female"),
-                         index = c("CaseID"))
-pdata_m2F <- pdata.frame(femodels %>% 
-                           filter(relinc == "Woman higher-earner" & gender == "Female"),
-                         index = c("CaseID"))
-pdata_m3F <- pdata.frame(femodels %>% 
-                           filter(relinc == "Equal earners"       & gender == "Female"),
-                         index = c("CaseID"))
-
-## Run the fixed effects models
-plm1 <- plm(dum ~ per * decision, data = pdata_m1, model = "within")
-plm2 <- plm(dum ~ per * decision, data = pdata_m2, model = "within")
-plm3 <- plm(dum ~ per * decision, data = pdata_m3, model = "within")
-
-plm1M <- plm(dum ~ per * decision, data = pdata_m1M, model = "within")
-plm2M <- plm(dum ~ per * decision, data = pdata_m2M, model = "within")
-plm3M <- plm(dum ~ per * decision, data = pdata_m3M, model = "within")
-
-plm1F <- plm(dum ~ per * decision, data = pdata_m1F, model = "within")
-plm2F <- plm(dum ~ per * decision, data = pdata_m2F, model = "within")
-plm3F <- plm(dum ~ per * decision, data = pdata_m3F, model = "within")
-
-## Average Marginal Effects of the models
-m1  <- avg_slopes(plm1, variables = c("per"), by = "decision") 
-m2  <- avg_slopes(plm2, variables = c("per"), by = "decision")
-m3  <- avg_slopes(plm3, variables = c("per"), by = "decision")
-
-m1M <- avg_slopes(plm1M, variables = c("per"), by = "decision")
-m2M <- avg_slopes(plm2M, variables = c("per"), by = "decision")
-m3M <- avg_slopes(plm3M, variables = c("per"), by = "decision")
-
-m1F <- avg_slopes(plm1F, variables = c("per"), by = "decision")
-m2F <- avg_slopes(plm2F, variables = c("per"), by = "decision")
-m3F <- avg_slopes(plm3F, variables = c("per"), by = "decision")
-
-## identify interaction variables
-m1$term <- paste(m1$term, m1$decision, sep= ".")
-m2$term <- paste(m2$term, m2$decision, sep= ".")
-m3$term <- paste(m3$term, m3$decision, sep= ".")
-
-m1M$term <- paste(m1M$term, m1M$decision, sep= ".")
-m2M$term <- paste(m2M$term, m2M$decision, sep= ".")
-m3M$term <- paste(m3M$term, m3M$decision, sep= ".")
-
-m1F$term <- paste(m1F$term, m1F$decision, sep= ".")
-m2F$term <- paste(m2F$term, m2F$decision, sep= ".")
-m3F$term <- paste(m3F$term, m3F$decision, sep= ".")
-
+list_pdata <- list(
+    ### All
+    pdata_m1 <- pdata.frame(femodels %>% 
+                              filter(relinc == "Man higher-earner"),   
+                            index = c("CaseID")),
+    pdata_m2 <- pdata.frame(femodels %>% 
+                              filter(relinc == "Woman higher-earner"), 
+                            index = c("CaseID")),
+    pdata_m3 <- pdata.frame(femodels %>% 
+                              filter(relinc == "Equal earners"),       
+                            index = c("CaseID")),
+    ### Men
+    pdata_m1M <- pdata.frame(femodels %>%
+                               filter(relinc == "Man higher-earner"   & gender == "Male"),
+                             index = c("CaseID")),
+    pdata_m2M <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & gender == "Male"),
+                             index = c("CaseID")),
+    pdata_m3M <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & gender == "Male"),
+                             index = c("CaseID")),
+    ### Women
+    pdata_m1F <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & gender == "Female"),
+                             index = c("CaseID")),
+    pdata_m2F <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & gender == "Female"),
+                             index = c("CaseID")),
+    pdata_m3F <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & gender == "Female"),
+                             index = c("CaseID")))
+  
+rm(list = ls()[grep("^pdata_", ls())]) # clean up global environment
+  
+# Run PLM models  
+list_plm <- lapply(list_pdata, function(pdata){
+    plm <- plm(dum ~ per * decision, data = pdata, model = "within")
+  })
+  
+# create average marginal effects
+list_ame <- lapply(list_plm, function(plm){
+    avg_slopes(plm, variables = c("per"), by = "decision")
+})
+  
+# Define a function to identify person (term) 
+  replace_based_on_column <- function(df) {
+    df$term <- paste(df$term, df$decision, sep= ".")
+    return(df)
+  }
+  
+# Apply this function to each data frame in the list
+  list_ame <- lapply(list_ame, replace_based_on_column)
+  
+# Add list identifiers
+  list_ame[[1]][["relinc"]]   <- "Men higher-earner" 
+  list_ame[[2]][["relinc"]]   <- "Women higher-earner" 
+  list_ame[[3]][["relinc"]]   <- "Equal earners" 
+  list_ame[[4]][["relinc"]]   <- "Men higher-earner" 
+  list_ame[[5]][["relinc"]]   <- "Women higher-earner" 
+  list_ame[[6]][["relinc"]]   <- "Equal earners" 
+  list_ame[[7]][["relinc"]]   <- "Men higher-earner" 
+  list_ame[[8]][["relinc"]]   <- "Women higher-earner" 
+  list_ame[[9]][["relinc"]]   <- "Equal earners" 
+  
+  list_ame[[1]][["gender"]]  <- "All" 
+  list_ame[[2]][["gender"]]  <- "All" 
+  list_ame[[3]][["gender"]]  <- "All" 
+  list_ame[[4]][["gender"]]  <- "Men" 
+  list_ame[[5]][["gender"]]  <- "Men" 
+  list_ame[[6]][["gender"]]  <- "Men" 
+  list_ame[[7]][["gender"]]  <- "Women" 
+  list_ame[[8]][["gender"]]  <- "Women" 
+  list_ame[[9]][["gender"]]  <- "Women" 
+  
 # test equality of coefficients between HIGH & LOW stakes
 # https://stats.stackexchange.com/questions/363762/testing-the-equality-of-two-regression-coefficients-from-same-data-but-different
 # https://journals.sagepub.com/doi/10.1177/0081175019852763
-
-## Test for statistical sig. between high and low stakes decisions
-### Calculate Z scores 
-  MHE    <- (m1[[1,4]]  - m1[[2,4]])  / sqrt(m1[[1,5]]^2  + m1[[2,5]]^2)
-  MHEM   <- (m1M[[1,4]] - m1M[[2,4]]) / sqrt(m1M[[1,5]]^2 + m1M[[2,5]]^2)
-  MHEF   <- (m1F[[1,4]] - m1F[[2,4]]) / sqrt(m1F[[1,5]]^2 + m1F[[2,5]]^2)
-
-  WHE    <- (m2[[1,4]]  - m2[[2,4]])  / sqrt(m2[[1,5]]^2  + m2[[2,5]]^2)
-  WHEM   <- (m2M[[1,4]] - m2M[[2,4]]) / sqrt(m2M[[1,5]]^2 + m2M[[2,5]]^2)
-  WHEF   <- (m2F[[1,4]] - m2F[[2,4]]) / sqrt(m2F[[1,5]]^2 + m2F[[2,5]]^2)
- 
-  EE     <- (m3[[1,4]]  - m3[[2,4]])  / sqrt(m3[[1,5]]^2  + m3[[2,5]]^2)
-  EEM    <- (m3M[[1,4]] - m3M[[2,4]]) / sqrt(m3M[[1,5]]^2 + m3M[[2,5]]^2)
-  EEF    <- (m3F[[1,4]] - m3F[[2,4]]) / sqrt(m3F[[1,5]]^2 + m3F[[2,5]]^2)
-
-### Calculate p values
-  p_MHE  <- 2*pnorm(-abs(MHE)) 
-  p_MHEM <- 2*pnorm(-abs(MHEM)) 
-  p_MHEF <- 2*pnorm(-abs(MHEF)) 
-
-  p_WHE  <- 2*pnorm(-abs(WHE)) 
-  p_WHEM <- 2*pnorm(-abs(WHEM)) 
-  p_WHEF <- 2*pnorm(-abs(WHEF)) 
-
-  p_EE   <- 2*pnorm(-abs(EE)) 
-  p_EEM  <- 2*pnorm(-abs(EEM)) 
-  p_EEF  <- 2*pnorm(-abs(EEF)) 
-
-### Man Higher Earner
-  message("All p = ",    round(p_MHE,   digits = 3))
-  message("Men p = ",    round(p_MHEM,  digits = 3)) 
-  message("Women p = ",  round(p_MHEF,  digits = 3)) 
-
-### Woman Higher Earner
-  message("All p = ",    round(p_WHE,   digits = 3))
-  message("Men p = ",    round(p_WHEM,  digits = 3)) 
-  message("Women p = ",  round(p_WHEF,  digits = 3)) 
-
-### Equal Earners
-  message("All p = ",    round(p_EE,    digits = 3))
-  message("Men p = ",    round(p_EEM,   digits = 3)) 
-  message("Women p = ",  round(p_EEF,   digits = 3)) 
-
+  
+data_type <- as_tibble(rbind(
+  list_ame[[1]],  list_ame[[2]],  list_ame[[3]], 
+  list_ame[[4]],  list_ame[[5]],  list_ame[[6]],
+  list_ame[[7]],  list_ame[[8]],  list_ame[[9]])) %>%
+  mutate(relinc = fct_case_when(
+    relinc == "Men higher-earner"   ~ "Men higher-earner",
+    relinc == "Women higher-earner" ~ "Women higher-earner",
+    relinc == "Equal earners"       ~ "Equal earners" )) %>%
+  arrange(relinc) # sort data to test down
+  
+output_type <- NULL # create empty df for test results
+  
+  for (i in seq(1, nrow(data_type), by = 2)) {
+    gender        <- data_type[i, 15]
+    relinc        <- data_type[i, 14]
+    stakes        <- data_type[i,  3]
+    decider       <- data_type[i,  1]
+    estimate      <- ((data_type[i, 4] - data_type[i + 1, 4]) / 
+                        sqrt(data_type[i, 5]^2 + data_type[i + 1, 5]^2))
+    p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+    output_type <- rbind(output_type, 
+                         data.frame(gender, relinc, stakes, decider, estimate, p))
+  }
+  
+output_type <- output_type %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
+  
+output_type[!(is.na(output_type$sig)), ] # show only statistically sig. status differences
+  
+  
 ## Test for statistical sig. between men and women (within decision)
-### Calculate Z scores 
-  MHEH   <- (m1M[[1,4]] - m1F[[1,4]]) / sqrt(m1M[[1,5]]^2 + m1F[[1,5]]^2)
-  MHEL   <- (m1M[[2,4]] - m1F[[2,4]]) / sqrt(m1M[[2,5]]^2 + m1F[[2,5]]^2)
+data_gender <- data_type %>%
+  filter(gender != "All") %>%
+  arrange(relinc, decision) #resort data to test across table
   
-  WHEH   <- (m2M[[1,4]] - m2F[[1,4]]) / sqrt(m2M[[1,5]]^2 + m2F[[1,5]]^2)
-  WHEL   <- (m2M[[2,4]] - m2F[[2,4]]) / sqrt(m2M[[2,5]]^2 + m2F[[2,5]]^2)
+output_gender <- NULL # create empty df for test results
   
-  EEH    <- (m3M[[1,4]] - m3F[[1,4]]) / sqrt(m3M[[1,5]]^2 + m3F[[1,5]]^2)
-  EEL    <- (m3M[[2,4]] - m3F[[2,4]]) / sqrt(m3M[[2,5]]^2 + m3F[[2,5]]^2)
+  for (i in seq(1, nrow(data_gender), by = 2)) {
+    gender        <- data_gender[i, 15]
+    relinc        <- data_gender[i, 14]
+    stakes        <- data_gender[i,  3]
+    decider       <- data_gender[i,  1]
+    estimate      <- ((data_gender[i, 4] - data_gender[i + 1, 4]) / 
+                        sqrt(data_gender[i, 5]^2 + data_gender[i + 1, 5]^2))
+    p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+    output_gender <- rbind(output_gender, 
+                           data.frame(gender, relinc, stakes, decider, estimate, p))
+  }
   
-### Calculate p values
-  p_MHEH  <- 2*pnorm(-abs(MHEH)) 
-  p_MHEL  <- 2*pnorm(-abs(MHEL)) 
+output_gender <- output_gender %>%
+    mutate(sig = case_when(
+      p   < .001   ~ "***",
+      p   < .01    ~ "**",
+      p   < .05    ~ "*",
+      TRUE         ~ NA_character_))
+  
+output_gender[!(is.na(output_gender$sig)), ] # show only statistically sig. gender differences
+  
+output_gender <- output_gender %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
 
-  p_WHEH <- 2*pnorm(-abs(WHEH)) 
-  p_WHEL <- 2*pnorm(-abs(WHEL)) 
-  
-  p_EEH  <- 2*pnorm(-abs(EEH)) 
-  p_EEL  <- 2*pnorm(-abs(EEL)) 
-  
-### Man Higher Earner
-  message("High-stakes p = ",    round(p_MHEH,  digits = 3))
-  message("Low-stakes  p = ",    round(p_MHEL,  digits = 3)) 
-  
-### Woman Higher Earner
-  message("High-stakes p = ",    round(p_WHEH,  digits = 3))
-  message("Low-stakes  p = ",    round(p_WHEL,  digits = 3)) 
-  
-### Equal Earners
-  message("High-stakes p = ",    round(p_EEH,   digits = 3))
-  message("Low-stakes  p = ",    round(p_EEL,   digits = 3)) 
+output_gender[!(is.na(output_gender$sig)), ] # show only statistically sig. gender differences
 
 ## Create list for 3 panels
   panels <- list(
-    "Man Higher Earner"   = list("All" = m1, "Men" = m1M, "Women" = m1F),
-    "Woman Higher Earner" = list("All" = m2, "Men" = m2M, "Women" = m2F),
-    "Equal Earners"       = list("All" = m3, "Men" = m3M, "Women" = m3F))
+    "Man Higher Earner"   = list("All"   = list_ame[[1]], 
+                                 "Men"   = list_ame[[4]], 
+                                 "Women" = list_ame[[7]]),
+    "Woman Higher Earner" = list("All"   = list_ame[[2]], 
+                                 "Men"   = list_ame[[5]], 
+                                 "Women" = list_ame[[8]]),
+    "Equal Earners"       = list("All"   = list_ame[[3]], 
+                                 "Men"   = list_ame[[6]], 
+                                 "Women" = list_ame[[9]]))
 
 ## Create pretty labels
 coef_map <- c(
@@ -238,29 +244,29 @@ tab02
 read_docx() %>% 
   body_add_par(paste("Table 02. Average Marginal Effects of Woman Deciding on Perceptions of Fairness 
 by vignette couple relative income, vignette decision type, and respondent gender")) %>% 
-  body_add_flextable(value = tabS4) %>% 
+  body_add_flextable(value = tab02) %>% 
   print(target = file.path(outDir, "finalsay_table02.docx")) # save table
 
 
 # Figure 02. -------------------------------------------------------------------
 
 ## Create predicted probabilities datesets
-pp1M <- avg_predictions(plm1M, by = c("per", "decision"))
+pp1M <- avg_predictions(list_plm[[4]], by = c("per", "decision"))
 pp1M$relinc <- "Man higher-earner"
 pp1M$gender <- "Men"
-pp1F <- avg_predictions(plm1F, by = c("per", "decision"))
+pp1F <- avg_predictions(list_plm[[7]], by = c("per", "decision"))
 pp1F$relinc <- "Man higher-earner"
 pp1F$gender <- "Women"
-pp2M <- avg_predictions(plm2M, by = c("per", "decision"))
+pp2M <- avg_predictions(list_plm[[5]], by = c("per", "decision"))
 pp2M$relinc <- "Woman higher-earner"
 pp2M$gender <- "Men"
-pp2F <- avg_predictions(plm2F, by = c("per", "decision"))
+pp2F <- avg_predictions(list_plm[[8]], by = c("per", "decision"))
 pp2F$relinc <- "Woman higher-earner"
 pp2F$gender <- "Women"
-pp3M <- avg_predictions(plm3M, by = c("per", "decision"))
+pp3M <- avg_predictions(list_plm[[6]], by = c("per", "decision"))
 pp3M$relinc <- "Equal earners"
 pp3M$gender <- "Men"
-pp3F <- avg_predictions(plm3F, by = c("per", "decision"))
+pp3F <- avg_predictions(list_plm[[9]], by = c("per", "decision"))
 pp3F$relinc <- "Equal earners"
 pp3F$gender <- "Women"
 
@@ -451,133 +457,121 @@ read_docx() %>%
 ## Results of Fixed Effects Models Using Continuous Outcome 
 ## to Measure Perception of Fairness
 
-## Run the fixed effects models
+# Run PLM models and create average marginal effects
+list_ame_S3 <- lapply(list_pdata, function(pdata){
+  
+  plm <- plm(as_numeric(fair) ~ per * decision, data = pdata, model = "within")
+  avg_slopes(plm, variables = c("per"), by = "decision")
+  
+})
 
-### Full Sample
-plm1_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1, model = "within")
-plm2_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2, model = "within")
-plm3_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3, model = "within")
+# Apply function to each data frame in the list
+list_ame_S3 <- lapply(list_ame_S3, replace_based_on_column)
 
-### Men
-plm1M_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1M, model = "within")
-plm2M_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2M, model = "within")
-plm3M_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3M, model = "within")
+# Add list identifiers
+list_ame_S3[[1]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S3[[2]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S3[[3]][["relinc"]]   <- "Equal earners" 
+list_ame_S3[[4]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S3[[5]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S3[[6]][["relinc"]]   <- "Equal earners" 
+list_ame_S3[[7]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S3[[8]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S3[[9]][["relinc"]]   <- "Equal earners" 
 
-### Women
-plm1F_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m1F, model = "within")
-plm2F_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m2F, model = "within")
-plm3F_S3 <- plm(as_numeric(fair) ~ per * decision, data = pdata_m3F, model = "within")
+list_ame_S3[[1]][["gender"]]  <- "All" 
+list_ame_S3[[2]][["gender"]]  <- "All" 
+list_ame_S3[[3]][["gender"]]  <- "All" 
+list_ame_S3[[4]][["gender"]]  <- "Men" 
+list_ame_S3[[5]][["gender"]]  <- "Men" 
+list_ame_S3[[6]][["gender"]]  <- "Men" 
+list_ame_S3[[7]][["gender"]]  <- "Women" 
+list_ame_S3[[8]][["gender"]]  <- "Women" 
+list_ame_S3[[9]][["gender"]]  <- "Women" 
 
-## Average Marginal Effects of the models
+# test equality of coefficients between HIGH & LOW stakes
+data_type_S3 <- as_tibble(rbind(
+  list_ame_S3[[1]],  list_ame_S3[[2]],  list_ame_S3[[3]], 
+  list_ame_S3[[4]],  list_ame_S3[[5]],  list_ame_S3[[6]],
+  list_ame_S3[[7]],  list_ame_S3[[8]],  list_ame_S3[[9]])) %>%
+  mutate(relinc = fct_case_when(
+    relinc == "Men higher-earner"   ~ "Men higher-earner",
+    relinc == "Women higher-earner" ~ "Women higher-earner",
+    relinc == "Equal earners"       ~ "Equal earners" )) %>%
+  arrange(relinc) # sort data to test down
 
-m1_S3  <- avg_slopes(plm1_S3, variables = c("per"), by = "decision")             
-m2_S3  <- avg_slopes(plm2_S3, variables = c("per"), by = "decision")
-m3_S3  <- avg_slopes(plm3_S3, variables = c("per"), by = "decision")
+output_type_S3 <- NULL # create empty df for test results
 
-m1M_S3 <- avg_slopes(plm1M_S3, variables = c("per"), by = "decision")           
-m2M_S3 <- avg_slopes(plm2M_S3, variables = c("per"), by = "decision")
-m3M_S3 <- avg_slopes(plm3M_S3, variables = c("per"), by = "decision")
+for (i in seq(1, nrow(data_type_S3), by = 2)) {
+  gender        <- data_type_S3[i, 15]
+  relinc        <- data_type_S3[i, 14]
+  stakes        <- data_type_S3[i,  3]
+  decider       <- data_type_S3[i,  1]
+  estimate      <- ((data_type_S3[i, 4] - data_type_S3[i + 1, 4]) / 
+                      sqrt(data_type_S3[i, 5]^2 + data_type_S3[i + 1, 5]^2))
+  p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  output_type_S3 <- rbind(output_type_S3, 
+                       data.frame(gender, relinc, stakes, decider, estimate, p))
+}
 
-m1F_S3 <- avg_slopes(plm1F_S3, variables = c("per"), by = "decision")           
-m2F_S3 <- avg_slopes(plm2F_S3, variables = c("per"), by = "decision")
-m3F_S3 <- avg_slopes(plm3F_S3, variables = c("per"), by = "decision")
+output_type_S3 <- output_type_S3 %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
 
-## identify interaction variables
-m1_S3$term  <- paste(m1_S3$term,  m1_S3$decision, sep= ".")
-m2_S3$term  <- paste(m2_S3$term,  m2_S3$decision, sep= ".")
-m3_S3$term  <- paste(m3_S3$term,  m3_S3$decision, sep= ".")
+output_type_S3[!(is.na(output_type_S3$sig)), ] # show only statistically sig. status differences
 
-m1M_S3$term <- paste(m1M_S3$term, m1M_S3$decision, sep= ".")
-m2M_S3$term <- paste(m2M_S3$term, m2M_S3$decision, sep= ".")
-m3M_S3$term <- paste(m3M_S3$term, m3M_S3$decision, sep= ".")
-
-m1F_S3$term <- paste(m1F_S3$term, m1F_S3$decision, sep= ".")
-m2F_S3$term <- paste(m2F_S3$term, m2F_S3$decision, sep= ".")
-m3F_S3$term <- paste(m3F_S3$term, m3F_S3$decision, sep= ".")
-
-
-## Calculate Z scores
-MHE_S3   <- (m1_S3[[1,4]] - m1_S3[[2,4]])   / sqrt(m1_S3[[1,5]]^2 + m1_S3[[2,5]]^2)
-WHE_S3   <- (m2_S3[[1,4]] - m2_S3[[2,4]])   / sqrt(m2_S3[[1,5]]^2 + m2_S3[[2,5]]^2)
-EE_S3    <- (m3_S3[[1,4]] - m3_S3[[2,4]])   / sqrt(m3_S3[[1,5]]^2 + m3_S3[[2,5]]^2)
-
-MHEM_S3  <- (m1M_S3[[1,4]] - m1M_S3[[2,4]]) / sqrt(m1M_S3[[1,5]]^2 + m1M_S3[[2,5]]^2)
-MHEF_S3  <- (m1F_S3[[1,4]] - m1F_S3[[2,4]]) / sqrt(m1F_S3[[1,5]]^2 + m1F_S3[[2,5]]^2)
-
-WHEM_S3  <- (m2M_S3[[1,4]] - m2M_S3[[2,4]]) / sqrt(m2M_S3[[1,5]]^2 + m2M_S3[[2,5]]^2)
-WHEF_S3  <- (m2F_S3[[1,4]] - m2F_S3[[2,4]]) / sqrt(m2F_S3[[1,5]]^2 + m2F_S3[[2,5]]^2)
-
-EEM_S3   <- (m3M_S3[[1,4]] - m3M_S3[[2,4]]) / sqrt(m3M_S3[[1,5]]^2 + m3M_S3[[2,5]]^2)
-EEF_S3   <- (m3F_S3[[1,4]] - m3F_S3[[2,4]]) / sqrt(m3F_S3[[1,5]]^2 + m3F_S3[[2,5]]^2)
-
-## Calculate p values
-p_MHE_S3  <- 2*pnorm(-abs(MHE_S3)) 
-p_WHE_S3  <- 2*pnorm(-abs(WHE_S3)) 
-p_EE_S3   <- 2*pnorm(-abs(EE_S3)) 
-
-p_MHEM_S3 <- 2*pnorm(-abs(MHEM_S3)) 
-p_MHEF_S3 <- 2*pnorm(-abs(MHEF_S3)) 
-
-p_WHEM_S3 <- 2*pnorm(-abs(WHEM_S3)) 
-p_WHEF_S3 <- 2*pnorm(-abs(WHEF_S3)) 
-
-p_EEM_S3  <- 2*pnorm(-abs(EEM_S3)) 
-p_EEF_S3  <- 2*pnorm(-abs(EEF_S3)) 
-
-
-## Man Higher Earner
-message("All p = ",    round(p_MHE_S3,   digits = 3))
-message("Men p = ",    round(p_MHEM_S3,  digits = 3)) 
-message("Women p = ",  round(p_MHEF_S3,  digits = 3)) 
-
-## Woman Higher Earner
-message("All p = ",    round(p_WHE_S3,   digits = 3))
-message("Men p = ",    round(p_WHEM_S3,  digits = 3)) 
-message("Women p = ",  round(p_WHEF_S3,  digits = 3)) 
-
-## Equal Earners
-message("All p = ",    round(p_EE_S3,    digits = 3))
-message("Men p = ",    round(p_EEM_S3,   digits = 3)) 
-message("Women p = ",  round(p_EEF_S3,   digits = 3)) 
 
 ## Test for statistical sig. between men and women (within decision)
-### Calculate Z scores 
-MHEH_S3   <- (m1M_S3[[1,4]] - m1F_S3[[1,4]]) / sqrt(m1M_S3[[1,5]]^2 + m1F_S3[[1,5]]^2)
-MHEL_S3   <- (m1M_S3[[2,4]] - m1F_S3[[2,4]]) / sqrt(m1M_S3[[2,5]]^2 + m1F_S3[[2,5]]^2)
+data_gender_S3 <- data_type_S3 %>%
+  filter(gender != "All") %>%
+  arrange(relinc, decision) #resort data to test across table
 
-WHEH_S3   <- (m2M_S3[[1,4]] - m2F_S3[[1,4]]) / sqrt(m2M_S3[[1,5]]^2 + m2F_S3[[1,5]]^2)
-WHEL_S3   <- (m2M_S3[[2,4]] - m2F_S3[[2,4]]) / sqrt(m2M_S3[[2,5]]^2 + m2F_S3[[2,5]]^2)
+output_gender_S3 <- NULL # create empty df for test results
 
-EEH_S3    <- (m3M_S3[[1,4]] - m3F_S3[[1,4]]) / sqrt(m3M_S3[[1,5]]^2 + m3F_S3[[1,5]]^2)
-EEL_S3    <- (m3M_S3[[2,4]] - m3F_S3[[2,4]]) / sqrt(m3M_S3[[2,5]]^2 + m3F_S3[[2,5]]^2)
+for (i in seq(1, nrow(data_gender_S3), by = 2)) {
+  gender        <- data_gender_S3[i, 15]
+  relinc        <- data_gender_S3[i, 14]
+  stakes        <- data_gender_S3[i,  3]
+  decider       <- data_gender_S3[i,  1]
+  estimate      <- ((data_gender_S3[i, 4] - data_gender_S3[i + 1, 4]) / 
+                      sqrt(data_gender_S3[i, 5]^2 + data_gender_S3[i + 1, 5]^2))
+  p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  output_gender_S3 <- rbind(output_gender_S3, 
+                         data.frame(gender, relinc, stakes, decider, estimate, p))
+}
 
-### Calculate p values
-p_MHEH_S3  <- 2*pnorm(-abs(MHEH_S3)) 
-p_MHEL_S3  <- 2*pnorm(-abs(MHEL_S3)) 
+output_gender_S3 <- output_gender_S3 %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
 
-p_WHEH_S3 <- 2*pnorm(-abs(WHEH_S3)) 
-p_WHEL_S3 <- 2*pnorm(-abs(WHEL_S3)) 
+output_gender_S3[!(is.na(output_gender_S3$sig)), ] # show only statistically sig. gender differences
 
-p_EEH_S3  <- 2*pnorm(-abs(EEH_S3)) 
-p_EEL_S3  <- 2*pnorm(-abs(EEL_S3)) 
+output_gender_S3 <- output_gender_S3 %>%
+  mutate(sig = case_when(
+    p   < .001   ~ "***",
+    p   < .01    ~ "**",
+    p   < .05    ~ "*",
+    TRUE         ~ NA_character_))
 
-### Man Higher Earner
-message("High-stakes p = ",    round(p_MHEH_S3,  digits = 3))
-message("Low-stakes  p = ",    round(p_MHEL_S3,  digits = 3)) 
-
-### Woman Higher Earner
-message("High-stakes p = ",    round(p_WHEH_S3,  digits = 3))
-message("Low-stakes  p = ",    round(p_WHEL_S3,  digits = 3)) 
-
-### Equal Earners
-message("High-stakes p = ",    round(p_EEH_S3,   digits = 3))
-message("Low-stakes  p = ",    round(p_EEL_S3,   digits = 3)) 
+output_gender_S3[!(is.na(output_gender_S3$sig)), ] # show only statistically sig. gender differences
 
 ## Create list for 3 panels
 panels_S3 <- list(
-  "Man Higher Earner"   = list("All" = m1_S3, "Men" = m1M_S3, "Women" = m1F_S3),
-  "Woman Higher Earner" = list("All" = m2_S3, "Men" = m2M_S3, "Women" = m2F_S3),
-  "Equal Earners"       = list("All" = m3_S3, "Men" = m3M_S3, "Women" = m3F_S3))
+  "Man Higher Earner"   = list("All"   = list_ame_S3[[1]], 
+                               "Men"   = list_ame_S3[[4]], 
+                               "Women" = list_ame_S3[[7]]),
+  "Woman Higher Earner" = list("All"   = list_ame_S3[[2]], 
+                               "Men"   = list_ame_S3[[5]], 
+                               "Women" = list_ame_S3[[8]]),
+  "Equal Earners"       = list("All"   = list_ame_S3[[3]], 
+                               "Men"   = list_ame_S3[[6]], 
+                               "Women" = list_ame_S3[[9]]))
 
 ## Create pretty labels
 coef_map <- c(
@@ -610,6 +604,7 @@ tabS3 <- modelsummary(
   huxtable::as_flextable()                                        %>%
   add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses. There were no statistically significant gender difference (p < .05).")
 
+tabS3
 num <-nrow(quantdata) #number of observations
 
 read_docx() %>% 
@@ -620,233 +615,228 @@ read_docx() %>%
 
 # Supplementary Table S4. ------------------------------------------------------
 
-### Married
-pdata_m1MAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"     & 
-                                      mar == "are married"),
-                           index = c("CaseID"))
-pdata_m2MAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner"   & 
-                                      mar == "are married"),
-                           index = c("CaseID"))
-pdata_m3MAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"         & 
-                                      mar == "are married"),
-                           index = c("CaseID"))
+## Prepare data for plm
+list_pdata_mar.par.dur <- list(
+  
+  ### Married
+  pdata_m1MAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"     & 
+                                        mar == "are married"),
+                             index = c("CaseID")),
+  pdata_m2MAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner"   & 
+                                        mar == "are married"),
+                             index = c("CaseID")),
+  pdata_m3MAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"         & 
+                                        mar == "are married"),
+                             index = c("CaseID")),
+  
+  ### Cohabiting
+  pdata_m1COH <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & 
+                                        mar == "live together"),
+                             index = c("CaseID")),
+  pdata_m2COH <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & 
+                                        mar == "live together"),
+                             index = c("CaseID")),
+  pdata_m3COH <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & 
+                                        mar == "live together"),
+                             index = c("CaseID")),
+  
+  ### Parents
+  pdata_m1PAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & 
+                                        child == "one child together"),
+                             index = c("CaseID")),
+  pdata_m2PAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & 
+                                        child == "one child together"),
+                             index = c("CaseID")),
+  pdata_m3PAR <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & 
+                                        child == "one child together"),
+                             index = c("CaseID")),
+  
+  ### Not parents
+  pdata_m1NOK <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & 
+                                        child == "no children"),
+                             index = c("CaseID")),
+  pdata_m2NOK <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & 
+                                        child == "no children"),
+                             index = c("CaseID")),
+  pdata_m3NOK <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & 
+                                        child == "no children"),
+                             index = c("CaseID")),
+  
+  ### 7 years
+  pdata_m1yr7 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & 
+                                        dur == "7 years"),
+                             index = c("CaseID")),
+  pdata_m2yr7 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & 
+                                        dur == "7 years"),
+                             index = c("CaseID")),
+  pdata_m3yr7 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & 
+                                        dur == "7 years"),
+                             index = c("CaseID")),
+  
+  ### 3 years
+  pdata_m1yr3 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Man higher-earner"   & 
+                                        dur == "3 years"),
+                             index = c("CaseID")),
+  pdata_m2yr3 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Woman higher-earner" & 
+                                        dur == "3 years"),
+                             index = c("CaseID")),
+  pdata_m3yr3 <- pdata.frame(femodels %>% 
+                               filter(relinc == "Equal earners"       & 
+                                        dur == "3 years"),
+                             index = c("CaseID"))
+)
 
-### Cohabiting
-pdata_m1COH <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"   & 
-                                      mar == "live together"),
-                           index = c("CaseID"))
-pdata_m2COH <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner" & 
-                                      mar == "live together"),
-                           index = c("CaseID"))
-pdata_m3COH <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"       & 
-                                      mar == "live together"),
-                           index = c("CaseID"))
-
-### Parents
-pdata_m1PAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"   & 
-                                      child == "one child together"),
-                           index = c("CaseID"))
-pdata_m2PAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner" & 
-                                      child == "one child together"),
-                           index = c("CaseID"))
-pdata_m3PAR <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"       & 
-                                      child == "one child together"),
-                           index = c("CaseID"))
-
-### Not parents
-pdata_m1NOK <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"   & 
-                                      child == "no children"),
-                           index = c("CaseID"))
-pdata_m2NOK <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner" & 
-                                      child == "no children"),
-                           index = c("CaseID"))
-pdata_m3NOK <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"       & 
-                                      child == "no children"),
-                           index = c("CaseID"))
-
-### 7 years
-pdata_m1yr7 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"   & 
-                                      dur == "7 years"),
-                           index = c("CaseID"))
-pdata_m2yr7 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner" & 
-                                      dur == "7 years"),
-                           index = c("CaseID"))
-pdata_m3yr7 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"       & 
-                                      dur == "7 years"),
-                           index = c("CaseID"))
-
-### 3 years
-pdata_m1yr3 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Man higher-earner"   & 
-                                      dur == "3 years"),
-                           index = c("CaseID"))
-pdata_m2yr3 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Woman higher-earner" & 
-                                      dur == "3 years"),
-                           index = c("CaseID"))
-pdata_m3yr3 <- pdata.frame(femodels %>% 
-                             filter(relinc == "Equal earners"       & 
-                                      dur == "3 years"),
-                           index = c("CaseID"))
+rm(list = ls()[grep("^pdata_", ls())]) # clean up global environment
 
 
-## Run the fixed effects models
-in_list <- list(pdata_m1MAR, pdata_m2MAR, pdata_m3MAR,
-                pdata_m1COH, pdata_m2COH, pdata_m3COH,
-                pdata_m1PAR, pdata_m2PAR, pdata_m3PAR,
-                pdata_m1NOK, pdata_m2NOK, pdata_m3NOK,
-                pdata_m1yr7, pdata_m2yr7, pdata_m3yr7,
-                pdata_m1yr3, pdata_m2yr3, pdata_m3yr3)
-
-out_list <- lapply(in_list, function(pdata){
+list_ame_S4 <- lapply(list_pdata_mar.par.dur, function(pdata){
   
   plm <- plm(dum ~ per * decision, data = pdata, model = "within")
   avg_slopes(plm, variables = c("per"), by = "decision")
   
 })
 
-# Define a function to identify person (term) 
-replace_based_on_column <- function(df) {
-  df$term <- paste(df$term, df$decision, sep= ".")
-  return(df)
-}
 
 # Apply this function to each data frame in the list
-out_list <- lapply(out_list, replace_based_on_column)
+list_ame_S4 <- lapply(list_ame_S4, replace_based_on_column)
 
 # Add list identifiers
-out_list[[1]][["relinc"]]   <- "Men higher-earner" 
-out_list[[2]][["relinc"]]   <- "Women higher-earner" 
-out_list[[3]][["relinc"]]   <- "Equal earners" 
-out_list[[4]][["relinc"]]   <- "Men higher-earner" 
-out_list[[5]][["relinc"]]   <- "Women higher-earner" 
-out_list[[6]][["relinc"]]   <- "Equal earners" 
-out_list[[7]][["relinc"]]   <- "Men higher-earner" 
-out_list[[8]][["relinc"]]   <- "Women higher-earner" 
-out_list[[9]][["relinc"]]   <- "Equal earners" 
-out_list[[10]][["relinc"]]  <- "Men higher-earner" 
-out_list[[11]][["relinc"]]  <- "Women higher-earner" 
-out_list[[12]][["relinc"]]  <- "Equal earners" 
-out_list[[13]][["relinc"]]  <- "Men higher-earner" 
-out_list[[14]][["relinc"]]  <- "Women higher-earner" 
-out_list[[15]][["relinc"]]  <- "Equal earners" 
-out_list[[16]][["relinc"]]  <- "Men higher-earner" 
-out_list[[17]][["relinc"]]  <- "Women higher-earner" 
-out_list[[18]][["relinc"]]  <- "Equal earners" 
+list_ame_S4[[1]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S4[[2]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S4[[3]][["relinc"]]   <- "Equal earners" 
+list_ame_S4[[4]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S4[[5]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S4[[6]][["relinc"]]   <- "Equal earners" 
+list_ame_S4[[7]][["relinc"]]   <- "Men higher-earner" 
+list_ame_S4[[8]][["relinc"]]   <- "Women higher-earner" 
+list_ame_S4[[9]][["relinc"]]   <- "Equal earners" 
+list_ame_S4[[10]][["relinc"]]  <- "Men higher-earner" 
+list_ame_S4[[11]][["relinc"]]  <- "Women higher-earner" 
+list_ame_S4[[12]][["relinc"]]  <- "Equal earners" 
+list_ame_S4[[13]][["relinc"]]  <- "Men higher-earner" 
+list_ame_S4[[14]][["relinc"]]  <- "Women higher-earner" 
+list_ame_S4[[15]][["relinc"]]  <- "Equal earners" 
+list_ame_S4[[16]][["relinc"]]  <- "Men higher-earner" 
+list_ame_S4[[17]][["relinc"]]  <- "Women higher-earner" 
+list_ame_S4[[18]][["relinc"]]  <- "Equal earners" 
 
-out_list[[1]][["mar.par.dur"]]  <- "Married" 
-out_list[[2]][["mar.par.dur"]]  <- "Married" 
-out_list[[3]][["mar.par.dur"]]  <- "Married" 
-out_list[[4]][["mar.par.dur"]]  <- "Cohabiting" 
-out_list[[5]][["mar.par.dur"]]  <- "Cohabiting" 
-out_list[[6]][["mar.par.dur"]]  <- "Cohabiting" 
-out_list[[7]][["mar.par.dur"]]  <- "Parents" 
-out_list[[8]][["mar.par.dur"]]  <- "Parents" 
-out_list[[9]][["mar.par.dur"]]  <- "Parents" 
-out_list[[10]][["mar.par.dur"]] <- "Not parents" 
-out_list[[11]][["mar.par.dur"]] <- "Not parents" 
-out_list[[12]][["mar.par.dur"]] <- "Not parents" 
-out_list[[13]][["mar.par.dur"]] <- "7 years" 
-out_list[[14]][["mar.par.dur"]] <- "7 years" 
-out_list[[15]][["mar.par.dur"]] <- "7 years" 
-out_list[[16]][["mar.par.dur"]] <- "3 years" 
-out_list[[17]][["mar.par.dur"]] <- "3 years" 
-out_list[[18]][["mar.par.dur"]] <- "3 years" 
+list_ame_S4[[1]][["mar.par.dur"]]  <- "Married" 
+list_ame_S4[[2]][["mar.par.dur"]]  <- "Married" 
+list_ame_S4[[3]][["mar.par.dur"]]  <- "Married" 
+list_ame_S4[[4]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_S4[[5]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_S4[[6]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_S4[[7]][["mar.par.dur"]]  <- "Parents" 
+list_ame_S4[[8]][["mar.par.dur"]]  <- "Parents" 
+list_ame_S4[[9]][["mar.par.dur"]]  <- "Parents" 
+list_ame_S4[[10]][["mar.par.dur"]] <- "Not parents" 
+list_ame_S4[[11]][["mar.par.dur"]] <- "Not parents" 
+list_ame_S4[[12]][["mar.par.dur"]] <- "Not parents" 
+list_ame_S4[[13]][["mar.par.dur"]] <- "7 years" 
+list_ame_S4[[14]][["mar.par.dur"]] <- "7 years" 
+list_ame_S4[[15]][["mar.par.dur"]] <- "7 years" 
+list_ame_S4[[16]][["mar.par.dur"]] <- "3 years" 
+list_ame_S4[[17]][["mar.par.dur"]] <- "3 years" 
+list_ame_S4[[18]][["mar.par.dur"]] <- "3 years" 
 
 
 ## Test for statistical difference between high & low decisions
 
-data_type <- as_tibble(rbind(
-  out_list[[1]],  out_list[[2]],  out_list[[3]], 
-  out_list[[4]],  out_list[[5]],  out_list[[6]],
-  out_list[[7]],  out_list[[8]],  out_list[[9]],
-  out_list[[10]], out_list[[11]], out_list[[12]],
-  out_list[[13]], out_list[[14]], out_list[[15]],
-  out_list[[16]], out_list[[17]], out_list[[18]])) %>%
+data_type_S4 <- as_tibble(rbind(
+  list_ame_S4[[1]],  list_ame_S4[[2]],  list_ame_S4[[3]], 
+  list_ame_S4[[4]],  list_ame_S4[[5]],  list_ame_S4[[6]],
+  list_ame_S4[[7]],  list_ame_S4[[8]],  list_ame_S4[[9]],
+  list_ame_S4[[10]], list_ame_S4[[11]], list_ame_S4[[12]],
+  list_ame_S4[[13]], list_ame_S4[[14]], list_ame_S4[[15]],
+  list_ame_S4[[16]], list_ame_S4[[17]], list_ame_S4[[18]])) %>%
   mutate(relinc = fct_case_when(
     relinc == "Men higher-earner"   ~ "Men higher-earner",
     relinc == "Women higher-earner" ~ "Women higher-earner",
     relinc == "Equal earners"       ~ "Equal earners" )) %>%
   arrange(relinc) # sort data to test down
 
-output_type <- NULL # create empty df for test results
+output_type_S4 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_type), by = 2)) {
-  status        <- data_type[i, 15]
-  relinc        <- data_type[i, 14]
-  stakes        <- data_type[i,  3]
-  decider       <- data_type[i,  1]
-  estimate      <- ((data_type[i, 4] - data_type[i + 1, 4]) / 
-                      sqrt(data_type[i, 5]^2 + data_type[i + 1, 5]^2))
+for (i in seq(1, nrow(data_type_S4), by = 2)) {
+  status        <- data_type_S4[i, 15]
+  relinc        <- data_type_S4[i, 14]
+  stakes        <- data_type_S4[i,  3]
+  decider       <- data_type_S4[i,  1]
+  estimate      <- ((data_type_S4[i, 4] - data_type_S4[i + 1, 4]) / 
+                      sqrt(data_type_S4[i, 5]^2 + data_type_S4[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_type <- rbind(output_type, 
+  output_type_S4 <- rbind(output_type_S4, 
                        data.frame(status, relinc, stakes, decider, estimate, p))
 }
 
-output_type <- output_type %>%
+output_type_S4 <- output_type_S4 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
     p   < .05    ~ "*",
     TRUE         ~ NA_character_))
 
-output_type[!(is.na(output_type$sig)), ] # show only statistically sig. status differences
+# show only statistically sig. decision differences
+output_type_S4[!(is.na(output_type_S4$sig)), ] 
 
 
 ## Test for statistical difference between relationship statuses
-data_status <- data_type %>%
+data_status_S4 <- data_type_S4 %>%
   arrange(relinc, decision) #resort data to test across table
 
-output_status <- NULL # create empty df for test results
+output_status_S4 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_status), by = 2)) {
-  status        <- data_status[i, 15]
-  relinc        <- data_status[i, 14]
-  stakes        <- data_status[i,  3]
-  decider       <- data_status[i,  1]
-  estimate      <- ((data_status[i, 4] - data_status[i + 1, 4]) / 
-                      sqrt(data_status[i, 5]^2 + data_status[i + 1, 5]^2))
+for (i in seq(1, nrow(data_status_S4), by = 2)) {
+  status        <- data_status_S4[i, 15]
+  relinc        <- data_status_S4[i, 14]
+  stakes        <- data_status_S4[i,  3]
+  decider       <- data_status_S4[i,  1]
+  estimate      <- ((data_status_S4[i, 4] - data_status_S4[i + 1, 4]) / 
+                      sqrt(data_status_S4[i, 5]^2 + data_status_S4[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_status <- rbind(output_status, 
+  output_status_S4 <- rbind(output_status_S4, 
                          data.frame(status, relinc, stakes, decider, estimate, p))
 }
 
-output_status <- output_status %>%
+output_status_S4 <- output_status_S4 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
     p   < .05    ~ "*",
     TRUE         ~ NA_character_))
 
-output_status[!(is.na(output_status$sig)), ] # show only statistically sig. status differences
+# show only statistically sig. status differences
+output_status_S4[!(is.na(output_status_S4$sig)), ] 
 
 
 ## Create list for 3 panels
-panels <- list(
-  "Man Higher Earner"   = list("Married" = out_list[[1]],  "Cohabiting"  = out_list[[4]], 
-                               "Parents" = out_list[[7]],  "Not parents" = out_list[[10]],
-                               "7 years" = out_list[[13]], "3 years"     = out_list[[16]]),
-  "Woman Higher Earner" = list("Married" = out_list[[2]],  "Cohabiting"  = out_list[[5]], 
-                               "Parents" = out_list[[8]],  "Not parents" = out_list[[11]],
-                               "7 years" = out_list[[14]], "3 years"     = out_list[[17]]),
-  "Equal Earners"       = list("Married" = out_list[[3]],  "Cohabiting"  = out_list[[6]], 
-                               "Parents" = out_list[[9]],  "Not parents" = out_list[[12]],
-                               "7 years" = out_list[[15]], "3 years"     = out_list[[18]]))
+panels_S4 <- list(
+  "Man Higher Earner"   = list("Married" = list_ame_S4[[1]],  "Cohabiting"  = list_ame_S4[[4]], 
+                               "Parents" = list_ame_S4[[7]],  "Not parents" = list_ame_S4[[10]],
+                               "7 years" = list_ame_S4[[13]], "3 years"     = list_ame_S4[[16]]),
+  "Woman Higher Earner" = list("Married" = list_ame_S4[[2]],  "Cohabiting"  = list_ame_S4[[5]], 
+                               "Parents" = list_ame_S4[[8]],  "Not parents" = list_ame_S4[[11]],
+                               "7 years" = list_ame_S4[[14]], "3 years"     = list_ame_S4[[17]]),
+  "Equal Earners"       = list("Married" = list_ame_S4[[3]],  "Cohabiting"  = list_ame_S4[[6]], 
+                               "Parents" = list_ame_S4[[9]],  "Not parents" = list_ame_S4[[12]],
+                               "7 years" = list_ame_S4[[15]], "3 years"     = list_ame_S4[[18]]))
 
 ## Create pretty labels
 coef_map <- c(
@@ -855,7 +845,7 @@ coef_map <- c(
 
 ## Produce Table S4
 tabS4 <- modelsummary(
-  panels,
+  panels_S4,
   shape = "rbind",
   coef_map = coef_map,
   gof_map = NA,
@@ -867,11 +857,19 @@ tabS4 <- modelsummary(
   insert_row(c("Man Higher Earner",   " ", " ", " ", " ", " ", " "), after = 1)  %>%
   insert_row(c("Woman Higher Earner", " ", " ", " ", " ", " ", " "), after = 6)  %>%
   insert_row(c("Equal Earners",       " ", " ", " ", " ", " ", " "), after = 11) %>%
-  set_top_border(row = c(7, 12), col = everywhere)                          %>%
-  set_bottom_border(row = c(1,7,12), col = everywhere)                      %>%
-  set_align(row = c(3, 5, 8, 10, 13, 15), 1, "center")                      %>%
-  huxtable::as_flextable()                                                  %>%
-  add_footer_lines("Notes: N=7,956 person-decisions. There were no statistically significant differences by decision type or by the relationship indicators (i.e., marital status, parental status, or relationship duration). Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and relationship indicators. Standard errors in parentheses.") %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 
+               'No', 'Yes', 'No', 'Yes', 'No', 'Yes'),               after = 6)  %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 
+               'No', 'No', 'No', 'No', 'No', 'No'),                  after = 12) %>%
+  insert_row(c('Significant difference, high vs. low stakes?', 
+               'No', 'No', 'No', 'No', 'Yes', 'No'),                 after = 18) %>%
+  set_top_border(row = c(8, 14), col = everywhere)                %>%
+  set_bottom_border(row = c(1,8,14), col = everywhere)            %>%
+  set_align(row = c(3, 5, 9, 11, 15, 17), 1, "center")            %>%
+  huxtable::as_flextable()                                        %>%
+  flextable::footnote(i = 15, j = 1, 
+                      value = as_paragraph(c("Statistically significant parental status difference (p < .05)."))) %>%
+  add_footer_lines("Notes: N=7,956 person-decisions. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and relationship indicators. Standard errors in parentheses.") %>%
   set_table_properties(layout = "autofit") 
 
 tabS4
@@ -882,7 +880,7 @@ read_docx() %>%
   print(target = file.path(outDir, "finalsay_tableS4.docx")) # save table
 
 
-# Supplementary Figure A. ------------------------------------------------------
+# Supplementary Figure 1. ------------------------------------------------------
 ## Fairness Evaluation by high/low Presented to Respondent
 
 data_figS1 <- quantdata %>%
