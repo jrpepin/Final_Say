@@ -97,7 +97,7 @@ out_list$`Low-stakes`[["stakes"]]  <- "Low-stakes"
 new_df <- as_tibble(rbind(out_list$`High-stakes`,  out_list$`Low-stakes`))
 
 
-tabS5 <- new_df %>%
+tabS6 <- new_df %>%
   pivot_wider(names_from = stakes, values_from = coherence) %>%
   filter(k < 11) %>%
   rename("Number of Topics" = k) %>%
@@ -108,12 +108,14 @@ tabS5 <- new_df %>%
   flextable::align(i = NULL, j = NULL, align = "center", part = "all") %>%
   add_header_row(values = c(" ", "Decision Type"),
                colwidths = c(1, 2), top = TRUE)
+
+tabS6
   
 ## Note shading cells doesn't work, so must do that manually (sorry)
 read_docx() %>% 
-  body_add_par(paste("Table S5. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
-  body_add_flextable(value = tabS5) %>% 
-  print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
+  body_add_par(paste("Table S6. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
+  body_add_flextable(value = tabS6) %>% 
+  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
 
 ### TOP WORDS ------------------------------------------------------------------
 
@@ -178,7 +180,7 @@ names(out_list3) <- c("High", "Low") # Rename lists
 out_list3$`High`[["stakes"]] <- "High-stakes" # Add list identifier
 out_list3$`Low`[["stakes"]]  <- "Low-stakes"
 
-data_tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
+data_tabS7 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, topic, desc(phi)) %>%
   mutate(rank = as.numeric(rank)) %>%
   filter(rank < 11) %>%
@@ -203,7 +205,7 @@ data_tabS6 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, new_topic, rank)
   
   
-tabS6 <- data_tabS6  %>%
+tabS7 <- data_tabS7  %>%
   select(c("new_topic", "word", "stakes", "rank")) %>%
   pivot_wider(names_from = c(new_topic), values_from = word,
               names_sep = " ",) %>%
@@ -229,15 +231,16 @@ tabS6 <- data_tabS6  %>%
   select(c("stakes", "rank", "Topic 1", "Topic 2", "Topic 3", "Topic 4",  
            "Topic 5", "Topic 6", "Topic 7", "Topic 8"))
 
-tabS6 <- as_grouped_data(x = tabS6, groups = c("stakes"), columns = NULL) # Group by vignette condition
+tabS7 <- as_grouped_data(x = tabS7, groups = c("stakes"), columns = NULL) # Group by vignette condition
 
-tabS6 <- tabS6 %>%
+tabS7 <- tabS7 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) 
 
-## Note shading cells doesn't work, so must do that manually (sorry)
+tabS7
+
 read_docx() %>% 
-  body_add_par(paste("Table S6. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
-  body_add_flextable(value = tabS6) %>% 
-  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
+  body_add_par(paste("Table S7. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
+  body_add_flextable(value = tabS7) %>% 
+  print(target = file.path(outDir, "finalsay_tableS7.docx")) # save table
 
   

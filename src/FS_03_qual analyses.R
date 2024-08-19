@@ -830,12 +830,16 @@ dev.off()
 # ?!?! significance stars are currently missing
 
 s1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable") 
+                   gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable") 
 s2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable")
+                   gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable")
 s3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
-                   gof_map = NA, output = "huxtable")
+                   gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable")
 data_tableS5 <-  cbind(s1, s2, s3)
+data_tableS5 <- data_tableS5[-c(30), ] # remove duplication p value notations
+data_tableS5[2, 2] = "High-stakes"
+data_tableS5[16, 2] = "Low-stakes"
+
 
 data_tableS5 <- data_tableS5 %>%
   rename(topic = 3) %>%
@@ -859,21 +863,24 @@ sect_properties <- prop_section(
 
 
 tabS5 <- data_tableS5 %>%
-  select(c("decision", topic, "Men higher-earner / 0", "Men higher-earner / 1", 
+  select(c("decision", "topic", "Men higher-earner / 0", "Men higher-earner / 1", 
            "Women higher-earner / 0", "Women higher-earner / 1",
            "Equal earner / 0", "Equal earner / 1")) %>%
   insert_row(c(" ", " ", 
                "Anthony\nDecides", "Michelle\nDecides",
                "Anthony\nDecides", "Michelle\nDecides", 
                "Anthony\nDecides", "Michelle\nDecides"), after = 1)  %>%
+  set_bottom_border(row = c(1,2, 30), col = everywhere)        %>%
   huxtable::as_flextable() %>%
   delete_rows(i = 1, part = "body") %>%
   add_header_row(values = c("Decision", "Topic", "Men higher-earner", 
                             "Women higher-earner", "Equal earners"),
                  colwidths = c(1, 1, 2, 2, 2), top = TRUE) %>%
-  flextable::align(align = "center", part = "header") %>%
+  flextable::align(align = "center", part = "header")      %>%
   add_footer_lines("Notes: N=7,956 person-decisions. Coefficients are the marginal effects of perceiving a decision as fair on topic prevalence (theta) in respondents' open-ended explanations, calculated from respondent-level fixed effects models with interaction between decision-maker gender and perception of fairness. Independent models applied by relative income. * p < .05, ** p < .01, *** p < .001; 2 tailed tests. Standard errors in parentheses.") %>%
   set_table_properties(layout = "autofit") 
+
+tabS5
 
 read_docx() %>% 
   body_add_par(paste("Table S5. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
@@ -892,9 +899,8 @@ qualdataHIGH <- qualdataFULL %>%
 qualdataLOW <- qualdataFULL %>%
   filter(x == "qual2")
 
-in_list <- list(qualdataHIGH, qualdataLOW)
-
-# Fit a 1 through 20 LDA models and compare coherence
+# document-term matrix to different format for fitlda
+in_list  <- list(qualdataHIGH, qualdataLOW)
 out_list <- lapply(in_list, function(df){
   
   # generating corpus
@@ -942,6 +948,12 @@ out_list <- lapply(in_list, function(df){
                                     x=matSTEMMED $v, 
                                     dims=c(matSTEMMED $nrow, matSTEMMED $ncol),
                                     dimnames = matSTEMMED $dimnames)
+})
+
+
+# Fit a 1 through 20 LDA models and compare coherence
+in_list2  <- list(out_list[[1]], out_list[[2]])
+out_list2 <- lapply(in_list2, function(mSTEMMED){
   
   # Fit a 1 through 20 LDA models
   k_list <- seq(1,20, by=1)
@@ -990,6 +1002,8 @@ tabS6 <- new_df %>%
   flextable::align(i = NULL, j = NULL, align = "center", part = "all") %>%
   add_header_row(values = c(" ", "Decision Type"),
                  colwidths = c(1, 2), top = TRUE)
+
+tabS6
 
 ## Note shading cells doesn't work, so must do that manually (sorry)
 read_docx() %>% 
@@ -1118,12 +1132,12 @@ tabS7 <- as_grouped_data(x = tabS7, groups = c("stakes"), columns = NULL) # Grou
 tabS7 <- tabS7 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) 
 
-## Note shading cells doesn't work, so must do that manually (sorry)
+tabS7
+
 read_docx() %>% 
   body_add_par(paste("Table S7. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
   body_add_flextable(value = tabS7) %>% 
   print(target = file.path(outDir, "finalsay_tableS7.docx")) # save table
-
 
 # Supplement Figure S2 ---------------------------------------------------------
 
