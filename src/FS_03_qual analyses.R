@@ -292,6 +292,9 @@ data_lca <- data_lca                  %>%
   mutate(CaseID = as.character(CaseID))
 
 ## export to Excel
+
+library(foreign)
+write.dta(data_lca %>% select(!c(qual)), file = file.path(outDir, "data_lca.dta"))
 write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
 
 ## Check topic frequency -- Average theta!
@@ -825,9 +828,6 @@ dev.off()
 # Supplementary Table S5 -------------------------------------------------------
 ## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
 ## Decision Type, and Vignette Couple’s Relative Income
-
-# ?!?! These topics are out of order and unlabeled 
-# ?!?! significance stars are currently missing
 
 s1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
                    gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable") 
