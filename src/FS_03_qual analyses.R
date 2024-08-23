@@ -292,10 +292,9 @@ data_lca <- data_lca                  %>%
   mutate(CaseID = as.character(CaseID))
 
 ## export to Excel/Stata
-
-library(foreign)
-write.dta(data_lca %>% select(!c(qual)), file = file.path(outDir, "data_lca.dta"))
-write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
+#library(foreign)
+#write.dta(data_lca %>% select(!c(qual)), file = file.path(outDir, "data_lca.dta"))
+#write_csv(data_lca, file = file.path(outDir, "data_lca.csv"))
 
 ## Check topic frequency -- Average theta!
 data_lca %>%
@@ -603,26 +602,26 @@ dev.off()
 ## Create the function
 
 ### Predicted Probabilities
-give_me_pp  <- function(model){
-  avg_predictions(model, by = c("dum", "per", "decision"))
+give_me_pp  <- function(model, dta){
+  avg_predictions(model, by = c("dum", "per", "decision"), newdata = dta)
 }
 
 ## estimate the predicted probabilities
-pp_all   <- lapply(fe_all,  give_me_pp) # all earners R=ALL
-pp_allM  <- lapply(fe_allM, give_me_pp) # all earners R=Man
-pp_allW  <- lapply(fe_allW, give_me_pp) # all earners R=Woman
+pp_all   <- Map(give_me_pp, fe_all,   dta_m0)  # all earners R=ALL
+pp_allM  <- Map(give_me_pp, fe_allM,  dta_m0M) # all earners R=Man
+pp_allW  <- Map(give_me_pp, fe_allW,  dta_m0W) # all earners R=Woman
 
-pp_mhe   <- lapply(fe_mhe,  give_me_pp) # men-higher-earner R=ALL
-pp_mheM  <- lapply(fe_mheM, give_me_pp) # men-higher-earner R=Man
-pp_mheW  <- lapply(fe_mheW, give_me_pp) # men-higher-earner R=Woman
+pp_mhe   <- Map(give_me_pp, fe_mhe,   dta_m1)  # men-higher-earner R=ALL
+pp_mheM  <- Map(give_me_pp, fe_mheM,  dta_m1M) # men-higher-earner R=Man
+pp_mheW  <- Map(give_me_pp, fe_mheW,  dta_m1W) # men-higher-earner R=Woman
 
-pp_whe   <- lapply(fe_whe,  give_me_pp) # women-higher-earner R=ALL
-pp_wheM  <- lapply(fe_wheM, give_me_pp) # women-higher-earner R=Man
-pp_wheW  <- lapply(fe_wheW, give_me_pp) # women-higher-earner R=Woman
+pp_whe   <- Map(give_me_pp, fe_whe,   dta_m2)  # women-higher-earner R=ALL
+pp_wheM  <- Map(give_me_pp, fe_wheM,  dta_m2M) # women-higher-earner R=Man
+pp_wheW  <- Map(give_me_pp, fe_wheW,  dta_m2W) # women-higher-earner R=Woman
 
-pp_ee    <- lapply(fe_ee,   give_me_pp) # equal earners R=ALL
-pp_eeM   <- lapply(fe_eeM,  give_me_pp) # equal earners R=Man
-pp_eeW   <- lapply(fe_eeW,  give_me_pp) # equal earners R=Woman
+pp_ee    <- Map(give_me_pp, fe_ee,    dta_m3)  # equal earners R=ALL
+pp_eeM   <- Map(give_me_pp, fe_eeM,   dta_m3M) # equal earners R=Man
+pp_eeW   <- Map(give_me_pp, fe_eeW,   dta_m3W) # equal earners R=Woman
 
 ## add relinc indicator
 
@@ -750,7 +749,7 @@ data_fig5 <- data_fig5 %>%
       gender   == "All"   ~ "All",
       gender   == "Women" ~ "Women",
       gender   == "Men"   ~ "Men")) %>%
-    select(!c(rowid, per, dum, decision, rowid_dedup, relinc))
+    select(!c(per, dum, decision, relinc))
 
 
 ## Test respondent gender differences ------------------------------------------
