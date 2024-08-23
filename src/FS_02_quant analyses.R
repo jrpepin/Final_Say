@@ -329,7 +329,7 @@ ggsave(filename = file.path(figDir, "fig2.png"), fig2,
 # SUPPLEMENTARY MATERIALS (quant)
 ################################################################################
 
-# Supplementary Table 1 -------------------------------------------------------------
+# Supplementary Table 1 --------------------------------------------------------
 ## Descriptive Statistics of Respondent Characteristics
 
 ## Create weighted data 
@@ -461,7 +461,7 @@ read_docx() %>%
 list_ame_S3 <- lapply(list_pdata, function(pdata){
   
   plm <- plm(as_numeric(fair) ~ per * decision, data = pdata, model = "within")
-  avg_slopes(plm, variables = c("per"), by = "decision")
+  avg_slopes(plm, variables = c("per"), by = "decision", newdata = pdata)
   
 })
 
@@ -709,7 +709,7 @@ rm(list = ls()[grep("^pdata_", ls())]) # clean up global environment
 list_ame_S4 <- lapply(list_pdata_mar.par.dur, function(pdata){
   
   plm <- plm(dum ~ per * decision, data = pdata, model = "within")
-  avg_slopes(plm, variables = c("per"), by = "decision")
+  avg_slopes(plm, variables = c("per"), by = "decision", newdata = pdata)
   
 })
 
