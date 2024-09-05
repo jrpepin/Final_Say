@@ -327,14 +327,14 @@ pdata_m0M <- pdata.frame(data_lca %>%
                            filter(gender == "Male"),               ## all relinc
                          index = c("CaseID"))
 pdata_m1M <- pdata.frame(data_lca %>% 
-                          filter(gender == "Male" & relinc == "Man higher-earner"),   
-                        index = c("CaseID"))
+                           filter(gender == "Male" & relinc == "Man higher-earner"),   
+                         index = c("CaseID"))
 pdata_m2M <- pdata.frame(data_lca %>% 
-                          filter(gender == "Male" & relinc == "Woman higher-earner"), 
-                        index = c("CaseID"))
+                           filter(gender == "Male" & relinc == "Woman higher-earner"), 
+                         index = c("CaseID"))
 pdata_m3M <- pdata.frame(data_lca %>% 
-                          filter(gender == "Male" & relinc == "Equal earners"),       
-                        index = c("CaseID"))
+                           filter(gender == "Male" & relinc == "Equal earners"),       
+                         index = c("CaseID"))
 
 ### Women
 pdata_m0W <- pdata.frame(data_lca %>% 
@@ -550,7 +550,7 @@ p1 <- data_fig4 %>%
         axis.text.x=element_blank(),
         legend.position     = "none") +
   guides(fill    = guide_legend(reverse = TRUE)) +
-  labs(title     = "Average marginal effects of relationship of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
+  labs(title     = "Average marginal effects of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
        x        = " ", 
        y        = " ",
        subtitle = "High-stakes decisions")
@@ -579,9 +579,9 @@ p2 <- data_fig4 %>%
   labs( x        = " ", 
         y        = " ",
         subtitle = "Low-stakes decisions",
-        caption = "Positive coefficients = more likely to be used when rated fair
-        Negative coefficients = more likely to be used when rated unfair 
-        * = p <.05 difference between probability of fair and unfair")
+        caption = "Positive coefficients = more frequently used when rated fair
+        Negative coefficients = more frequently used when rated unfair 
+        * = p < 0.05 significant marginal effect of fairness evaluation on topic prevalence")
 
 ## combine the plots
 g1 <- ggplotGrob(p1)
@@ -635,7 +635,7 @@ pp_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_whe,  "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_ee   <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_ee,    "Equal earner",        SIMPLIFY = FALSE)
+                  pp_ee,    "Equal earner",        SIMPLIFY = FALSE)
 
 pp_allM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_allM, "All earners",         SIMPLIFY = FALSE)
@@ -647,7 +647,7 @@ pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_eeM  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeM,   "Equal earner",        SIMPLIFY = FALSE)
+                  pp_eeM,   "Equal earner",        SIMPLIFY = FALSE)
 
 pp_allW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_allW, "All earners",         SIMPLIFY = FALSE)
@@ -659,7 +659,7 @@ pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
                   pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
 
 pp_eeW  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_eeW,   "Equal earner",        SIMPLIFY = FALSE)
+                  pp_eeW,   "Equal earner",        SIMPLIFY = FALSE)
 
 ## add R gender indicator
 pp_all  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
@@ -672,7 +672,7 @@ pp_whe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_whe,  "All",   SIMPLIFY = FALSE)
 
 pp_ee   <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_ee,    "All",   SIMPLIFY = FALSE)
+                  pp_ee,    "All",   SIMPLIFY = FALSE)
 
 pp_allM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_allM, "Men",   SIMPLIFY = FALSE)
@@ -684,7 +684,7 @@ pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_wheM, "Men",   SIMPLIFY = FALSE)
 
 pp_eeM  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeM,   "Men",   SIMPLIFY = FALSE)
+                  pp_eeM,   "Men",   SIMPLIFY = FALSE)
 
 pp_allW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_allW, "Women", SIMPLIFY = FALSE)
@@ -696,7 +696,7 @@ pp_wheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
                   pp_wheW, "Women", SIMPLIFY = FALSE)
 
 pp_eeW  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeW,   "Women", SIMPLIFY = FALSE)
+                  pp_eeW,   "Women", SIMPLIFY = FALSE)
 
 ## put them into a data frame
 df_all  <- bind_rows(pp_all,  .id = "topic")
@@ -742,14 +742,14 @@ data_fig5 <- data_fig5 %>%
       decision == "low"   ~ "Low"),
     earner     = fct_case_when(
       relinc   == "All earners"          ~ "All earners",
-      relinc   == "Men higher-earner"    ~ "Men higher-earner",
-      relinc   == "Women higher-earner"  ~ "Women higher-earner",
+      relinc   == "Men higher-earner"    ~ "Men\nhigher-earner",
+      relinc   == "Women higher-earner"  ~ "Women\nhigher-earner",
       relinc   == "Equal earner"         ~ "Equal earners"),
     gender     = fct_case_when(
       gender   == "All"   ~ "All",
       gender   == "Women" ~ "Women",
       gender   == "Men"   ~ "Men")) %>%
-    select(!c(per, dum, decision, relinc))
+  select(!c(per, dum, decision, relinc))
 
 
 ## Test respondent gender differences ------------------------------------------
@@ -781,7 +781,7 @@ gen_output[!(is.na(gen_output$sig)), ] # show only statistically sig. gender dif
 ## Create high stakes plot
 p3 <- data_fig5 %>%
   filter(gender != "All" & earner != "All earners" & 
-         fair  == "Fair" & stakes == "High") %>%
+           fair  == "Fair" & stakes == "High") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
   facet_grid(rows   = vars(reorder(topic, -estimate)),  
@@ -791,21 +791,21 @@ p3 <- data_fig5 %>%
   theme_minimal(13) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
-#        axis.text.y         = element_blank(),
+        #        axis.text.y         = element_blank(),
         strip.text.y        = element_blank(),
         legend.position     = "none") +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
   scale_fill_grey(name = " ") +
-  labs(title     = "Predicted probability of topic for decisions rated somewhat or very fair\nby decision type, vignette couples' relative income and decision-maker gender, and respondent gender\n ",
+  labs(title     = "Predicted topic prevalence for decisions rated as fair by decision type, vignette couples' relative income\nand decision-maker gender, and respondent gender\n ",
        x        = " ", 
        y        = " ",
-        subtitle = "High-stakes decisions")
+       subtitle = "High-stakes decisions")
 
 ## Create low stakes plot
 p4 <- data_fig5 %>%
   filter(gender != "All" & earner != "All earners" & 
-         fair  == "Fair" & stakes == "Low") %>%
+           fair  == "Fair" & stakes == "Low") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.8, position="stack") +
   #  geom_point() +
@@ -816,7 +816,7 @@ p4 <- data_fig5 %>%
   theme_minimal(13) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
-#        axis.text.y         = element_blank(),
+        #        axis.text.y         = element_blank(),
         strip.text.y        = element_blank(),
         legend.position     = "bottom") +
   guides(fill = guide_legend(reverse = TRUE)) +
@@ -872,7 +872,7 @@ data_tableS5 <- data_tableS5 %>%
       topic    == "(5)" ~ "Decision History",
       topic    == "(2)" ~ "Man Has Final Say",
       topic    == "(4)" ~ "Happy Wife, Happy Life"))
-    
+
 
 ## control docx formatting output
 sect_properties <- prop_section(
@@ -1178,7 +1178,7 @@ for (i in seq(1, nrow(data_gen_S), by = 2)) {
   decider       <- data_gen_S[i, 10]
   stakes        <- data_gen_S[i, 13]
   estimate      <- ((data_gen_S[i, 2] - data_gen_S[i + 1, 2]) / 
-                    sqrt(data_gen_S[i, 3]^2 + data_gen_S[i + 1, 3]^2))
+                      sqrt(data_gen_S[i, 3]^2 + data_gen_S[i + 1, 3]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
   gen_output_S  <- rbind(gen_output_S, data.frame(topic, decider, stakes, estimate, p))
 }
@@ -1211,7 +1211,7 @@ p5 <- data_fig5 %>%
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
   scale_fill_grey(name = " ") +
-  labs(title     = "Predicted probability of topic for decisions rated somewhat or very unfair\nby decision type, vignette couples' relative income and decision-maker gender, and respondent gender\n ",
+  labs(title     = "Predicted topic prevalence for decisions rated as unfair by decision type, vignette couples' relative income\nand decision-maker gender, and respondent gender\n ",
        x        = " ", 
        y        = " ",
        subtitle = "High-stakes decisions")
@@ -1253,4 +1253,3 @@ png(file.path(figDir, "figS2.png"),
     width = 850, height = 580, pointsize=16) 
 grid.draw(g_figS2) 
 dev.off()
-
