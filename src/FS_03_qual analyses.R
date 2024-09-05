@@ -729,8 +729,8 @@ data_fig5 <- data_fig5 %>%
       topic    == "2" ~ "Man Has Final Say",
       topic    == "4" ~ "Happy Wife, Happy Life"),
     decider    = fct_case_when(
-      per      == 0   ~ "He decided",
-      per      == 1   ~ "She decided"),
+      per      == 1   ~ "She decided",
+      per      == 0   ~ "He decided"),
     fair       = fct_case_when(
       dum      == 1   ~ "Fair",
       dum      == 0   ~ "Unfair"),
@@ -742,8 +742,8 @@ data_fig5 <- data_fig5 %>%
       decision == "low"   ~ "Low"),
     earner     = fct_case_when(
       relinc   == "All earners"          ~ "All earners",
-      relinc   == "Men higher-earner"    ~ "Men\nhigher-earner",
-      relinc   == "Women higher-earner"  ~ "Women\nhigher-earner",
+      relinc   == "Men higher-earner"    ~ "Men higher-earner",
+      relinc   == "Women higher-earner"  ~ "Women higher-earner",
       relinc   == "Equal earner"         ~ "Equal earners"),
     gender     = fct_case_when(
       gender   == "All"   ~ "All",

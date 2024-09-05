@@ -1,242 +1,52 @@
 
 
-### Create the function
-pp <- function(model){
-  ggpredict(model, terms = c("dum", "per", "decision"))
-}
-
-#### estimate the predicted probabilities
-pp_mhe   <- lapply(fe_mhe,  pp) # men-higher-earner R=ALL
-pp_mheM  <- lapply(fe_mheM, pp) # men-higher-earner R=Man
-pp_mheW  <- lapply(fe_mheW, pp) # men-higher-earner R=Woman
-
-pp_whe   <- lapply(fe_whe,  pp) # women-higher-earner R=ALL
-pp_wheM  <- lapply(fe_wheM, pp) # women-higher-earner R=Man
-pp_wheW  <- lapply(fe_wheW, pp) # women-higher-earner R=Woman
-
-pp_ee   <- lapply(fe_ee,  pp)   # equal earners R=ALL
-pp_eeM  <- lapply(fe_eeM, pp)   # equal earners R=Man
-pp_eeW  <- lapply(fe_eeW, pp)   # equal earners R=Woman
-
-
-#### add relinc indicator
-pp_mhe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_mhe,  "Men higher-earner",   SIMPLIFY = FALSE)
-
-pp_whe  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_whe,  "Women higher-earner", SIMPLIFY = FALSE)
-
-pp_ee  <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                 pp_ee,    "Equal earner",       SIMPLIFY = FALSE)
-
-pp_mheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   pp_mheM, "Men higher-earner",   SIMPLIFY = FALSE)
-
-pp_wheM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   pp_wheM, "Women higher-earner", SIMPLIFY = FALSE)
-
-pp_eeM <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_eeM,   "Equal earner",       SIMPLIFY = FALSE)
-
-pp_mheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   pp_mheW, "Men higher-earner",   SIMPLIFY = FALSE)
-
-pp_wheW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                   pp_wheW, "Women higher-earner", SIMPLIFY = FALSE)
-
-pp_eeW <- mapply(function(x, y) "[<-"(x, "relinc", value = y) ,
-                  pp_eeW,   "Equal earner",       SIMPLIFY = FALSE)
-
-
-#### add R gender indicator
-pp_mhe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_mhe,  "All",   SIMPLIFY = FALSE)
-
-pp_whe  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_whe,  "All",   SIMPLIFY = FALSE)
-
-pp_ee  <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_ee,    "All",   SIMPLIFY = FALSE)
-
-pp_mheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_mheM, "Men",   SIMPLIFY = FALSE)
-
-pp_wheM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_wheM, "Men",   SIMPLIFY = FALSE)
-
-pp_eeM <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeM,   "Men",   SIMPLIFY = FALSE)
-
-pp_mheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_mheW, "Women", SIMPLIFY = FALSE)
-
-pp_wheW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                  pp_wheW, "Women", SIMPLIFY = FALSE)
-
-pp_eeW <- mapply(function(x, y) "[<-"(x, "gender", value = y) ,
-                 pp_eeW,   "Women", SIMPLIFY = FALSE)
-
-#### put them into a dataframe
-df_mhe  <- bind_rows(pp_mhe,  .id = "topic")
-df_whe  <- bind_rows(pp_whe,  .id = "topic")
-df_ee   <- bind_rows(pp_ee,   .id = "topic")
-
-df_mheM <- bind_rows(pp_mheM, .id = "topic")
-df_wheM <- bind_rows(pp_wheM, .id = "topic")
-df_eeM  <- bind_rows(pp_eeM,  .id = "topic")
-
-df_mheW <- bind_rows(pp_mheW, .id = "topic")
-df_wheW <- bind_rows(pp_wheW, .id = "topic")
-df_eeW  <- bind_rows(pp_eeW,  .id = "topic")
-
-
-data_fig4 <- as_tibble(rbind(df_mhe, df_whe, df_ee, df_mheM, df_wheM, df_eeM, df_mheW, df_wheW, df_eeW))
-
-data_fig4 <- data_fig4 %>% 
-  mutate( 
-    topic = fct_case_when(
-      topic == "3" ~ "Practical Efficiency",
-      topic == "1" ~ "Give & Take",
-      topic == "6" ~ "Money Matters",
-      topic == "7" ~ "Work Together",
-      topic == "5" ~ "Taking Turns",
-      topic == "2" ~ "Man Has Final Say",
-      topic == "4" ~ "Happy Wife, Happy Life"),
-    decider = fct_case_when(
-      group == 0   ~ "He decided",
-      group == 1   ~ "She decided"),
-    fair = fct_case_when(
-      x     == 1   ~ "Fair",
-      x     == 0   ~ "Unfair"),
-    newest = case_when(
-      fair == "Fair"   ~ predicted,
-      fair == "Unfair" ~ -predicted),
-    stakes = fct_case_when(
-      facet == "high" ~ "High",
-      facet == "low"  ~ "Low"),
-    earner = fct_case_when(
-      relinc == "Men higher-earner"    ~ "Men higher-earner",
-      relinc == "Women higher-earner"  ~ "Women higher-earner",
-      relinc == "Equal earner"         ~ "Equal earners")) %>%
-  select(!c(x, group, facet))
+df <- data_fig5 %>%
+  filter(gender != "All" & earner != "All earners") %>%
+  pivot_wider(names_from = gender, 
+              values_from = c(estimate, std.error, statistic, p.value, s.value, 
+                              conf.low, conf.high, newest)) %>%
+  # compute the gap
+  mutate(gap=estimate_Men-estimate_Women) %>% 
+  # find the maximum value by decider
+  group_by(fair, stakes, topic, earner, decider) %>%
+  mutate(max=max(estimate_Men, estimate_Women)) %>% 
+  ungroup() %>%
+  pivot_longer(
+    cols = estimate_Men:newest_Women,
+    names_to = c("statistic", "gender"),
+    names_sep = "_",
+    values_to = "value") %>%
+  pivot_wider(names_from = statistic,
+              values_from = value) %>%
+  mutate(estimate = round(estimate, digits =2),
+         max = round(max, digits = 2))
 
 
 
-## Probability of topic combined -- appendix figure? 
-data_fig4 %>%
-  filter(gender == "All") %>%
-  ggplot(aes(x = predicted, y = earner, fill = fair)) +
-  geom_col(width = 0.8, position="stack") +
-#  geom_point() +
-  facet_grid(rows   = vars(topic, decider),  
-             cols   = vars(stakes),
+df %>%
+  filter(fair  == "Fair" & stakes == "High") %>%
+  ggplot(aes(x = estimate, y = decider, color = forcats::fct_rev(earner), position_dodge(.5))) +
+  geom_line(aes(group=decider), color="#E7E7E7", linewidth=3.5) + 
+  geom_point(aes(color=gender), size=3) +
+  facet_grid(rows   = vars(reorder(topic, -estimate)),  
+             cols   = vars(earner), 
              space  = "free",
              switch = "y") +
+  # data callout
+  geom_text(data = df %>% filter(fair  == "Fair" & stakes == "High" &
+                                   estimate == max), aes(label=estimate, color=gender),
+            size=3.25,
+            nudge_x= .02) +
   theme_minimal(13) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
+        #        axis.text.y         = element_blank(),
         strip.text.y        = element_blank(),
-        legend.position     = "bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) +
+        legend.position     = "none") +
+  guides(color = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
-  scale_fill_grey()
-
-
-
-data_fig4 %>%
-  filter(gender == "All" & fair == "Fair") %>%
-  ggplot(aes(x = predicted, y = forcats::fct_rev(decider), fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.8, position="stack") +
-  #  geom_point() +
-  facet_grid(rows   = vars(reorder(topic, -predicted)),  
-             cols   = vars(stakes), 
-             space  = "free",
-             switch = "y") +
-  theme_minimal(13) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.y        = element_blank(),
-        legend.position     = "bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  scale_y_discrete(position = "right") +
-  scale_fill_grey(name = " ")
-
-## Fair -- gender
-## Make another one for low stakes and put together.
-## this should become figure 4
-data_fig4 %>%
-  filter(fair == "Fair" & stakes == "High" & gender != "All") %>%
-  ggplot(aes(x = predicted, y = forcats::fct_rev(decider), fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.8, position="stack") +
-  #  geom_point() +
-  facet_grid(rows   = vars(reorder(topic, -predicted)),  
-             cols   = vars(gender), 
-             space  = "free",
-             switch = "y") +
-  theme_minimal(13) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.y        = element_blank(),
-        legend.position     = "bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  scale_y_discrete(position = "right") +
-  scale_fill_grey(name = " ") +
-  labs( x        = " ", 
-        y        = " ",
-        subtitle = "High-stakes decisions")
-
-
-
-## only for fair!
-data_fig4 %>%
-  filter(fair == "Fair" & gender != "All") %>%
-  ggplot(aes(x = predicted, y = stakes)) +
-  geom_line() +
-  geom_point(aes(shape = gender), size = 2) +
-  facet_grid(rows   = vars(decider, topic),
-             cols   = vars(earner),
-             space  = "free",
-             switch = "y") +
-  scale_y_discrete(limits=rev, position = "right") +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Predicted probability of topic usage for high and low stakes decisions evaluated as fair",
-        subtitle = "by respondent gender, and vignette gender and relative earnings") +
-  theme_minimal() +
-  scale_shape_manual(values=c(1, 19), name = " ") +
-  theme(axis.text.x         = element_text(size = 10),
-        strip.text.x        = element_text(face = "bold", size = 10),
-        strip.text.y        = element_text(angle = 0, size = 10),
-        strip.text.y.left   = element_text(angle = 0),
-        axis.title          = element_text(size = 10), 
-        axis.text           = element_text(size = 8), 
-        plot.margin         = unit(c(.1,.5,.1,.5),"cm"),
-        legend.position     = "top",
-        plot.title.position = "plot",
-        axis.line           = element_line(size = 4, colour = "white"),
-        panel.spacing       = unit(.5, "lines"),
-        panel.grid.major.y  = element_line(colour="#f2f2f2", size=7),
-        panel.grid.minor.x  = element_blank(),
-        panel.border        = element_blank())
-
-
-
-  
-## clear that bars add to 1, but unreadable in black & white
-data_fig4 %>%
-  filter(gender == "All") %>%
-  ggplot(aes(x = predicted, y = decider, fill = topic)) +
-  geom_col(width = 0.8, position="stack") +
-  #  geom_point() +
-  facet_grid(rows   = vars(stakes, fair),
-             cols   = vars(earner),
-             space  = "free",
-             switch = "y") +
-  theme_minimal(13) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.y        = element_blank(),
-        legend.position     = "bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_grey()
+  scale_color_grey(name = " ") +
+  labs(title     = "Predicted topic prevalence for decisions rated as fair by decision type, vignette couples' relative income\nand decision-maker gender, and respondent gender\n ",
+       x        = " ", 
+       y        = " ",
+       subtitle = "High-stakes decisions")
