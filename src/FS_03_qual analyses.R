@@ -729,8 +729,8 @@ data_fig5 <- data_fig5 %>%
       topic    == "2" ~ "Man Has Final Say",
       topic    == "4" ~ "Happy Wife, Happy Life"),
     decider    = fct_case_when(
-      per      == 1   ~ "She decided",
-      per      == 0   ~ "He decided"),
+      per      == 0   ~ "He decided",
+      per      == 1   ~ "She decided"),
     fair       = fct_case_when(
       dum      == 1   ~ "Fair",
       dum      == 0   ~ "Unfair"),
@@ -778,26 +778,34 @@ gen_output <- gen_output %>%
 
 gen_output[!(is.na(gen_output$sig)), ] # show only statistically sig. gender differences
 
+#####?????? REDUCE PLOT MARGINS BOLD STAKES LABELS ADD AVERAGE THETA COLUMNS?
+
+
 ## Create high stakes plot
 p3 <- data_fig5 %>%
   filter(gender != "All" & earner != "All earners" & 
            fair  == "Fair" & stakes == "High") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.8, position="stack") +
+  geom_col(width = 0.9, position=position_stack()) +
+  geom_text(aes(label = round(estimate, digits = 2),
+                color = earner == "Men higher-earner"), size=2.5, 
+            position = position_stack(vjust = .5)) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(reorder(topic, -estimate)),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(13) +
+  theme_minimal(12) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
-        #        axis.text.y         = element_blank(),
         strip.text.y        = element_blank(),
+        axis.text.x         = element_blank(),
+        panel.grid          = element_blank(),
         legend.position     = "none") +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
   scale_fill_grey(name = " ") +
-  labs(title     = "Predicted topic prevalence for decisions rated as fair by decision type, vignette couples' relative income\nand decision-maker gender, and respondent gender\n ",
+  labs(title     = "Predicted topic prevalence for decisions rated as fair by decision type, vignette decision-maker gender and relative income, \nand respondent gender",
        x        = " ", 
        y        = " ",
        subtitle = "High-stakes decisions")
@@ -807,17 +815,21 @@ p4 <- data_fig5 %>%
   filter(gender != "All" & earner != "All earners" & 
            fair  == "Fair" & stakes == "Low") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.8, position="stack") +
-  #  geom_point() +
+  geom_col(width = 0.9, position=position_stack()) +
+  geom_text(aes(label = round(estimate, digits = 2),
+                color = earner == "Men higher-earner"), size=2.5, 
+            position = position_stack(vjust = .5)) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(reorder(topic, -estimate)),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(13) +
+  theme_minimal(12) +
   theme(plot.title.position = "plot",
         strip.text.y.left   = element_text(angle = 0),
-        #        axis.text.y         = element_blank(),
         strip.text.y        = element_blank(),
+        axis.text.x         = element_blank(),
+        panel.grid          = element_blank(),
         legend.position     = "bottom") +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
