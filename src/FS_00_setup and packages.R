@@ -38,6 +38,7 @@ pacman::p_load(
        ggpubr, 
        ggtext,          # Color labels in ggtitle
        gtable,          # Combine plots
+       patchwork,       # Combine plots a different way
        scales,          # percentages for ggplots axes
        officer,         # producing word output
        modelsummary,    # producing word tables

@@ -722,21 +722,18 @@ data_fig5 <- data_fig5 %>%
   mutate( 
     topic = fct_case_when(
       topic    == "3" ~ "Accommodate",
-      topic    == "1" ~ "Balanced Sacrifice",
+      topic    == "1" ~ "Balanced\nSacrifice",
       topic    == "7" ~ "Consensus",
-      topic    == "6" ~ "Money Matters",
-      topic    == "5" ~ "Decision History",
-      topic    == "2" ~ "Man Has Final Say",
-      topic    == "4" ~ "Happy Wife, Happy Life"),
+      topic    == "6" ~ "Money\nMatters",
+      topic    == "5" ~ "Decision\nHistory",
+      topic    == "2" ~ "Man Has\nFinal Say",
+      topic    == "4" ~ "Happy Wife\nHappy Life"),
     decider    = fct_case_when(
       per      == 0   ~ "He decided",
       per      == 1   ~ "She decided"),
     fair       = fct_case_when(
       dum      == 1   ~ "Fair",
       dum      == 0   ~ "Unfair"),
-    newest     = case_when(
-      fair     == "Fair"   ~ estimate,
-      fair     == "Unfair" ~ -estimate),
     stakes     = fct_case_when(
       decision == "high"  ~ "High",
       decision == "low"   ~ "Low"),
@@ -748,8 +745,11 @@ data_fig5 <- data_fig5 %>%
     gender     = fct_case_when(
       gender   == "All"   ~ "All",
       gender   == "Women" ~ "Women",
-      gender   == "Men"   ~ "Men")) %>%
+      gender   == "Men"   ~ "Men"),
+    label      = format(round(estimate, digits=2), nsmall = 2)) %>%
   select(!c(per, dum, decision, relinc))
+
+data_fig5$label <- sub(".", "", data_fig5$label)
 
 
 ## Test respondent gender differences ------------------------------------------
@@ -778,79 +778,284 @@ gen_output <- gen_output %>%
 
 gen_output[!(is.na(gen_output$sig)), ] # show only statistically sig. gender differences
 
-#####?????? REDUCE PLOT MARGINS BOLD STAKES LABELS ADD AVERAGE THETA COLUMNS?
+
+## Create HIGH stakes stacked bar plots ----------------------------------------
+df_Hbar <- data_fig5 %>%
+  filter(earner != "All earners" & fair  == "Fair" & gender != "All" &
+           stakes == "High") %>%
+  # Updates the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
 
 
-## Create high stakes plot
-p3 <- data_fig5 %>%
-  filter(gender != "All" & earner != "All earners" & 
-           fair  == "Fair" & stakes == "High") %>%
+pHH_bar <- df_Hbar %>%
+  filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
-  geom_text(aes(label = round(estimate, digits = 2),
+  geom_text(aes(label = label,
                 color = earner == "Men higher-earner"), size=2.5, 
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
-  facet_grid(rows   = vars(reorder(topic, -estimate)),  
+  facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
   theme_minimal(12) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.y        = element_blank(),
+  theme(strip.text.y.left   = element_text(angle = 0),
         axis.text.x         = element_blank(),
         panel.grid          = element_blank(),
-        legend.position     = "none") +
+        strip.placement.y   = "outside",
+        legend.position     = "none",
+        plot.title.position = "plot",
+        plot.subtitle       = element_text(face = "bold"),
+        plot.margin = margin(t = 0,    # Top margin
+                             r = 0,    # Right margin
+                             b = 0,    # Bottom margin
+                             l = 0)) + # Left margin
+  xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_y_discrete(position = "right") +
   scale_fill_grey(name = " ") +
-  labs(title     = "Predicted topic prevalence for decisions rated as fair by decision type, vignette decision-maker gender and relative income, \nand respondent gender",
+  labs(subtitle = "High-stakes", 
        x        = " ", 
-       y        = " ",
-       subtitle = "High-stakes decisions")
+       y        = " ") 
 
-## Create low stakes plot
-p4 <- data_fig5 %>%
-  filter(gender != "All" & earner != "All earners" & 
-           fair  == "Fair" & stakes == "Low") %>%
+pHS_bar <- df_Hbar %>%
+  filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
-  geom_text(aes(label = round(estimate, digits = 2),
+  geom_text(aes(label = label,
                 color = earner == "Men higher-earner"), size=2.5, 
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
-  facet_grid(rows   = vars(reorder(topic, -estimate)),  
+  facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
   theme_minimal(12) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.y        = element_blank(),
+  theme(strip.text.y        = element_blank(),
         axis.text.x         = element_blank(),
+        axis.text.y         = element_blank(), # remove this for pHS
         panel.grid          = element_blank(),
-        legend.position     = "bottom") +
+        legend.position     = "none",
+        plot.margin = margin(t = 0,    # Top margin
+                             r = 0,    # Right margin
+                             b = 0,    # Bottom margin
+                             l = 0)) + # Left margin
+  xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
   scale_fill_grey(name = " ") +
-  labs( x        = " ", 
-        y        = " ",
-        subtitle = "Low-stakes decisions")
+  labs(title    = " ", 
+       x        = " ", 
+       y        = " ") 
 
-## Create the combined plot
-g3 <- ggplotGrob(p3)
-g4 <- ggplotGrob(p4) 
-g_fig5 <- rbind(g3, g4, size = "first")
-g_fig5$widths <- unit.pmax(g3$widths, g4$widths)
-grid.newpage()
-grid.draw(g_fig5)
+## Create average theta strip for HIGH stakes plots ----------------------------
+df_Havg <- data_fig5 %>%
+  filter(earner == "All earners" & fair  == "Fair" & gender == "All" &
+           stakes == "High") %>%
+  # Updates the factor levels
+  mutate(topic = factor(topic,
+                        levels = c("Accommodate",
+                                   "Money\nMatters",
+                                   "Man Has\nFinal Say",
+                                   "Consensus",
+                                   "Balanced\nSacrifice",
+                                   "Decision\nHistory",
+                                   "Happy Wife\nHappy Life")))
 
-### save Figure 5
-png(file.path(figDir, "fig5.png"), 
-    width = 850, height = 580, pointsize=16) 
-grid.draw(g_fig5) 
-dev.off()
+pHH_avg <- df_Havg %>% 
+  filter(decider == "He decided") %>%
+  ggplot(aes(x=estimate,y=gender)) +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y",
+             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
+                                      `She decided` = "Avg.\ntheta"))) +
+  geom_text(aes(x=0, label=label), position = position_stack(),
+            fontface="bold",
+            size=3.25) +
+  theme_void() +
+  theme(
+    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background = element_rect(fill="grey90", color="grey90"),
+    strip.text.y = element_blank(), 
+    legend.position = "none") 
+
+pHS_avg <- df_Havg %>% 
+  filter(decider == "She decided") %>%
+  ggplot(aes(x=estimate,y=gender)) +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y",
+             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
+                                      `She decided` = "Avg.\ntheta"))) +
+  geom_text(aes(x=0, label=label), position = position_stack(),
+            fontface="bold",
+            size=3.25) +
+  theme_void() +
+  theme(
+    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background = element_rect(fill="grey90", color="grey90"),
+    strip.text.y = element_blank(), 
+    legend.position = "none") 
+
+## Create LOW stakes stacked bar plots -----------------------------------------
+df_Lbar <- data_fig5 %>%
+  filter(earner != "All earners" & fair  == "Fair" & gender != "All" &
+           stakes == "Low") %>%
+  # Updates the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
+
+
+pLH_bar <- df_Lbar %>%
+  filter(decider == "He decided") %>%
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.9, position=position_stack()) +
+  geom_text(aes(label = label,
+                color = earner == "Men higher-earner"), size=2.5, 
+            position = position_stack(vjust = .5)) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(12) +
+  theme(strip.text.y.left   = element_text(angle = 0),
+        axis.text.x         = element_blank(),
+        panel.grid          = element_blank(),
+        strip.placement.y   = "outside",
+        legend.position     = "bottom",
+        legend.justification='left',
+        plot.title.position = "plot",
+        plot.subtitle       = element_text(face = "bold"),
+        plot.margin = margin(t = 0,    # Top margin
+                             r = 0,    # Right margin
+                             b = 0,    # Bottom margin
+                             l = 0)) + # Left margin
+  xlim(0, .85) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_grey(name = " ") +
+  labs(subtitle    = "Low-stakes", 
+       x        = " ", 
+       y        = " ") 
+
+pLS_bar <- df_Lbar %>%
+  filter(decider == "She decided") %>%
+  ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
+  geom_col(width = 0.9, position=position_stack()) +
+  geom_text(aes(label = label,
+                color = earner == "Men higher-earner"), size=2.5, 
+            position = position_stack(vjust = .5)) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y") +
+  theme_minimal(12) +
+  theme(strip.text.y        = element_blank(),
+        axis.text.x         = element_blank(),
+        axis.text.y         = element_blank(), # remove this for pHS
+        panel.grid          = element_blank(),
+        legend.position     = "bottom",
+        legend.justification='left',
+        plot.margin = margin(t = 0,    # Top margin
+                             r = 0,    # Right margin
+                             b = 0,    # Bottom margin
+                             l = 0)) + # Left margin
+  xlim(0, .85) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_y_discrete(position = "right") +
+  scale_fill_grey(name = " ") +
+  labs(title    = " ", 
+       x        = " ", 
+       y        = " ") 
+
+## Create average theta strip for LOW stakes plots -----------------------------
+df_Lavg <- data_fig5 %>%
+  filter(earner == "All earners" & fair  == "Fair" & gender == "All" &
+           stakes == "Low") %>%
+  # Updates the factor levels
+  mutate(topic = factor(topic,
+                        levels = c("Accommodate",
+                                   "Balanced\nSacrifice",
+                                   "Happy Wife\nHappy Life",
+                                   "Decision\nHistory",
+                                   "Consensus",
+                                   "Man Has\nFinal Say",
+                                   "Money\nMatters")))
+
+pLH_avg <- df_Lavg %>% 
+  filter(decider == "He decided") %>%
+  ggplot(aes(x=estimate,y=gender)) +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y",
+             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
+                                      `She decided` = "Avg.\ntheta"))) +
+  geom_text(aes(x=0, label=label), position = position_stack(),
+            fontface="bold",
+            size=3.25) +
+  theme_void() +
+  theme(
+    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background = element_rect(fill="grey90", color="grey90"),
+    strip.text.y = element_blank(), 
+    legend.position = "none") 
+
+pLS_avg <- df_Lavg %>% 
+  filter(decider == "She decided") %>%
+  ggplot(aes(x=estimate,y=gender)) +
+  facet_grid(rows   = vars(topic),  
+             cols   = vars(decider), 
+             space  = "free",
+             switch = "y",
+             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
+                                      `She decided` = "Avg.\ntheta"))) +
+  geom_text(aes(x=0, label=label), position = position_stack(),
+            fontface="bold",
+            size=3.25) +
+  theme_void() +
+  theme(
+    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background = element_rect(fill="grey90", color="grey90"),
+    strip.text.y = element_blank(), 
+    legend.position = "none") 
+
+
+# Combine HIGH & LOW stakes charts ---------------------------------------------
+layout <- c(
+  area(l=0,  r=45, t=0, b=1), # defines the main figure area
+  area(l=45, r=50, t=0, b=1), # defines the gap figure area
+  area(l=53, r=98, t=0, b=1), 
+  area(l=98, r=99, t=0, b=1))
+
+# Show the layout to make sure it looks as it should
+plot(layout)
+
+## Combine HIGH stakes charts 
+p3_high <- pHH_bar + pHH_avg + pHS_bar + pHS_avg + 
+  plot_layout(design = layout) 
+
+p3_high
+
+## Combine LOW stakes charts 
+p4_low <- pLH_bar + pLH_avg + pLS_bar + pLS_avg +
+  plot_layout(design = layout, guides = "collect") & theme(legend.position = "bottom", legend.justification='left')
+
+p4_low
+
+## Combine all plots
+fig5 <- p3_high / p4_low +
+  plot_annotation(
+    title = "Predicted topic prevalence for decisions rated as fair",
+    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender")
+
+fig5
+
+ggsave(filename = file.path(figDir, "fig5.png"), fig5, 
+       width=6.5, height=9, units="in", dpi=300, bg = "white")
 
 
 ################################################################################
