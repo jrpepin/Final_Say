@@ -754,22 +754,24 @@ data_fig5$label <- sub(".", "", data_fig5$label)
 
 ## Test respondent gender differences ------------------------------------------
 data_gen <- data_fig5 %>%
-  filter(earner == "All earners" & gender != "All" & fair == "Fair") %>%
-  arrange(topic, stakes, decider)
+  filter(earner != "All earners" & gender != "All" & fair == "Fair") %>%
+  arrange(topic, stakes, decider, earner)
 
 gen_output <- NULL # create empty df for test results
 
 for (i in seq(1, nrow(data_gen), by = 2)) {
-  topic   <- data_gen[i, 1]
-  decider <- data_gen[i, 10]
-  stakes  <- data_gen[i, 13]
-  estimate    <- ((data_gen[i, 2] - data_gen[i + 1, 2]) / 
+  topic     <- data_gen[i, 1]
+  decider   <- data_gen[i, 10]
+  stakes    <- data_gen[i, 12]
+  earner    <- data_gen[i, 13]
+  statistic <- ((data_gen[i, 2] - data_gen[i + 1, 2]) / 
                     sqrt(data_gen[i, 3]^2 + data_gen[i + 1, 3]^2))
-  p       <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  gen_output  <- rbind(gen_output, data.frame(topic, decider, stakes, estimate, p))
+  p       <- round(2*pnorm(-abs(as.numeric(statistic))), digits = 3)
+  gen_output  <- rbind(gen_output, data.frame(topic, decider, stakes, earner, statistic, p))
 }
 
 gen_output <- gen_output %>%
+  arrange(stakes, topic, earner, decider) %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
