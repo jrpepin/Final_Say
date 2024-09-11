@@ -1653,7 +1653,7 @@ pLS_avg <- df_Lavg %>%
 # Combine HIGH & LOW stakes charts ---------------------------------------------
 layout <- c(
   area(l=0,  r=45, t=0, b=1), # defines the main figure area
-  area(l=45, r=50, t=0, b=1), # defines the gap figure area
+  area(l=44, r=50, t=0, b=1), # defines the gap figure area
   area(l=53, r=98, t=0, b=1), 
   area(l=98, r=99, t=0, b=1))
 
@@ -1676,7 +1676,9 @@ p6_low
 figS2 <- p5_high / p6_low +
   plot_annotation(
     title = "Predicted topic prevalence for decisions rated as unfair",
-    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender")
+    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
+    caption = "Stars denote men's topic prevalence was statistically significantly different from women respondents 
+    * = p < .05, ** = p < .01 *** = p < .001")
 
 figS2
 
