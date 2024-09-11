@@ -747,31 +747,32 @@ data_fig5 <- data_fig5 %>%
       gender   == "Women" ~ "Women",
       gender   == "Men"   ~ "Men"),
     label      = format(round(estimate, digits=2), nsmall = 2)) %>%
-  select(!c(per, dum, decision, relinc))
+  select(!c(per, dum, decision, relinc)) %>%
+  arrange(fair, topic, stakes, decider, earner)
 
 data_fig5$label <- sub(".", "", data_fig5$label)
 
-
 ## Test respondent gender differences ------------------------------------------
-data_gen <- data_fig5 %>%
-  filter(earner != "All earners" & gender != "All" & fair == "Fair") %>%
-  arrange(topic, stakes, decider, earner)
 
+gen_input <- data_fig5 %>% 
+  filter(earner != "All earners" & gender != "All")
+  
 gen_output <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_gen), by = 2)) {
-  topic     <- data_gen[i, 1]
-  decider   <- data_gen[i, 10]
-  stakes    <- data_gen[i, 12]
-  earner    <- data_gen[i, 13]
-  statistic <- ((data_gen[i, 2] - data_gen[i + 1, 2]) / 
-                    sqrt(data_gen[i, 3]^2 + data_gen[i + 1, 3]^2))
-  p       <- round(2*pnorm(-abs(as.numeric(statistic))), digits = 3)
-  gen_output  <- rbind(gen_output, data.frame(topic, decider, stakes, earner, statistic, p))
+for (i in seq(1, nrow(gen_input), by = 2)) {
+  fair      <- gen_input[i, 11]
+  topic     <- gen_input[i, 1]
+  decider   <- gen_input[i, 10]
+  stakes    <- gen_input[i, 12]
+  earner    <- gen_input[i, 13]
+  estimate  <- ((gen_input[i, 2] - gen_input[i + 1, 2]) / 
+                    sqrt(gen_input[i, 3]^2 + gen_input[i + 1, 3]^2))
+  p           <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
+  gen_output  <- rbind(gen_output, data.frame(fair, topic, decider, stakes, earner, estimate, p))
 }
 
 gen_output <- gen_output %>%
-  arrange(stakes, topic, earner, decider) %>%
+  arrange(fair, stakes, topic, earner, decider) %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
@@ -780,16 +781,24 @@ gen_output <- gen_output %>%
 
 gen_output[!(is.na(gen_output$sig)), ] # show only statistically sig. gender differences
 
+# Combine results with fig data
+gen_output$gender <- "Men"
+names(gen_output)[names(gen_output) == "estimate"] <- "t.test"
+
+data_fig5 <- left_join(data_fig5, gen_output) %>%
+  mutate(gender = fct_case_when(
+    gender   == "All"   ~ "All",
+    gender   == "Women" ~ "Women",
+    gender   == "Men"   ~ "Men")) %>% 
+  unite("label", label, sig, na.rm = TRUE, sep = "", remove = FALSE)
 
 ## Create HIGH stakes stacked bar plots ----------------------------------------
-df_Hbar <- data_fig5 %>%
-  filter(earner != "All earners" & fair  == "Fair" & gender != "All" &
-           stakes == "High") %>%
-  # Updates the factor levels
-  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
-
-
-pHH_bar <- df_Hbar %>%
+ 
+pHH_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+         stakes == "High" & fair   == "Fair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -820,7 +829,11 @@ pHH_bar <- df_Hbar %>%
        x        = " ", 
        y        = " ") 
 
-pHS_bar <- df_Hbar %>%
+pHS_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "High" & fair   == "Fair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -903,14 +916,12 @@ pHS_avg <- df_Havg %>%
     legend.position = "none") 
 
 ## Create LOW stakes stacked bar plots -----------------------------------------
-df_Lbar <- data_fig5 %>%
-  filter(earner != "All earners" & fair  == "Fair" & gender != "All" &
-           stakes == "Low") %>%
-  # Updates the factor levels
-  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
 
-
-pLH_bar <- df_Lbar %>%
+pLH_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "Low" & fair   == "Fair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -942,7 +953,11 @@ pLH_bar <- df_Lbar %>%
        x        = " ", 
        y        = " ") 
 
-pLS_bar <- df_Lbar %>%
+pLS_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "Low" & fair   == "Fair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -1029,7 +1044,7 @@ pLS_avg <- df_Lavg %>%
 # Combine HIGH & LOW stakes charts ---------------------------------------------
 layout <- c(
   area(l=0,  r=45, t=0, b=1), # defines the main figure area
-  area(l=45, r=50, t=0, b=1), # defines the gap figure area
+  area(l=44, r=50, t=0, b=1), # defines the gap figure area
   area(l=53, r=98, t=0, b=1), 
   area(l=98, r=99, t=0, b=1))
 
@@ -1052,7 +1067,9 @@ p4_low
 fig5 <- p3_high / p4_low +
   plot_annotation(
     title = "Predicted topic prevalence for decisions rated as fair",
-    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender")
+    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
+    caption = "Stars denote men's topic prevalence was statistically significantly different from women respondents 
+    * = p < .05, ** = p < .01 *** = p < .001")
 
 fig5
 
@@ -1384,42 +1401,13 @@ read_docx() %>%
 ## by decision type, vignette couples' relative income and decision-maker gender, 
 ## and respondent gender\n 
 
-
-## Test respondent gender differences ------------------------------------------
-data_gen_S <- data_fig5 %>%
-  filter(earner == "All earners" & gender != "All" & fair == "Unfair") %>%
-  arrange(topic, stakes, decider)
-
-gen_output_S <- NULL # create empty df for test results
-
-for (i in seq(1, nrow(data_gen_S), by = 2)) {
-  topic         <- data_gen_S[i, 1]
-  decider       <- data_gen_S[i, 10]
-  stakes        <- data_gen_S[i, 13]
-  estimate      <- ((data_gen_S[i, 2] - data_gen_S[i + 1, 2]) / 
-                      sqrt(data_gen_S[i, 3]^2 + data_gen_S[i + 1, 3]^2))
-  p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  gen_output_S  <- rbind(gen_output_S, data.frame(topic, decider, stakes, estimate, p))
-}
-
-gen_output_S <- gen_output_S %>%
-  mutate(sig = case_when(
-    p   < .001   ~ "***",
-    p   < .01    ~ "**",
-    p   < .05    ~ "*",
-    TRUE         ~ NA_character_))
-
-gen_output_S[!(is.na(gen_output_S$sig)), ] # show only statistically sig. gender differences
-
 ## Create HIGH stakes stacked bar plots ----------------------------------------
-df_Hbar <- data_fig5 %>%
-  filter(earner != "All earners" & fair  == "Unfair" & gender != "All" &
-           stakes == "High") %>%
-  # Updates the factor levels
-  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
 
-
-pHH_bar <- df_Hbar %>%
+pHH_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "High" & fair   == "Unfair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -1450,7 +1438,11 @@ pHH_bar <- df_Hbar %>%
        x        = " ", 
        y        = " ") 
 
-pHS_bar <- df_Hbar %>%
+pHS_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "High" & fair   == "Unfair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -1533,14 +1525,12 @@ pHS_avg <- df_Havg %>%
     legend.position = "none") 
 
 ## Create LOW stakes stacked bar plots -----------------------------------------
-df_Lbar <- data_fig5 %>%
-  filter(earner != "All earners" & fair  == "Unfair" & gender != "All" &
-           stakes == "Low") %>%
-  # Updates the factor levels
-  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) 
 
-
-pLH_bar <- df_Lbar %>%
+pLH_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "Low" & fair   == "Unfair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
@@ -1572,7 +1562,11 @@ pLH_bar <- df_Lbar %>%
        x        = " ", 
        y        = " ") 
 
-pLS_bar <- df_Lbar %>%
+pLS_bar <- data_fig5 %>%
+  filter(gender != "All"  & earner != "All earners" & 
+           stakes == "Low" & fair   == "Unfair") %>%
+  # Orders the factor levels
+  mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
   geom_col(width = 0.9, position=position_stack()) +
