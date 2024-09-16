@@ -432,11 +432,7 @@ fe_mheW   <- lapply(dv, plms_mheW) # Man higher-earner
 fe_wheW   <- lapply(dv, plms_wheW) # Woman higher-earner
 fe_eeW    <- lapply(dv, plms_eeW)  # Equal earners
 
-# Figure 4 ---------------------------------------------------------------------
-
-## Average Marginal Effects of the models
-
-# create list of pdata frames (for give_me_stata_ame function)
+# create list of pdata frames (for functions)
 times <- 7
 dta_m0  <- replicate(times, pdata_m0,  simplify = FALSE)
 dta_m1  <- replicate(times, pdata_m1,  simplify = FALSE)
@@ -453,7 +449,10 @@ dta_m1W <- replicate(times, pdata_m1W, simplify = FALSE)
 dta_m2W <- replicate(times, pdata_m2W, simplify = FALSE)
 dta_m3W <- replicate(times, pdata_m3W, simplify = FALSE)
 
-# Create the function
+
+# Figure 4 ---------------------------------------------------------------------
+
+# Create the Average Marginal Effects of the models function
 give_me_stata_ame <- function(model, dta){
   avg_slopes(model, variables = c("dum"), by = c("decision", "per"), newdata = dta)
 }
@@ -599,9 +598,8 @@ dev.off()
 
 
 # Figure 5 ---------------------------------------------------------------------
-## Create the function
 
-### Predicted Probabilities
+### Create the Predicted Probabilities of the models function
 give_me_pp  <- function(model, dta){
   avg_predictions(model, by = c("dum", "per", "decision"), newdata = dta)
 }
@@ -884,8 +882,8 @@ pHH_avg <- df_Havg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -903,8 +901,8 @@ pHS_avg <- df_Havg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1009,8 +1007,8 @@ pLH_avg <- df_Lavg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1028,8 +1026,8 @@ pLS_avg <- df_Lavg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1068,7 +1066,8 @@ fig5 <- p3_high / p4_low +
   plot_annotation(
     title = "Predicted topic prevalence for decisions rated as fair",
     subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
-    caption = "Stars denote men's topic prevalence was statistically significantly different from women respondents 
+    caption = "Mean indicates the average prevalence of each topic for the pooled sample based on the average theta.
+    Asterisks denote men's topic prevalence was statistically significantly different from women respondents. 
     * = p < .05, ** = p < .01 *** = p < .001")
 
 fig5
@@ -1493,8 +1492,8 @@ pHH_avg <- df_Havg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1512,8 +1511,8 @@ pHS_avg <- df_Havg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1618,8 +1617,8 @@ pLH_avg <- df_Lavg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1637,8 +1636,8 @@ pLS_avg <- df_Lavg %>%
              cols   = vars(decider), 
              space  = "free",
              switch = "y",
-             labeller = as_labeller(c(`He decided` = "Avg.\ntheta",
-                                      `She decided` = "Avg.\ntheta"))) +
+             labeller = as_labeller(c(`He decided` = "Mean",
+                                      `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
             fontface="bold",
             size=3.25) +
@@ -1677,7 +1676,8 @@ figS2 <- p5_high / p6_low +
   plot_annotation(
     title = "Predicted topic prevalence for decisions rated as unfair",
     subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
-    caption = "Stars denote men's topic prevalence was statistically significantly different from women respondents 
+    caption = "Mean indicates the average prevalence of each topic for the pooled sample based on the average theta.
+    Asterisks denote men's topic prevalence was statistically significantly different from women respondents. 
     * = p < .05, ** = p < .01 *** = p < .001")
 
 figS2
