@@ -289,41 +289,45 @@ data_fig2 <- data_fig2 %>%
 
 fig2 <- data_fig2 %>%
   ggplot(aes(x = per, y = estimate, fill = gender)) +
-  geom_col(width = 0.6, position = position_dodge(0.7)) +
+  geom_col(width = 0.6, position = position_dodge(0.7), colour="black") +
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#707070") +
   geom_text(position = position_dodge(width = .7),
-            vjust = -1,
+            vjust = -1.2,
             aes(label=sprintf("%1.0f%%", estimate*100))) +
   facet_grid(decision ~ relinc,
              scales="free",
              space = "free",
              switch = "y") +
-  scale_fill_grey() +
+  scale_fill_manual(values = c("black", "white")) +
   theme_minimal(12) +
-  theme(legend.position     = "bottom",
-        panel.grid.major.x  = element_blank(),
-        strip.text          = element_text(face = "bold"),
-        strip.text.y.left   = element_text(angle = 0),
-        axis.text.y         = element_blank(),  #remove y axis labels
-        axis.ticks.y        = element_blank(),  #remove y axis ticks
-        plot.subtitle       = element_text(face = "italic", color = "#707070"),
-        plot.caption        = element_text(face = "italic", color = "#707070"),
-        plot.title          = ggtext::element_markdown(),
-        plot.title.position = "plot") +
+  theme(
+    text                = element_text(size=12, family = "serif"),
+    axis.text           = element_text(size=12), 
+    legend.position     = "bottom",
+    panel.grid.major.x  = element_blank(),
+    strip.text          = element_text(face = "bold"),
+    strip.text.y.left   = element_text(angle = 0),
+    axis.text.y         = element_blank(),  #remove y axis labels
+    axis.ticks.y        = element_blank(),  #remove y axis ticks
+    plot.subtitle       = element_text(face = "italic", color = "#707070"),
+    plot.caption        = element_text(face = "italic", color = "#707070"),
+    plot.title          = ggtext::element_markdown(),
+    plot.title.position = "plot") +
   scale_y_continuous(labels=scales::percent, limits = c(0, .88)) +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = "Respondents' gender",
-        title    = "Predicted percent of respondents who rated the decision as somewhat or very fair",
-        subtitle = "By decision type, vignette couples' relative income and decision-maker gender, and respondent gender",
-        caption  = "Predicted percentages calculated from respondent-fixed effects linear probability models (see Table 2). 
-        Independent models applied by vignette couple’s relative income and respondent gender.") 
+  labs(
+#   title    = "Predicted percent of respondents who rated the decision as somewhat or very fair",
+#   subtitle = "By decision type, vignette couples' relative income and decision-maker gender, and respondent gender",
+#   caption  = "Note: Predicted percentages calculated from respondent-fixed effects linear probability models (see Table 2). 
+#   Independent models applied by vignette couple’s relative income and respondent gender.",
+    x        = NULL, 
+    y        = NULL, 
+    fill     = "Respondents' gender") 
 
 fig2
 
-ggsave(filename = file.path(figDir, "fig2.png"), fig2, 
-       width=9, height=6, units="in", dpi=300, bg = "white")
+ggsave(filename = file.path(figDir, "fig2.tif"), fig2, 
+       width=22.9, height=13, units="cm", dpi=800)
 
 ################################################################################
 # SUPPLEMENTARY MATERIALS (quant)

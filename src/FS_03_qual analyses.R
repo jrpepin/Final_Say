@@ -104,24 +104,30 @@ write_xlsx(coherence_mat, path = file.path(outDir, "coherence.xlsx"))
 
 fig1 <- coherence_mat %>%
   ggplot(aes(x = k, y = coherence)) +
-  geom_line() +
-  geom_point() +
+  geom_line(linewidth = 1.1) +
+  geom_point(size=2.5) +
   geom_point(data=coherence_mat %>% filter(k == 7),
              pch=21,
-             size=4) +
+             size=6,
+             stroke = 1.1) +
   theme_minimal() +
   scale_x_continuous(breaks = 1:20) +
-  theme(panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank()) +
+  theme(text                = element_text(size=12, family="serif"),
+        axis.text           = element_text(size=12), 
+        plot.title.position = "plot",
+        panel.grid.major.x  = element_blank(),
+        panel.grid.minor.x  = element_blank(),
+        panel.grid.minor.y  = element_blank()) +
   labs( x        = "Number of Topics", 
-        y        = "Coherence", 
-        title    = "Average probabilistic coherence for 1-20 topics",
-        caption  = "Note: The circled point represents the selected LDA model with seven topics.") 
+        y        = NULL, 
+#       title    = "Average probabilistic coherence for 1-20 topics",
+#       caption  = "Note: The circled point represents the selected LDA model with seven topics.",
+        subtitle = "Coherence") 
 
 fig1
 
-ggsave(filename = file.path(figDir, "fig1.png"), fig1, 
-       width=6, height=4, units="in", dpi=300, bg = 'white')
+ggsave(filename = file.path(figDir, "fig1.tif"), fig1, 
+       width=15.2, height=10.2, units="cm", dpi=800)
 
 
 ################################################################################
