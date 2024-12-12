@@ -293,21 +293,24 @@ fig2 <- data_fig2 %>%
   geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.2,
                 stat="identity", position=position_dodge(.7), color="#707070") +
   geom_text(position = position_dodge(width = .7),
-            vjust = -1.2,
+            vjust = -1.5,
+            size = 10/.pt,
             aes(label=sprintf("%1.0f%%", estimate*100))) +
   facet_grid(decision ~ relinc,
              scales="free",
              space = "free",
              switch = "y") +
   scale_fill_manual(values = c("black", "white")) +
-  theme_minimal(12) +
+  theme_minimal() +
   theme(
     text                = element_text(size=12, family = "serif"),
     axis.text           = element_text(size=12), 
+    legend.text         = element_text(size=12),
     legend.position     = "bottom",
     panel.grid.major.x  = element_blank(),
     strip.text          = element_text(face = "bold"),
     strip.text.y.left   = element_text(angle = 0),
+    axis.text.x         = element_text(colour = "black"),
     axis.text.y         = element_blank(),  #remove y axis labels
     axis.ticks.y        = element_blank(),  #remove y axis ticks
     plot.subtitle       = element_text(face = "italic", color = "#707070"),
@@ -326,8 +329,11 @@ fig2 <- data_fig2 %>%
 
 fig2
 
-ggsave(filename = file.path(figDir, "fig2.tif"), fig2, 
-       width=22.9, height=13, units="cm", dpi=800)
+
+agg_tiff(filename = file.path(figDir, "fig2.tif"), width=6.5, height=5, units="in", res = 800)
+plot(fig2)
+invisible(dev.off())
+
 
 ################################################################################
 # SUPPLEMENTARY MATERIALS (quant)

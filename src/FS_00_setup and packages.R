@@ -71,6 +71,8 @@ pacman::p_load(
        tagcloud, 
        RJSONIO,
        ggwordcloud,
+       showtext, # dpi for figure text
+       ragg, # output figures without blur
        conflicted
        )
 
@@ -98,7 +100,7 @@ conflict_prefer("arrange", "dplyr")
 conflict_prefer("desc", "dplyr")
 
 ################################################################################
-# Functions
+# Functions & Options
 ################################################################################
 
 ### function to keep factor order
@@ -108,6 +110,9 @@ fct_case_when <- function(...) {
   levels <- levels[!is.na(levels)]
   factor(dplyr::case_when(...), levels=levels)
 } 
+
+
+showtext_opts(dpi = 800)
 
 ################################################################################
 # Download the data

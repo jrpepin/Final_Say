@@ -113,7 +113,7 @@ fig1 <- coherence_mat %>%
   theme_minimal() +
   scale_x_continuous(breaks = 1:20) +
   theme(text                = element_text(size=12, family="serif"),
-        axis.text           = element_text(size=12), 
+        axis.text           = element_text(size=12, colour = "black"), 
         plot.title.position = "plot",
         panel.grid.major.x  = element_blank(),
         panel.grid.minor.x  = element_blank(),
@@ -129,6 +129,10 @@ fig1
 ggsave(filename = file.path(figDir, "fig1.tif"), fig1, 
        width=15.2, height=10.2, units="cm", dpi=800)
 
+agg_tiff(filename = file.path(figDir, "fig1.tif"), 
+         width=15.2, height=10.2, units="cm", res = 800)
+plot(fig1)
+invisible(dev.off())
 
 ################################################################################
 # Selected 7 Topic Model 
