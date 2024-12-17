@@ -818,6 +818,7 @@ data_fig5 <- left_join(data_fig5, gen_output) %>%
     gender   == "Men"   ~ "Men")) %>% 
   unite("label", label, sig, na.rm = TRUE, sep = "", remove = FALSE)
 
+
 ## Create HIGH stakes stacked bar plots ----------------------------------------
  
 pHH_bar <- data_fig5 %>%
@@ -827,31 +828,38 @@ pHH_bar <- data_fig5 %>%
   mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.9, position=position_stack()) +
+  geom_col(width = 0.85, position=position_stack(), colour="black") +
   geom_text(aes(label = label,
-                color = earner == "Men higher-earner"), size=2.5, 
+                color = earner == "Men higher-earner"), 
+            size     = 2.5, 
+            family   = "serif",
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(12) +
-  theme(strip.text.y.left   = element_text(angle = 0),
-        axis.text.x         = element_blank(),
-        panel.grid          = element_blank(),
-        strip.placement.y   = "outside",
-        legend.position     = "none",
-        plot.title.position = "plot",
-        plot.subtitle       = element_text(face = "bold"),
-        plot.margin = margin(t = 0,    # Top margin
-                             r = 0,    # Right margin
-                             b = 0,    # Bottom margin
-                             l = 0)) + # Left margin
+  theme_minimal() +
+  theme(
+    text                = element_text(size=12, family = "serif"),
+    strip.text          = element_text(size=12, family = "serif"), 
+    strip.text.y.left   = element_text(angle = 0),
+    axis.text.y         = element_text(size=12, family = "serif", colour = "black"), 
+    axis.text.x         = element_blank(),
+    panel.grid          = element_blank(),
+    strip.placement.y   = "outside",
+    legend.position     = "none",
+    plot.title.position = "plot",
+    plot.title          = element_text(face = "bold", family = "serif"),
+    plot.margin = margin(
+      t = 0,    # Top margin
+      r = 0,    # Right margin
+      b = 0,    # Bottom margin
+      l = 0)) + # Left margin
   xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_grey(name = " ") +
-  labs(subtitle = "High-stakes", 
+  scale_fill_manual(values = c("black", "grey50", "white"), guide = "none") +
+  labs(title = "High-stakes", 
        x        = " ", 
        y        = " ") 
 
@@ -862,29 +870,35 @@ pHS_bar <- data_fig5 %>%
   mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.9, position=position_stack()) +
+  geom_col(width = 0.85, position=position_stack(), colour="black") +
   geom_text(aes(label = label,
-                color = earner == "Men higher-earner"), size=2.5, 
+                color = earner == "Men higher-earner"), 
+            size     = 2.5, 
+            family   = "serif",
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(12) +
-  theme(strip.text.y        = element_blank(),
-        axis.text.x         = element_blank(),
-        axis.text.y         = element_blank(), # remove this for pHS
-        panel.grid          = element_blank(),
-        legend.position     = "none",
-        plot.margin = margin(t = 0,    # Top margin
-                             r = 0,    # Right margin
-                             b = 0,    # Bottom margin
-                             l = 0)) + # Left margin
+  theme_minimal() +
+  theme(
+    text                = element_text(size=12, family = "serif"),
+    strip.text          = element_text(size=12, family = "serif"), 
+    strip.text.y        = element_blank(),
+    axis.text.x         = element_blank(),
+    axis.text.y         = element_blank(), # remove this for pHS
+    panel.grid          = element_blank(),
+    legend.position     = "none",
+    plot.margin = margin(
+      t = 0,    # Top margin
+      r = 0,    # Right margin
+      b = 0,    # Bottom margin
+      l = 0)) + # Left margin
   xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
-  scale_fill_grey(name = " ") +
+  scale_fill_manual(values = c("black", "grey50", "white"), guide = "none") +
   labs(title    = " ", 
        x        = " ", 
        y        = " ") 
@@ -913,14 +927,15 @@ pHH_avg <- df_Havg %>%
              labeller = as_labeller(c(`He decided` = "Mean",
                                       `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
-            fontface="bold",
+            fontface="bold", family = "serif",
             size=3.25) +
   theme_void() +
   theme(
-    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
-    panel.background = element_rect(fill="grey90", color="grey90"),
-    strip.text.y = element_blank(), 
-    legend.position = "none") 
+    strip.text        = element_text(size=10, family = "serif"), 
+    strip.text.y      = element_blank(), 
+    plot.margin       = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background  = element_rect(fill="white", colour="black"),
+    legend.position   = "none") 
 
 pHS_avg <- df_Havg %>% 
   filter(decider == "She decided") %>%
@@ -932,14 +947,15 @@ pHS_avg <- df_Havg %>%
              labeller = as_labeller(c(`He decided` = "Mean",
                                       `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
-            fontface="bold",
+            fontface="bold", family = "serif",
             size=3.25) +
   theme_void() +
   theme(
-    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
-    panel.background = element_rect(fill="grey90", color="grey90"),
-    strip.text.y = element_blank(), 
-    legend.position = "none") 
+    strip.text        = element_text(size=10, family = "serif"), 
+    strip.text.y      = element_blank(), 
+    plot.margin       = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background  = element_rect(fill="white", colour="black"),
+    legend.position   = "none") 
 
 ## Create LOW stakes stacked bar plots -----------------------------------------
 
@@ -950,32 +966,40 @@ pLH_bar <- data_fig5 %>%
   mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "He decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.9, position=position_stack()) +
+  geom_col(width = 0.85, position=position_stack(), colour="black") +
   geom_text(aes(label = label,
-                color = earner == "Men higher-earner"), size=2.5, 
+                color = earner == "Men higher-earner"), 
+            size     = 2.5, 
+            family   = "serif",
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(12) +
-  theme(strip.text.y.left   = element_text(angle = 0),
-        axis.text.x         = element_blank(),
-        panel.grid          = element_blank(),
-        strip.placement.y   = "outside",
-        legend.position     = "bottom",
-        legend.justification='left',
-        plot.title.position = "plot",
-        plot.subtitle       = element_text(face = "bold"),
-        plot.margin = margin(t = 0,    # Top margin
-                             r = 0,    # Right margin
-                             b = 0,    # Bottom margin
-                             l = 0)) + # Left margin
+  theme_minimal() +
+  theme(
+    text                = element_text(size=12, family = "serif"),
+    strip.text           = element_text(size=12, family = "serif"), 
+    strip.text.y.left    = element_text(angle = 0),
+    axis.text.y          = element_text(size=12, family = "serif", colour = "black"), 
+    axis.text.x          = element_blank(),
+    panel.grid           = element_blank(),
+    strip.placement.y    = "outside",
+    legend.position      = "bottom",
+    legend.justification ='left',
+    legend.text         = element_text(size=12, family = "serif"),
+    plot.title.position  = "plot",
+    plot.title          = element_text(face = "bold", family = "serif"),
+    plot.margin = margin(
+      t = 0,    # Top margin
+      r = 0,    # Right margin
+      b = 0,    # Bottom margin
+      l = 0)) + # Left margin
   xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_grey(name = " ") +
-  labs(subtitle    = "Low-stakes", 
+  scale_fill_manual(values = c("black", "grey50", "white"), name="") +
+  labs(title    = "Low-stakes", 
        x        = " ", 
        y        = " ") 
 
@@ -986,30 +1010,37 @@ pLS_bar <- data_fig5 %>%
   mutate(topic = fct_reorder(topic, .x = estimate, .fun = mean, .desc = TRUE)) %>%
   filter(decider == "She decided") %>%
   ggplot(aes(x = estimate, y = gender, fill = forcats::fct_rev(earner))) +
-  geom_col(width = 0.9, position=position_stack()) +
+  geom_col(width = 0.85, position=position_stack(), colour="black") +
   geom_text(aes(label = label,
-                color = earner == "Men higher-earner"), size=2.5, 
+                color = earner == "Men higher-earner"), 
+            size     = 2.5, 
+            family   = "serif",
             position = position_stack(vjust = .5)) +
   scale_color_manual(values = c("white", "black"), guide = "none") +
   facet_grid(rows   = vars(topic),  
              cols   = vars(decider), 
              space  = "free",
              switch = "y") +
-  theme_minimal(12) +
-  theme(strip.text.y        = element_blank(),
-        axis.text.x         = element_blank(),
-        axis.text.y         = element_blank(), # remove this for pHS
-        panel.grid          = element_blank(),
-        legend.position     = "bottom",
-        legend.justification='left',
-        plot.margin = margin(t = 0,    # Top margin
-                             r = 0,    # Right margin
-                             b = 0,    # Bottom margin
-                             l = 0)) + # Left margin
+  theme_minimal() +
+  theme(
+    text                = element_text(size=12, family = "serif"),
+    strip.text          = element_text(size=12, family = "serif"), 
+    strip.text.y        = element_blank(),
+    axis.text.x         = element_blank(),
+    axis.text.y         = element_blank(), # remove this for pHS
+    panel.grid          = element_blank(),
+    legend.position      = "bottom",
+    legend.justification ='left',
+    legend.text         = element_text(size=12, family = "serif"),
+    plot.margin = margin(
+      t = 0,    # Top margin
+      r = 0,    # Right margin
+      b = 0,    # Bottom margin
+      l = 0)) + # Left margin
   xlim(0, .85) +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_y_discrete(position = "right") +
-  scale_fill_grey(name = " ") +
+  scale_fill_manual(values = c("black", "grey50", "white"), name="") +
   labs(title    = " ", 
        x        = " ", 
        y        = " ") 
@@ -1038,14 +1069,15 @@ pLH_avg <- df_Lavg %>%
              labeller = as_labeller(c(`He decided` = "Mean",
                                       `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
-            fontface="bold",
+            fontface="bold", family = "serif",
             size=3.25) +
   theme_void() +
   theme(
-    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
-    panel.background = element_rect(fill="grey90", color="grey90"),
-    strip.text.y = element_blank(), 
-    legend.position = "none") 
+    strip.text        = element_text(size=10, family = "serif"), 
+    strip.text.y      = element_blank(), 
+    plot.margin       = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background  = element_rect(fill="white", colour="black"),
+    legend.position   = "none") 
 
 pLS_avg <- df_Lavg %>% 
   filter(decider == "She decided") %>%
@@ -1057,14 +1089,15 @@ pLS_avg <- df_Lavg %>%
              labeller = as_labeller(c(`He decided` = "Mean",
                                       `She decided` = "Mean"))) +
   geom_text(aes(x=0, label=label), position = position_stack(),
-            fontface="bold",
+            fontface="bold", family = "serif",
             size=3.25) +
   theme_void() +
   theme(
-    plot.margin = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
-    panel.background = element_rect(fill="grey90", color="grey90"),
-    strip.text.y = element_blank(), 
-    legend.position = "none") 
+    strip.text        = element_text(size=10, family = "serif"), 
+    strip.text.y      = element_blank(), 
+    plot.margin       = margin(l=0, r=0, b=0, t=0), #otherwise it adds too much space
+    panel.background  = element_rect(fill="white", colour="black"),
+    legend.position   = "none") 
 
 
 # Combine HIGH & LOW stakes charts ---------------------------------------------
@@ -1090,7 +1123,8 @@ p4_low <- pLH_bar + pLH_avg + pLS_bar + pLS_avg +
 p4_low
 
 ## Combine all plots
-fig5 <- p3_high / p4_low # +
+fig5 <- p3_high / p4_low +
+  plot_layout(heights = c(4, 4)) # +
 #  plot_annotation(
 #    title = "Predicted topic prevalence for decisions rated as fair",
 #    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
@@ -1100,8 +1134,10 @@ fig5 <- p3_high / p4_low # +
 
 fig5
 
-ggsave(filename = file.path(figDir, "fig5.png"), fig5, 
-       width=6.5, height=9, units="in", dpi=300, bg = "white")
+## save Figure 5
+agg_tiff(filename = file.path(figDir, "fig5.tif"), width=7, height=9, units="in", res = 1000)
+plot(fig5)
+invisible(dev.off())
 
 
 ################################################################################

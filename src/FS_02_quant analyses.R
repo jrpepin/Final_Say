@@ -329,7 +329,7 @@ fig2 <- data_fig2 %>%
 
 fig2
 
-
+## save Figure 2
 agg_tiff(filename = file.path(figDir, "fig2.tif"), width=6.5, height=5, units="in", res = 800)
 plot(fig2)
 invisible(dev.off())
