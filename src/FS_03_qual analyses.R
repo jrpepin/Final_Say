@@ -214,17 +214,26 @@ fig3 <- data_fig3 %>%
   scale_y_reordered() +
   scale_x_continuous(breaks = c(".000" = 0.000, ".025" = 0.025, 
                                 ".050" = 0.050, ".075" = 0.075)) +
-  theme_minimal(12) +
-  labs( x        = " ", 
-        y        = " ", 
-        fill     = " ",
-        title    = "Highest-ranking word stems per topic",
-        subtitle = "Probability of being found in topic (phi)")
+  theme_minimal() +
+  theme(
+    text               = element_text(size=12, family="serif"),
+    axis.text          = element_text(size=12, colour = "black"),
+    strip.text         = element_text(size=12, colour = "black", family="serif"),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank()) +
+  labs( 
+#   title    = "Highest-ranking word stems per topic",
+#   subtitle = "Probability of being found in topic (phi)",
+    x        = " ",
+    y        = " ", 
+    fill     = " ")
 
 fig3
 
-ggsave(file.path(figDir, "fig3.png"), fig3, 
-       height = 8, width = 6, units="in",dpi = 300, bg = 'white')
+agg_tiff(filename = file.path(figDir, "fig3.tif"), width=6.5, height=8, units="in", res = 800)
+plot(fig3)
+invisible(dev.off())
+
 
 ################################################################################
 # Topic Modeling Regression Tables
@@ -542,24 +551,28 @@ data_fig4 <- data_fig4 %>%
 p1 <- data_fig4 %>%
   filter(decision == "high") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
-  geom_col(width = 0.8, position = position_dodge(0.7)) +
-  geom_text(aes(x = estimate + .01 * sign(estimate), 
+  geom_col(width = 0.8, position = position_dodge(0.7), colour="black") +
+  geom_text(aes(x = estimate + .015 * sign(estimate), 
                 label = ifelse(p.value < .05, "*", " ")), 
             position = position_dodge(width = 0.9), 
             size = 3.5 , angle = 90) +
   facet_grid(reorder(topic, -estimate) ~ earner,
              space = "free",
              switch = "y") +
-  theme_minimal(13) +
-  scale_fill_grey(name = " ") +
+  theme_minimal() +
+  scale_fill_manual(values = c("black", "white")) +
   scale_y_discrete(labels = NULL, breaks = NULL) +
   scale_x_continuous(limits = c(-.3, .3)) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        axis.text.x=element_blank(),
-        legend.position     = "none") +
+  theme(
+    text                = element_text(size=12, family="serif"),
+    axis.text           = element_text(size=12, colour = "black"),
+    strip.text          = element_text(size=12, colour = "black", family="serif"),
+    plot.title.position = "plot",
+    strip.text.y.left   = element_text(angle = 0),
+    axis.text.x         = element_blank(),
+    legend.position     = "none") +
   guides(fill    = guide_legend(reverse = TRUE)) +
-  labs(title     = "Average marginal effects of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
+  labs(#title     = "Average marginal effects of fairness rating to topic prevalence\nby vignette couple's relative income, decision-maker gender, and decision type\n",
        x        = " ", 
        y        = " ",
        subtitle = "High-stakes decisions")
@@ -568,43 +581,48 @@ p1 <- data_fig4 %>%
 p2 <- data_fig4 %>%
   filter(decision == "low") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
-  geom_col(width = 0.8, position = position_dodge(0.7)) +
-  geom_text(aes(x = estimate + .01 * sign(estimate), 
+  geom_col(width = 0.8, position = position_dodge(0.7), colour="black") +
+  geom_text(aes(x = estimate + .015 * sign(estimate), 
                 label = ifelse(p.value < .05, "*", " ")), 
             position = position_dodge(width = 0.9), 
             size = 3.5 , angle = 90) +
   facet_grid(reorder(topic, -estimate) ~ earner,
              space = "free",
              switch = "y") +
-  theme_minimal(13) +
-  scale_fill_grey(name = " ") +
+  theme_minimal() +
+  scale_fill_manual(name="", values = c("black", "white")) +
   scale_y_discrete(labels = NULL, breaks = NULL) +
   scale_x_continuous(limits = c(-.3, .3)) +
-  theme(plot.title.position = "plot",
-        strip.text.y.left   = element_text(angle = 0),
-        strip.text.x = element_blank(),
-        legend.position     = "bottom") +
+  theme(
+    text                = element_text(size=12, family="serif"),
+    axis.text           = element_text(size=12, colour = "black"),
+    strip.text          = element_text(size=12, colour = "black", family="serif"),
+    legend.text         = element_text(size=12),
+    plot.title.position = "plot",
+    strip.text.y.left   = element_text(angle = 0),
+    strip.text.x        = element_blank(),
+    legend.position     = "bottom") +
   guides(fill = guide_legend(reverse = TRUE)) +
-  labs( x        = " ", 
-        y        = " ",
-        subtitle = "Low-stakes decisions",
-        caption = "Positive coefficients = more frequently used when rated fair
-        Negative coefficients = more frequently used when rated unfair 
-        * = p < 0.05 significant marginal effect of fairness evaluation on topic prevalence")
+  labs(
+#   caption = "Positive coefficients = more frequently used when rated fair
+#       Negative coefficients = more frequently used when rated unfair 
+#       * = p < 0.05 significant marginal effect of fairness evaluation on topic prevalence",
+    x        = " ", 
+    y        = " ",
+    subtitle = "Low-stakes decisions")
 
 ## combine the plots
 g1 <- ggplotGrob(p1)
-g2 <- ggplotGrob(p2) ## this is cutting off data?!?!?!
+g2 <- ggplotGrob(p2)
 g_fig4 <- rbind(g1, g2, size = "first")
 g_fig4$widths <- unit.pmax(g1$widths, g2$widths)
 grid.newpage()
 grid.draw(g_fig4)
 
 ## save Figure 4
-png(file.path(figDir, "fig4.png"), 
-    width = 850, height = 580, pointsize=16) 
-grid.draw(g_fig4) 
-dev.off()
+agg_tiff(filename = file.path(figDir, "fig4.tif"), width=8.5, height=5.5, units="in", res = 800)
+grid.draw(g_fig4)
+invisible(dev.off())
 
 
 # Figure 5 ---------------------------------------------------------------------
@@ -1072,13 +1090,13 @@ p4_low <- pLH_bar + pLH_avg + pLS_bar + pLS_avg +
 p4_low
 
 ## Combine all plots
-fig5 <- p3_high / p4_low +
-  plot_annotation(
-    title = "Predicted topic prevalence for decisions rated as fair",
-    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
-    caption = "Mean indicates the average prevalence of each topic for the pooled sample based on the average theta.
-    Asterisks denote men's topic prevalence was statistically significantly different from women respondents. 
-    * = p < .05, ** = p < .01 *** = p < .001")
+fig5 <- p3_high / p4_low # +
+#  plot_annotation(
+#    title = "Predicted topic prevalence for decisions rated as fair",
+#    subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
+#    caption = "Mean indicates the average prevalence of each topic for the pooled sample based on the average theta.
+#    Asterisks denote men's topic prevalence was statistically significantly different from women respondents. 
+#    * = p < .05, ** = p < .01 *** = p < .001")
 
 fig5
 
