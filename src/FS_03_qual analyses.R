@@ -126,11 +126,9 @@ fig1 <- coherence_mat %>%
 
 fig1
 
-ggsave(filename = file.path(figDir, "fig1.tif"), fig1, 
-       width=15.2, height=10.2, units="cm", dpi=800)
-
+## save Figure 1
 agg_tiff(filename = file.path(figDir, "fig1.tif"), 
-         width=15.2, height=10.2, units="cm", res = 800)
+         width=15.2, height=10.2, units="cm", res = 800, scaling = 1)
 plot(fig1)
 invisible(dev.off())
 
@@ -230,7 +228,7 @@ fig3 <- data_fig3 %>%
 
 fig3
 
-agg_tiff(filename = file.path(figDir, "fig3.tif"), width=6.5, height=8, units="in", res = 800)
+agg_tiff(filename = file.path(figDir, "fig3.tif"), width=6.5, height=8, units="in", res = 800, scaling = 1)
 plot(fig3)
 invisible(dev.off())
 
@@ -552,7 +550,7 @@ p1 <- data_fig4 %>%
   filter(decision == "high") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
   geom_col(width = 0.8, position = position_dodge(0.7), colour="black") +
-  geom_text(aes(x = estimate + .015 * sign(estimate), 
+  geom_text(aes(x = estimate + .02 * sign(estimate), 
                 label = ifelse(p.value < .05, "*", " ")), 
             position = position_dodge(width = 0.9), 
             size = 3.5 , angle = 90) +
@@ -565,8 +563,9 @@ p1 <- data_fig4 %>%
   scale_x_continuous(limits = c(-.3, .3)) +
   theme(
     text                = element_text(size=12, family="serif"),
-    axis.text           = element_text(size=12, colour = "black"),
+    axis.text           = element_text(size=12, colour = "black", family="serif"),
     strip.text          = element_text(size=12, colour = "black", family="serif"),
+    plot.subtitle       = element_text(size=12, colour = "black", family="serif", face = "bold"),
     plot.title.position = "plot",
     strip.text.y.left   = element_text(angle = 0),
     axis.text.x         = element_blank(),
@@ -582,7 +581,7 @@ p2 <- data_fig4 %>%
   filter(decision == "low") %>%
   ggplot(aes(x = estimate, y = decider, fill = decider)) +
   geom_col(width = 0.8, position = position_dodge(0.7), colour="black") +
-  geom_text(aes(x = estimate + .015 * sign(estimate), 
+  geom_text(aes(x = estimate + .02 * sign(estimate), 
                 label = ifelse(p.value < .05, "*", " ")), 
             position = position_dodge(width = 0.9), 
             size = 3.5 , angle = 90) +
@@ -595,8 +594,9 @@ p2 <- data_fig4 %>%
   scale_x_continuous(limits = c(-.3, .3)) +
   theme(
     text                = element_text(size=12, family="serif"),
-    axis.text           = element_text(size=12, colour = "black"),
+    axis.text           = element_text(size=12, colour = "black", family="serif"),
     strip.text          = element_text(size=12, colour = "black", family="serif"),
+    plot.subtitle       = element_text(size=12, colour = "black", family="serif", face = "bold"),
     legend.text         = element_text(size=12),
     plot.title.position = "plot",
     strip.text.y.left   = element_text(angle = 0),
@@ -620,7 +620,7 @@ grid.newpage()
 grid.draw(g_fig4)
 
 ## save Figure 4
-agg_tiff(filename = file.path(figDir, "fig4.tif"), width=8.5, height=5.5, units="in", res = 800)
+agg_tiff(filename = file.path(figDir, "fig4.tif"), width=8.5, height=5.5, units="in", res = 800, scaling = 1)
 grid.draw(g_fig4)
 invisible(dev.off())
 
@@ -850,7 +850,7 @@ pHH_bar <- data_fig5 %>%
     strip.placement.y   = "outside",
     legend.position     = "none",
     plot.title.position = "plot",
-    plot.title          = element_text(face = "bold", family = "serif"),
+    plot.title          = element_text(size=12, face = "bold", family = "serif"),
     plot.margin = margin(
       t = 0,    # Top margin
       r = 0,    # Right margin
@@ -979,7 +979,7 @@ pLH_bar <- data_fig5 %>%
              switch = "y") +
   theme_minimal() +
   theme(
-    text                = element_text(size=12, family = "serif"),
+    text                 = element_text(size=12, family = "serif"),
     strip.text           = element_text(size=12, family = "serif"), 
     strip.text.y.left    = element_text(angle = 0),
     axis.text.y          = element_text(size=12, family = "serif", colour = "black"), 
@@ -988,9 +988,9 @@ pLH_bar <- data_fig5 %>%
     strip.placement.y    = "outside",
     legend.position      = "bottom",
     legend.justification ='left',
-    legend.text         = element_text(size=12, family = "serif"),
+    legend.text          = element_text(size=12, family = "serif"),
     plot.title.position  = "plot",
-    plot.title          = element_text(face = "bold", family = "serif"),
+    plot.title           = element_text(size=12, face = "bold", family = "serif"),
     plot.margin = margin(
       t = 0,    # Top margin
       r = 0,    # Right margin
@@ -1135,10 +1135,9 @@ fig5 <- p3_high / p4_low +
 fig5
 
 ## save Figure 5
-agg_tiff(filename = file.path(figDir, "fig5.tif"), width=7, height=9, units="in", res = 1000)
+agg_tiff(filename = file.path(figDir, "fig5.tif"), width=7, height=9, units="in", res = 800, scaling = 1)
 plot(fig5)
 invisible(dev.off())
-
 
 ################################################################################
 # SUPPLEMENTARY MATERIALS (qual)
