@@ -1143,23 +1143,23 @@ invisible(dev.off())
 # SUPPLEMENTARY MATERIALS (qual)
 ################################################################################
 
-# Supplementary Table S5 -------------------------------------------------------
+# Appendix Table A5 ------------------------------------------------------------
 ## Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, 
 ## Decision Type, and Vignette Couple’s Relative Income
 
-s1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
+a1 <- modelsummary(ame_mhe, shape = decision + model ~ relinc + per,
                    gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable") 
-s2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
+a2 <- modelsummary(ame_whe, shape = decision + model ~ relinc + per,
                    gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable")
-s3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
+a3 <- modelsummary(ame_ee, shape = decision + model ~ relinc + per,
                    gof_map = NA, stars = c("*"=.05, "**"=.01, "***"=0.001), output = "huxtable")
-data_tableS5 <-  cbind(s1, s2, s3)
-data_tableS5 <- data_tableS5[-c(30), ] # remove duplication p value notations
-data_tableS5[2, 2] = "High-stakes"
-data_tableS5[16, 2] = "Low-stakes"
+data_tableA5 <-  cbind(a1, a2, a3)
+data_tableA5 <- data_tableA5[-c(30), ] # remove duplication p value notations
+data_tableA5[2, 2] = "High-stakes"
+data_tableA5[16, 2] = "Low-stakes"
 
 
-data_tableS5 <- data_tableS5 %>%
+data_tableA5 <- data_tableA5 %>%
   rename(topic = 3) %>%
   mutate( 
     topic = fct_case_when(
@@ -1180,7 +1180,7 @@ sect_properties <- prop_section(
   page_margins = page_mar())
 
 
-tabS5 <- data_tableS5 %>%
+tabA5 <- data_tableA5 %>%
   select(c("decision", "topic", "Men higher-earner / 0", "Men higher-earner / 1", 
            "Women higher-earner / 0", "Women higher-earner / 1",
            "Equal earner / 0", "Equal earner / 1")) %>%
@@ -1198,15 +1198,15 @@ tabS5 <- data_tableS5 %>%
   add_footer_lines("Notes: N=7,956 person-decisions. Coefficients are the marginal effects of perceiving a decision as fair on topic prevalence (theta) in respondents' open-ended explanations, calculated from respondent-level fixed effects models with interaction between decision-maker gender and perception of fairness. Independent models applied by relative income. * p < .05, ** p < .01, *** p < .001; 2 tailed tests. Standard errors in parentheses.") %>%
   set_table_properties(layout = "autofit") 
 
-tabS5
+tabA5
 
 read_docx() %>% 
-  body_add_par(paste("Table S5. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
-  body_add_flextable(value = tabS5) %>% 
-  print(target = file.path(outDir, "finalsay_tableS5.docx")) # save table
+  body_add_par(paste("Table A5. Relationship of Fairness Rating to Topic Prevalence by Decision-Maker Gender, Decision Type, and Vignette Couple’s Relative Income")) %>% 
+  body_add_flextable(value = tabA5) %>% 
+  print(target = file.path(outDir, "finalsay_tableA5.docx")) # save table
 
 
-# Supplementary Table S6 -------------------------------------------------------
+# Appendix Table A6 ------------------------------------------------------------
 ## Average Probabilistic Coherence for LDA Models with Independent Topic Models 
 ## by Decision-Type
 
@@ -1309,7 +1309,7 @@ out_list2$`Low-stakes`[["stakes"]]  <- "Low-stakes"
 new_df <- as_tibble(rbind(out_list2$`High-stakes`,  out_list2$`Low-stakes`))
 
 
-tabS6 <- new_df %>%
+tabA6 <- new_df %>%
   pivot_wider(names_from = stakes, values_from = coherence) %>%
   filter(k < 11) %>%
   rename("Number of Topics" = k) %>%
@@ -1321,15 +1321,15 @@ tabS6 <- new_df %>%
   add_header_row(values = c(" ", "Decision Type"),
                  colwidths = c(1, 2), top = TRUE)
 
-tabS6
+tabA6
 
 ## Note shading cells doesn't work, so must do that manually (sorry)
 read_docx() %>% 
-  body_add_par(paste("Table S6. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
-  body_add_flextable(value = tabS6) %>% 
-  print(target = file.path(outDir, "finalsay_tableS6.docx")) # save table
+  body_add_par(paste("Table A6. Average Probabilistic Coherence for LDA Models with Independent Topic Models by Decision-Type")) %>% 
+  body_add_flextable(value = tabA6) %>% 
+  print(target = file.path(outDir, "finalsay_tableA6.docx")) # save table
 
-# Supplementary Table S7 -------------------------------------------------------
+# Appendix Table A7 ------------------------------------------------------------
 ## Highest-ranking Word Stems Per Topics, 
 ## Independent LDA on High-Stakes and Low-Stakes Decisions
 
@@ -1394,7 +1394,7 @@ names(out_list3) <- c("High", "Low") # Rename lists
 out_list3$`High`[["stakes"]] <- "High-stakes" # Add list identifier
 out_list3$`Low`[["stakes"]]  <- "Low-stakes"
 
-data_tabS7 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
+data_tabA7 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, topic, desc(phi)) %>%
   mutate(rank = as.numeric(rank)) %>%
   filter(rank < 11) %>%
@@ -1419,7 +1419,7 @@ data_tabS7 <- as_tibble(rbind(out_list3$`High`,  out_list3$`Low`)) %>%
   arrange(stakes, new_topic, rank)
 
 
-tabS7 <- data_tabS7  %>%
+tabA7 <- data_tabA7  %>%
   select(c("new_topic", "word", "stakes", "rank")) %>%
   pivot_wider(names_from = c(new_topic), values_from = word,
               names_sep = " ",) %>%
@@ -1445,19 +1445,19 @@ tabS7 <- data_tabS7  %>%
   select(c("stakes", "rank", "Topic 1", "Topic 2", "Topic 3", "Topic 4",  
            "Topic 5", "Topic 6", "Topic 7", "Topic 8"))
 
-tabS7 <- as_grouped_data(x = tabS7, groups = c("stakes"), columns = NULL) # Group by vignette condition
+tabA7 <- as_grouped_data(x = tabA7, groups = c("stakes"), columns = NULL) # Group by vignette condition
 
-tabS7 <- tabS7 %>%
+tabA7 <- tabA7 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) 
 
-tabS7
+tabA7
 
 read_docx() %>% 
-  body_add_par(paste("Table S7. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
-  body_add_flextable(value = tabS7) %>% 
-  print(target = file.path(outDir, "finalsay_tableS7.docx")) # save table
+  body_add_par(paste("Table A7. Highest-ranking Word Stems Per Topics, Independent LDA on High-Stakes and Low-Stakes Decisions")) %>% 
+  body_add_flextable(value = tabA7) %>% 
+  print(target = file.path(outDir, "finalsay_tableA7.docx")) # save table
 
-# Supplement Figure S2 ---------------------------------------------------------
+# Appendix Figure S2 -----------------------------------------------------------
 
 ## Predicted probability of topic for decisions rated somewhat or very unfair\n
 ## by decision type, vignette couples' relative income and decision-maker gender, 
@@ -1735,7 +1735,7 @@ p6_low <- pLH_bar + pLH_avg + pLS_bar + pLS_avg +
 p6_low
 
 ## Combine all plots
-figS2 <- p5_high / p6_low +
+figA2 <- p5_high / p6_low +
   plot_annotation(
     title = "Predicted topic prevalence for decisions rated as unfair",
     subtitle = "by decision type, vignette decision-maker gender and relative income, and respondent gender",
@@ -1743,7 +1743,7 @@ figS2 <- p5_high / p6_low +
     Asterisks denote men's topic prevalence was statistically significantly different from women respondents. 
     * = p < .05, ** = p < .01 *** = p < .001")
 
-figS2
+figA2
 
-ggsave(filename = file.path(figDir, "figS2.png"), figS2, 
+ggsave(filename = file.path(figDir, "figA2.png"), figA2, 
        width=6.5, height=9, units="in", dpi=300, bg = "white")

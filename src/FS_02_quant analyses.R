@@ -304,8 +304,8 @@ fig2 <- data_fig2 %>%
   theme_minimal() +
   theme(
     text                = element_text(size=12, family = "serif"),
-    axis.text           = element_text(size=12), 
-    legend.text         = element_text(size=12),
+    axis.text           = element_text(size=12, family = "serif"), 
+    legend.text         = element_text(size=12, family = "serif"),
     legend.position     = "bottom",
     panel.grid.major.x  = element_blank(),
     strip.text          = element_text(face = "bold"),
@@ -339,15 +339,15 @@ invisible(dev.off())
 # SUPPLEMENTARY MATERIALS (quant)
 ################################################################################
 
-# Supplementary Table 1 --------------------------------------------------------
+# Appendix Table 1 -------------------------------------------------------------
 ## Descriptive Statistics of Respondent Characteristics
 
 ## Create weighted data 
-data_S1 <- quantdata %>%
+data_A1 <- quantdata %>%
   select("gender", "relate", "parent", "raceeth", 
          "educ", "employ", "inc", "age")
 
-tabS1 <- data_S1 %>%
+tabA1 <- data_A1 %>%
   tbl_summary(
     label = list(gender  ~ "Women",
                  relate  ~ "Relationship Status",
@@ -368,20 +368,20 @@ tabS1 <- data_S1 %>%
     stat_0 = '**N = 3,978**') %>%
   as_flex_table() 
 
-tabS1 # show table
+tabA1 # show table
 
 ## https://mran.microsoft.com/snapshot/2017-12-11/web/packages/officer/vignettes/word.html
 read_docx() %>% 
-  body_add_par("Table S1. Sample Characteristics") %>% 
-  body_add_flextable(value = tabS1) %>% 
-  print(target = file.path(outDir, "finalsay_tableS1.docx"))
+  body_add_par("Table A1. Sample Characteristics") %>% 
+  body_add_flextable(value = tabA1) %>% 
+  print(target = file.path(outDir, "finalsay_tableA1.docx"))
 
 
-# Supplementary Table 2 --------------------------------------------------------
+# Appendix Table 2 -------------------------------------------------------------
 ## Bivariate Statistics of Perceptions of Fairness in Decision Making 
 ## by Type of Decision (N = 3,978)
 
-data_S2 <- quantdata %>%
+data_A2 <- quantdata %>%
   # Create long data for high/low vars
   pivot_longer(
     cols = c(dum1, dum2),
@@ -403,13 +403,13 @@ data_S2 <- quantdata %>%
   select("CaseID", "weight", "type", "variable", "level", "fairness")
 
 ## Re order variable manipulations
-data_S2$variable <- factor(data_S2$variable, 
+data_A2$variable <- factor(data_A2$variable, 
                            levels  = c("relinc", "person", "organize",
                                        "mar", "child", "dur"), 
                            ordered = FALSE)
 
 ## Create summary data
-tabS2 <- data_S2 %>%
+tabA2 <- data_A2 %>%
   group_by(type, variable, level) %>%
   summarize(mean = mean(fairness, na.rm = TRUE),
             sd = sd(fairness, na.rm = TRUE)) %>%
@@ -417,28 +417,28 @@ tabS2 <- data_S2 %>%
   pivot_wider(names_from = type, values_from = c(mean, sd)) %>%
   select(level, mean_dum1, sd_dum1, mean_dum2, sd_dum2)
 
-tabS2 <- tabS2 %>%
+tabA2 <- tabA2 %>%
   mutate(
     cat = case_when(
-      tabS2$level == "Man higher-earner"     |
-        tabS2$level == "Woman higher-earner"   |
-        tabS2$level == "Equal earners"       ~ "Relative Earnings",
-      tabS2$level == "Woman"                 |
-        tabS2$level == "Man"                 ~ "Gender of Decider",
-      tabS2$level == "Shared"                |
-        tabS2$level == "Separate"              |
-        tabS2$level == "Both"                ~ "Financial Allocation Strategy",
-      tabS2$level == "live together"         |
-        tabS2$level == "are married"         ~ "Marital Status",
-      tabS2$level == "no children"           |
-        tabS2$level == "one child together"  ~ "Parental Status",
-      tabS2$level == "3 years"               |
-        tabS2$level == "7 years"             ~ "Relationship Duration"))
+      tabA2$level == "Man higher-earner"     |
+        tabA2$level == "Woman higher-earner"   |
+        tabA2$level == "Equal earners"       ~ "Relative Earnings",
+      tabA2$level == "Woman"                 |
+        tabA2$level == "Man"                 ~ "Gender of Decider",
+      tabA2$level == "Shared"                |
+        tabA2$level == "Separate"              |
+        tabA2$level == "Both"                ~ "Financial Allocation Strategy",
+      tabA2$level == "live together"         |
+        tabA2$level == "are married"         ~ "Marital Status",
+      tabA2$level == "no children"           |
+        tabA2$level == "one child together"  ~ "Parental Status",
+      tabA2$level == "3 years"               |
+        tabA2$level == "7 years"             ~ "Relationship Duration"))
 
 ## Create Flextable
-tabS2 <- as_grouped_data(x = tabS2, groups = c("cat"), columns = NULL) # Group by vignette condition
+tabA2 <- as_grouped_data(x = tabA2, groups = c("cat"), columns = NULL) # Group by vignette condition
 
-tabS2 <- tabS2 %>%
+tabA2 <- tabA2 %>%
   flextable::as_flextable(hide_grouplabel = TRUE) %>%
   add_header_row(values = c("", "High Stakes", "Low Stakes"), colwidths = c(1, 2, 2)) %>%
   flextable::align(i = 1, align = "center", part = "header") %>%
@@ -455,20 +455,20 @@ tabS2 <- tabS2 %>%
 
 num <-nrow(quantdata) #number of observations
 
-tabS2 # show table
+tabA2 # show table
 
 read_docx() %>% 
-  body_add_par(paste("Table S2. Bivariate Statistics of Perceptions of Fairness in Decision Making by Type of Decision (N = ", num,")", sep="")) %>% 
-  body_add_flextable(value = tabS2) %>% 
-  print(target = file.path(outDir, "finalsay_tableS2.docx")) # save table
+  body_add_par(paste("Table A2. Bivariate Statistics of Perceptions of Fairness in Decision Making by Type of Decision (N = ", num,")", sep="")) %>% 
+  body_add_flextable(value = tabA2) %>% 
+  print(target = file.path(outDir, "finalsay_tableA2.docx")) # save table
 
 
-# Supplementary Table S3 -------------------------------------------------------
+# Appendix Table S3 -------------------------------------------------------
 ## Results of Fixed Effects Models Using Continuous Outcome 
 ## to Measure Perception of Fairness
 
 # Run PLM models and create average marginal effects
-list_ame_S3 <- lapply(list_pdata, function(pdata){
+list_ame_A3 <- lapply(list_pdata, function(pdata){
   
   plm <- plm(as_numeric(fair) ~ per * decision, data = pdata, model = "within")
   avg_slopes(plm, variables = c("per"), by = "decision", newdata = pdata)
@@ -476,34 +476,34 @@ list_ame_S3 <- lapply(list_pdata, function(pdata){
 })
 
 # Apply function to each data frame in the list
-list_ame_S3 <- lapply(list_ame_S3, replace_based_on_column)
+list_ame_A3 <- lapply(list_ame_A3, replace_based_on_column)
 
 # Add list identifiers
-list_ame_S3[[1]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S3[[2]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S3[[3]][["relinc"]]   <- "Equal earners" 
-list_ame_S3[[4]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S3[[5]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S3[[6]][["relinc"]]   <- "Equal earners" 
-list_ame_S3[[7]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S3[[8]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S3[[9]][["relinc"]]   <- "Equal earners" 
+list_ame_A3[[1]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A3[[2]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A3[[3]][["relinc"]]   <- "Equal earners" 
+list_ame_A3[[4]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A3[[5]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A3[[6]][["relinc"]]   <- "Equal earners" 
+list_ame_A3[[7]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A3[[8]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A3[[9]][["relinc"]]   <- "Equal earners" 
 
-list_ame_S3[[1]][["gender"]]  <- "All" 
-list_ame_S3[[2]][["gender"]]  <- "All" 
-list_ame_S3[[3]][["gender"]]  <- "All" 
-list_ame_S3[[4]][["gender"]]  <- "Men" 
-list_ame_S3[[5]][["gender"]]  <- "Men" 
-list_ame_S3[[6]][["gender"]]  <- "Men" 
-list_ame_S3[[7]][["gender"]]  <- "Women" 
-list_ame_S3[[8]][["gender"]]  <- "Women" 
-list_ame_S3[[9]][["gender"]]  <- "Women" 
+list_ame_A3[[1]][["gender"]]  <- "All" 
+list_ame_A3[[2]][["gender"]]  <- "All" 
+list_ame_A3[[3]][["gender"]]  <- "All" 
+list_ame_A3[[4]][["gender"]]  <- "Men" 
+list_ame_A3[[5]][["gender"]]  <- "Men" 
+list_ame_A3[[6]][["gender"]]  <- "Men" 
+list_ame_A3[[7]][["gender"]]  <- "Women" 
+list_ame_A3[[8]][["gender"]]  <- "Women" 
+list_ame_A3[[9]][["gender"]]  <- "Women" 
 
 # test equality of coefficients between HIGH & LOW stakes
 data_type_S3 <- as_tibble(rbind(
-  list_ame_S3[[1]],  list_ame_S3[[2]],  list_ame_S3[[3]], 
-  list_ame_S3[[4]],  list_ame_S3[[5]],  list_ame_S3[[6]],
-  list_ame_S3[[7]],  list_ame_S3[[8]],  list_ame_S3[[9]])) %>%
+  list_ame_A3[[1]],  list_ame_A3[[2]],  list_ame_A3[[3]], 
+  list_ame_A3[[4]],  list_ame_A3[[5]],  list_ame_A3[[6]],
+  list_ame_A3[[7]],  list_ame_A3[[8]],  list_ame_A3[[9]])) %>%
   mutate(relinc = fct_case_when(
     relinc == "Men higher-earner"   ~ "Men higher-earner",
     relinc == "Women higher-earner" ~ "Women higher-earner",
@@ -572,16 +572,16 @@ output_gender_S3 <- output_gender_S3 %>%
 output_gender_S3[!(is.na(output_gender_S3$sig)), ] # show only statistically sig. gender differences
 
 ## Create list for 3 panels
-panels_S3 <- list(
-  "Man Higher Earner"   = list("All"   = list_ame_S3[[1]], 
-                               "Men"   = list_ame_S3[[4]], 
-                               "Women" = list_ame_S3[[7]]),
-  "Woman Higher Earner" = list("All"   = list_ame_S3[[2]], 
-                               "Men"   = list_ame_S3[[5]], 
-                               "Women" = list_ame_S3[[8]]),
-  "Equal Earners"       = list("All"   = list_ame_S3[[3]], 
-                               "Men"   = list_ame_S3[[6]], 
-                               "Women" = list_ame_S3[[9]]))
+panels_A3 <- list(
+  "Man Higher Earner"   = list("All"   = list_ame_A3[[1]], 
+                               "Men"   = list_ame_A3[[4]], 
+                               "Women" = list_ame_A3[[7]]),
+  "Woman Higher Earner" = list("All"   = list_ame_A3[[2]], 
+                               "Men"   = list_ame_A3[[5]], 
+                               "Women" = list_ame_A3[[8]]),
+  "Equal Earners"       = list("All"   = list_ame_A3[[3]], 
+                               "Men"   = list_ame_A3[[6]], 
+                               "Women" = list_ame_A3[[9]]))
 
 ## Create pretty labels
 coef_map <- c(
@@ -589,8 +589,8 @@ coef_map <- c(
   "per.2"    = "Low Stakes")
 
 ## Produce Table S3
-tabS3 <- modelsummary(
-  panels_S3,
+tabA3 <- modelsummary(
+  panels_A3,
   shape = "rbind",
   coef_map = coef_map,
   gof_map = NA,
@@ -614,16 +614,16 @@ tabS3 <- modelsummary(
   huxtable::as_flextable()                                        %>%
   add_footer_lines("Notes: N=7,956 person-decisions. 3,970 men and 3,986 women. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and respondent gender. Standard errors in parentheses. There were no statistically significant gender difference (p < .05).")
 
-tabS3
+tabA3
 num <-nrow(quantdata) #number of observations
 
 read_docx() %>% 
   body_add_par(paste("Table S3. Marginal Effects of Woman Deciding on Perceptions of Fairness by Relative Income of Vignette Couple and Decision Type", sep="")) %>% 
-  body_add_flextable(value = tabS3) %>% 
+  body_add_flextable(value = tabA3) %>% 
   print(target = file.path(outDir, "finalsay_tableS3.docx")) # save table
 
 
-# Supplementary Table S4. ------------------------------------------------------
+# Appendix Table S4. -----------------------------------------------------------
 
 ## Prepare data for plm
 list_pdata_mar.par.dur <- list(
@@ -716,7 +716,7 @@ list_pdata_mar.par.dur <- list(
 rm(list = ls()[grep("^pdata_", ls())]) # clean up global environment
 
 
-list_ame_S4 <- lapply(list_pdata_mar.par.dur, function(pdata){
+list_ame_A4 <- lapply(list_pdata_mar.par.dur, function(pdata){
   
   plm <- plm(dum ~ per * decision, data = pdata, model = "within")
   avg_slopes(plm, variables = c("per"), by = "decision", newdata = pdata)
@@ -725,57 +725,57 @@ list_ame_S4 <- lapply(list_pdata_mar.par.dur, function(pdata){
 
 
 # Apply this function to each data frame in the list
-list_ame_S4 <- lapply(list_ame_S4, replace_based_on_column)
+list_ame_A4 <- lapply(list_ame_A4, replace_based_on_column)
 
 # Add list identifiers
-list_ame_S4[[1]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S4[[2]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S4[[3]][["relinc"]]   <- "Equal earners" 
-list_ame_S4[[4]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S4[[5]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S4[[6]][["relinc"]]   <- "Equal earners" 
-list_ame_S4[[7]][["relinc"]]   <- "Men higher-earner" 
-list_ame_S4[[8]][["relinc"]]   <- "Women higher-earner" 
-list_ame_S4[[9]][["relinc"]]   <- "Equal earners" 
-list_ame_S4[[10]][["relinc"]]  <- "Men higher-earner" 
-list_ame_S4[[11]][["relinc"]]  <- "Women higher-earner" 
-list_ame_S4[[12]][["relinc"]]  <- "Equal earners" 
-list_ame_S4[[13]][["relinc"]]  <- "Men higher-earner" 
-list_ame_S4[[14]][["relinc"]]  <- "Women higher-earner" 
-list_ame_S4[[15]][["relinc"]]  <- "Equal earners" 
-list_ame_S4[[16]][["relinc"]]  <- "Men higher-earner" 
-list_ame_S4[[17]][["relinc"]]  <- "Women higher-earner" 
-list_ame_S4[[18]][["relinc"]]  <- "Equal earners" 
+list_ame_A4[[1]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A4[[2]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A4[[3]][["relinc"]]   <- "Equal earners" 
+list_ame_A4[[4]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A4[[5]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A4[[6]][["relinc"]]   <- "Equal earners" 
+list_ame_A4[[7]][["relinc"]]   <- "Men higher-earner" 
+list_ame_A4[[8]][["relinc"]]   <- "Women higher-earner" 
+list_ame_A4[[9]][["relinc"]]   <- "Equal earners" 
+list_ame_A4[[10]][["relinc"]]  <- "Men higher-earner" 
+list_ame_A4[[11]][["relinc"]]  <- "Women higher-earner" 
+list_ame_A4[[12]][["relinc"]]  <- "Equal earners" 
+list_ame_A4[[13]][["relinc"]]  <- "Men higher-earner" 
+list_ame_A4[[14]][["relinc"]]  <- "Women higher-earner" 
+list_ame_A4[[15]][["relinc"]]  <- "Equal earners" 
+list_ame_A4[[16]][["relinc"]]  <- "Men higher-earner" 
+list_ame_A4[[17]][["relinc"]]  <- "Women higher-earner" 
+list_ame_A4[[18]][["relinc"]]  <- "Equal earners" 
 
-list_ame_S4[[1]][["mar.par.dur"]]  <- "Married" 
-list_ame_S4[[2]][["mar.par.dur"]]  <- "Married" 
-list_ame_S4[[3]][["mar.par.dur"]]  <- "Married" 
-list_ame_S4[[4]][["mar.par.dur"]]  <- "Cohabiting" 
-list_ame_S4[[5]][["mar.par.dur"]]  <- "Cohabiting" 
-list_ame_S4[[6]][["mar.par.dur"]]  <- "Cohabiting" 
-list_ame_S4[[7]][["mar.par.dur"]]  <- "Parents" 
-list_ame_S4[[8]][["mar.par.dur"]]  <- "Parents" 
-list_ame_S4[[9]][["mar.par.dur"]]  <- "Parents" 
-list_ame_S4[[10]][["mar.par.dur"]] <- "Not parents" 
-list_ame_S4[[11]][["mar.par.dur"]] <- "Not parents" 
-list_ame_S4[[12]][["mar.par.dur"]] <- "Not parents" 
-list_ame_S4[[13]][["mar.par.dur"]] <- "7 years" 
-list_ame_S4[[14]][["mar.par.dur"]] <- "7 years" 
-list_ame_S4[[15]][["mar.par.dur"]] <- "7 years" 
-list_ame_S4[[16]][["mar.par.dur"]] <- "3 years" 
-list_ame_S4[[17]][["mar.par.dur"]] <- "3 years" 
-list_ame_S4[[18]][["mar.par.dur"]] <- "3 years" 
+list_ame_A4[[1]][["mar.par.dur"]]  <- "Married" 
+list_ame_A4[[2]][["mar.par.dur"]]  <- "Married" 
+list_ame_A4[[3]][["mar.par.dur"]]  <- "Married" 
+list_ame_A4[[4]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_A4[[5]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_A4[[6]][["mar.par.dur"]]  <- "Cohabiting" 
+list_ame_A4[[7]][["mar.par.dur"]]  <- "Parents" 
+list_ame_A4[[8]][["mar.par.dur"]]  <- "Parents" 
+list_ame_A4[[9]][["mar.par.dur"]]  <- "Parents" 
+list_ame_A4[[10]][["mar.par.dur"]] <- "Not parents" 
+list_ame_A4[[11]][["mar.par.dur"]] <- "Not parents" 
+list_ame_A4[[12]][["mar.par.dur"]] <- "Not parents" 
+list_ame_A4[[13]][["mar.par.dur"]] <- "7 years" 
+list_ame_A4[[14]][["mar.par.dur"]] <- "7 years" 
+list_ame_A4[[15]][["mar.par.dur"]] <- "7 years" 
+list_ame_A4[[16]][["mar.par.dur"]] <- "3 years" 
+list_ame_A4[[17]][["mar.par.dur"]] <- "3 years" 
+list_ame_A4[[18]][["mar.par.dur"]] <- "3 years" 
 
 
 ## Test for statistical difference between high & low decisions
 
 data_type_S4 <- as_tibble(rbind(
-  list_ame_S4[[1]],  list_ame_S4[[2]],  list_ame_S4[[3]], 
-  list_ame_S4[[4]],  list_ame_S4[[5]],  list_ame_S4[[6]],
-  list_ame_S4[[7]],  list_ame_S4[[8]],  list_ame_S4[[9]],
-  list_ame_S4[[10]], list_ame_S4[[11]], list_ame_S4[[12]],
-  list_ame_S4[[13]], list_ame_S4[[14]], list_ame_S4[[15]],
-  list_ame_S4[[16]], list_ame_S4[[17]], list_ame_S4[[18]])) %>%
+  list_ame_A4[[1]],  list_ame_A4[[2]],  list_ame_A4[[3]], 
+  list_ame_A4[[4]],  list_ame_A4[[5]],  list_ame_A4[[6]],
+  list_ame_A4[[7]],  list_ame_A4[[8]],  list_ame_A4[[9]],
+  list_ame_A4[[10]], list_ame_A4[[11]], list_ame_A4[[12]],
+  list_ame_A4[[13]], list_ame_A4[[14]], list_ame_A4[[15]],
+  list_ame_A4[[16]], list_ame_A4[[17]], list_ame_A4[[18]])) %>%
   mutate(relinc = fct_case_when(
     relinc == "Men higher-earner"   ~ "Men higher-earner",
     relinc == "Women higher-earner" ~ "Women higher-earner",
@@ -837,16 +837,16 @@ output_status_S4[!(is.na(output_status_S4$sig)), ]
 
 
 ## Create list for 3 panels
-panels_S4 <- list(
-  "Man Higher Earner"   = list("Married" = list_ame_S4[[1]],  "Cohabiting"  = list_ame_S4[[4]], 
-                               "Parents" = list_ame_S4[[7]],  "Not parents" = list_ame_S4[[10]],
-                               "7 years" = list_ame_S4[[13]], "3 years"     = list_ame_S4[[16]]),
-  "Woman Higher Earner" = list("Married" = list_ame_S4[[2]],  "Cohabiting"  = list_ame_S4[[5]], 
-                               "Parents" = list_ame_S4[[8]],  "Not parents" = list_ame_S4[[11]],
-                               "7 years" = list_ame_S4[[14]], "3 years"     = list_ame_S4[[17]]),
-  "Equal Earners"       = list("Married" = list_ame_S4[[3]],  "Cohabiting"  = list_ame_S4[[6]], 
-                               "Parents" = list_ame_S4[[9]],  "Not parents" = list_ame_S4[[12]],
-                               "7 years" = list_ame_S4[[15]], "3 years"     = list_ame_S4[[18]]))
+panels_A4 <- list(
+  "Man Higher Earner"   = list("Married" = list_ame_A4[[1]],  "Cohabiting"  = list_ame_A4[[4]], 
+                               "Parents" = list_ame_A4[[7]],  "Not parents" = list_ame_A4[[10]],
+                               "7 years" = list_ame_A4[[13]], "3 years"     = list_ame_A4[[16]]),
+  "Woman Higher Earner" = list("Married" = list_ame_A4[[2]],  "Cohabiting"  = list_ame_A4[[5]], 
+                               "Parents" = list_ame_A4[[8]],  "Not parents" = list_ame_A4[[11]],
+                               "7 years" = list_ame_A4[[14]], "3 years"     = list_ame_A4[[17]]),
+  "Equal Earners"       = list("Married" = list_ame_A4[[3]],  "Cohabiting"  = list_ame_A4[[6]], 
+                               "Parents" = list_ame_A4[[9]],  "Not parents" = list_ame_A4[[12]],
+                               "7 years" = list_ame_A4[[15]], "3 years"     = list_ame_A4[[18]]))
 
 ## Create pretty labels
 coef_map <- c(
@@ -854,8 +854,8 @@ coef_map <- c(
   "per.2"    = "Low Stakes")
 
 ## Produce Table S4
-tabS4 <- modelsummary(
-  panels_S4,
+tabA4 <- modelsummary(
+  panels_A4,
   shape = "rbind",
   coef_map = coef_map,
   gof_map = NA,
@@ -882,18 +882,18 @@ tabS4 <- modelsummary(
   add_footer_lines("Notes: N=7,956 person-decisions. Results calculated from respondent-fixed effects linear probability models. Independent models applied by relative income and relationship indicators. Standard errors in parentheses.") %>%
   set_table_properties(layout = "autofit") 
 
-tabS4
+tabA4
 
 read_docx() %>% 
-  body_add_par(paste("Table S4. Average Marginal Effects of Woman Deciding on Perceptions of Fairness by vignette couple relative income, vignette decision type, and vignette relationship status indicators")) %>% 
-  body_add_flextable(value = tabS4) %>% 
-  print(target = file.path(outDir, "finalsay_tableS4.docx")) # save table
+  body_add_par(paste("Table A4. Average Marginal Effects of Woman Deciding on Perceptions of Fairness by vignette couple relative income, vignette decision type, and vignette relationship status indicators")) %>% 
+  body_add_flextable(value = tabA4) %>% 
+  print(target = file.path(outDir, "finalsay_tableA4.docx")) # save table
 
 
-# Supplementary Figure 1. ------------------------------------------------------
+# Appendix Figure 1. -----------------------------------------------------------
 ## Fairness Evaluation by high/low Presented to Respondent
 
-data_figS1 <- quantdata %>%
+data_figA1 <- quantdata %>%
   select("CaseID", "high", "low", "fair1", "fair2") %>%
   # Create long data for high/low fairness vars
   pivot_longer(
@@ -915,38 +915,45 @@ data_figS1 <- quantdata %>%
   mutate(pct = prop.table(n)) %>%
   ungroup()
 
-data_figS1$type[data_figS1$type == "high"] <-"High\nstakes"
-data_figS1$type[data_figS1$type == "low"] <-"Low\nstakes"
+data_figA1$type[data_figA1$type == "high"] <-"High\nstakes"
+data_figA1$type[data_figA1$type == "low"] <-"Low\nstakes"
 
-data_figS1$type <- factor(data_figS1$type, 
+data_figA1$type <- factor(data_figA1$type, 
                           levels  = c("High\nstakes", "Low\nstakes"), 
                           ordered = FALSE)
 
-figS1 <- data_figS1 %>%
+figA1 <- data_figA1 %>%
   ggplot(aes(x = category, y = pct, fill = fct_rev(fairness))) +
   geom_col(position = "fill",
-           width = 0.6) +
+           width = 0.6,
+           colour="black") +
   facet_grid(type ~ .,
              scales="free",
              space = "free",
              switch = "y") +
-  geom_text(aes(label=sprintf("%1.0f%%", pct*100)),
-            position=position_stack(vjust=0.5),
-            colour = "white",
-            size = 3) +
+  geom_text(aes(label = sprintf("%1.0f%%", pct*100),
+                color = fairness == "Very unfair"),
+            position  = position_stack(vjust=0.5),
+            size      = 3,
+            family    = "serif") +
   coord_flip()+
-  scale_fill_grey() +
-  theme_minimal(12) +
-  theme(legend.position      = "top",
-        legend.justification = c(1, 0),
-        panel.grid.major.x   = element_blank(),
-        strip.placement      = 'outside',
-        strip.text.y         = element_text(face = "bold"),
-        strip.text.y.left    = element_text(angle = 0),
-        plot.title           = element_text(face = "bold"),
-        plot.title.position  = "plot",
-        plot.subtitle       = element_text(face = "italic", color = "#707070"),
-        plot.caption        = element_text(face = "italic", color = "#707070")) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
+  scale_fill_manual(values = c("black", "grey40", "grey70", "white"), guide = "none") +
+  theme_minimal() +
+  theme(
+    text                 = element_text(size=12, family = "serif"),
+    axis.text            = element_text(size=12, family = "serif", color = "black"),
+    strip.text           = element_text(size=12, family = "serif"), 
+    strip.text.y         = element_text(size=12, family = "serif", face = "bold"),
+    strip.text.y.left    = element_text(angle = 0),
+    legend.text          = element_text(size=12, family = "serif"),
+    plot.title           = element_text(size=12, family = "serif", face = "bold"),
+    plot.title.position  = "plot",
+    plot.subtitle        = element_text(size=12, family = "serif", face = "italic", color = "#707070"),
+    legend.position      = "top",
+    legend.justification = c(1, 0),
+    panel.grid.major.x   = element_blank(),
+    strip.placement      = 'outside') +
   guides(fill = guide_legend(reverse = TRUE)) +
   labs( x        = " ", 
         y        = " ", 
@@ -954,7 +961,10 @@ figS1 <- data_figS1 %>%
         title    = "Fairness evaluation for high and low stake decisions",
         subtitle = "How fair do you think the decision was?")
 
-figS1   
+figA1   
 
-ggsave(filename = file.path(figDir, "figS1.png"), figS1, 
-       width=6, height=4, units="in", dpi=300, bg = 'white')
+
+## save Figure A1
+agg_tiff(filename = file.path(figDir, "figA1.tif"), width=6, height=4, units="in", res = 800, scaling = 1)
+plot(figA1)
+invisible(dev.off())
