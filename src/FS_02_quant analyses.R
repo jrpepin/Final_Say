@@ -463,7 +463,7 @@ read_docx() %>%
   print(target = file.path(outDir, "finalsay_tableA2.docx")) # save table
 
 
-# Appendix Table S3 -------------------------------------------------------
+# Appendix Table A3 -------------------------------------------------------
 ## Results of Fixed Effects Models Using Continuous Outcome 
 ## to Measure Perception of Fairness
 
@@ -500,7 +500,7 @@ list_ame_A3[[8]][["gender"]]  <- "Women"
 list_ame_A3[[9]][["gender"]]  <- "Women" 
 
 # test equality of coefficients between HIGH & LOW stakes
-data_type_S3 <- as_tibble(rbind(
+data_type_A3 <- as_tibble(rbind(
   list_ame_A3[[1]],  list_ame_A3[[2]],  list_ame_A3[[3]], 
   list_ame_A3[[4]],  list_ame_A3[[5]],  list_ame_A3[[6]],
   list_ame_A3[[7]],  list_ame_A3[[8]],  list_ame_A3[[9]])) %>%
@@ -510,66 +510,66 @@ data_type_S3 <- as_tibble(rbind(
     relinc == "Equal earners"       ~ "Equal earners" )) %>%
   arrange(relinc) # sort data to test down
 
-output_type_S3 <- NULL # create empty df for test results
+output_type_A3 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_type_S3), by = 2)) {
-  gender        <- data_type_S3[i, 15]
-  relinc        <- data_type_S3[i, 14]
-  stakes        <- data_type_S3[i,  3]
-  decider       <- data_type_S3[i,  1]
-  estimate      <- ((data_type_S3[i, 4] - data_type_S3[i + 1, 4]) / 
-                      sqrt(data_type_S3[i, 5]^2 + data_type_S3[i + 1, 5]^2))
+for (i in seq(1, nrow(data_type_A3), by = 2)) {
+  gender        <- data_type_A3[i, 15]
+  relinc        <- data_type_A3[i, 14]
+  stakes        <- data_type_A3[i,  3]
+  decider       <- data_type_A3[i,  1]
+  estimate      <- ((data_type_A3[i, 4] - data_type_A3[i + 1, 4]) / 
+                      sqrt(data_type_A3[i, 5]^2 + data_type_A3[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_type_S3 <- rbind(output_type_S3, 
+  output_type_A3 <- rbind(output_type_A3, 
                           data.frame(gender, relinc, stakes, decider, estimate, p))
 }
 
-output_type_S3 <- output_type_S3 %>%
+output_type_A3 <- output_type_A3 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
     p   < .05    ~ "*",
     TRUE         ~ NA_character_))
 
-output_type_S3[!(is.na(output_type_S3$sig)), ] # show only statistically sig. status differences
+output_type_A3[!(is.na(output_type_A3$sig)), ] # show only statistically sig. status differences
 
 
 ## Test for statistical sig. between men and women (within decision)
-data_gender_S3 <- data_type_S3 %>%
+data_gender_A3 <- data_type_A3 %>%
   filter(gender != "All") %>%
   arrange(relinc, decision) #resort data to test across table
 
-output_gender_S3 <- NULL # create empty df for test results
+output_gender_A3 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_gender_S3), by = 2)) {
-  gender        <- data_gender_S3[i, 15]
-  relinc        <- data_gender_S3[i, 14]
-  stakes        <- data_gender_S3[i,  3]
-  decider       <- data_gender_S3[i,  1]
-  estimate      <- ((data_gender_S3[i, 4] - data_gender_S3[i + 1, 4]) / 
-                      sqrt(data_gender_S3[i, 5]^2 + data_gender_S3[i + 1, 5]^2))
+for (i in seq(1, nrow(data_gender_A3), by = 2)) {
+  gender        <- data_gender_A3[i, 15]
+  relinc        <- data_gender_A3[i, 14]
+  stakes        <- data_gender_A3[i,  3]
+  decider       <- data_gender_A3[i,  1]
+  estimate      <- ((data_gender_A3[i, 4] - data_gender_A3[i + 1, 4]) / 
+                      sqrt(data_gender_A3[i, 5]^2 + data_gender_A3[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_gender_S3 <- rbind(output_gender_S3, 
+  output_gender_A3 <- rbind(output_gender_A3, 
                             data.frame(gender, relinc, stakes, decider, estimate, p))
 }
 
-output_gender_S3 <- output_gender_S3 %>%
+output_gender_A3 <- output_gender_A3 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
     p   < .05    ~ "*",
     TRUE         ~ NA_character_))
 
-output_gender_S3[!(is.na(output_gender_S3$sig)), ] # show only statistically sig. gender differences
+output_gender_A3[!(is.na(output_gender_A3$sig)), ] # show only statistically sig. gender differences
 
-output_gender_S3 <- output_gender_S3 %>%
+output_gender_A3 <- output_gender_A3 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
     p   < .05    ~ "*",
     TRUE         ~ NA_character_))
 
-output_gender_S3[!(is.na(output_gender_S3$sig)), ] # show only statistically sig. gender differences
+output_gender_A3[!(is.na(output_gender_A3$sig)), ] # show only statistically sig. gender differences
 
 ## Create list for 3 panels
 panels_A3 <- list(
@@ -588,7 +588,7 @@ coef_map <- c(
   "per.1"    = "High Stakes",
   "per.2"    = "Low Stakes")
 
-## Produce Table S3
+## Produce Table A3
 tabA3 <- modelsummary(
   panels_A3,
   shape = "rbind",
@@ -618,12 +618,12 @@ tabA3
 num <-nrow(quantdata) #number of observations
 
 read_docx() %>% 
-  body_add_par(paste("Table S3. Marginal Effects of Woman Deciding on Perceptions of Fairness by Relative Income of Vignette Couple and Decision Type", sep="")) %>% 
+  body_add_par(paste("Table A3. Marginal Effects of Woman Deciding on Perceptions of Fairness by Relative Income of Vignette Couple and Decision Type", sep="")) %>% 
   body_add_flextable(value = tabA3) %>% 
-  print(target = file.path(outDir, "finalsay_tableS3.docx")) # save table
+  print(target = file.path(outDir, "finalsay_tableA3.docx")) # save table
 
 
-# Appendix Table S4. -----------------------------------------------------------
+# Appendix Table A4. -----------------------------------------------------------
 
 ## Prepare data for plm
 list_pdata_mar.par.dur <- list(
@@ -769,7 +769,7 @@ list_ame_A4[[18]][["mar.par.dur"]] <- "3 years"
 
 ## Test for statistical difference between high & low decisions
 
-data_type_S4 <- as_tibble(rbind(
+data_type_A4 <- as_tibble(rbind(
   list_ame_A4[[1]],  list_ame_A4[[2]],  list_ame_A4[[3]], 
   list_ame_A4[[4]],  list_ame_A4[[5]],  list_ame_A4[[6]],
   list_ame_A4[[7]],  list_ame_A4[[8]],  list_ame_A4[[9]],
@@ -782,21 +782,21 @@ data_type_S4 <- as_tibble(rbind(
     relinc == "Equal earners"       ~ "Equal earners" )) %>%
   arrange(relinc) # sort data to test down
 
-output_type_S4 <- NULL # create empty df for test results
+output_type_A4 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_type_S4), by = 2)) {
-  status        <- data_type_S4[i, 15]
-  relinc        <- data_type_S4[i, 14]
-  stakes        <- data_type_S4[i,  3]
-  decider       <- data_type_S4[i,  1]
-  estimate      <- ((data_type_S4[i, 4] - data_type_S4[i + 1, 4]) / 
-                      sqrt(data_type_S4[i, 5]^2 + data_type_S4[i + 1, 5]^2))
+for (i in seq(1, nrow(data_type_A4), by = 2)) {
+  status        <- data_type_A4[i, 15]
+  relinc        <- data_type_A4[i, 14]
+  stakes        <- data_type_A4[i,  3]
+  decider       <- data_type_A4[i,  1]
+  estimate      <- ((data_type_A4[i, 4] - data_type_A4[i + 1, 4]) / 
+                      sqrt(data_type_A4[i, 5]^2 + data_type_A4[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_type_S4 <- rbind(output_type_S4, 
+  output_type_A4 <- rbind(output_type_A4, 
                           data.frame(status, relinc, stakes, decider, estimate, p))
 }
 
-output_type_S4 <- output_type_S4 %>%
+output_type_A4 <- output_type_A4 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
@@ -804,28 +804,28 @@ output_type_S4 <- output_type_S4 %>%
     TRUE         ~ NA_character_))
 
 # show only statistically sig. decision differences
-output_type_S4[!(is.na(output_type_S4$sig)), ] 
+output_type_A4[!(is.na(output_type_A4$sig)), ] 
 
 
 ## Test for statistical difference between relationship statuses
-data_status_S4 <- data_type_S4 %>%
+data_status_A4 <- data_type_A4 %>%
   arrange(relinc, decision) #resort data to test across table
 
-output_status_S4 <- NULL # create empty df for test results
+output_status_A4 <- NULL # create empty df for test results
 
-for (i in seq(1, nrow(data_status_S4), by = 2)) {
-  status        <- data_status_S4[i, 15]
-  relinc        <- data_status_S4[i, 14]
-  stakes        <- data_status_S4[i,  3]
-  decider       <- data_status_S4[i,  1]
-  estimate      <- ((data_status_S4[i, 4] - data_status_S4[i + 1, 4]) / 
-                      sqrt(data_status_S4[i, 5]^2 + data_status_S4[i + 1, 5]^2))
+for (i in seq(1, nrow(data_status_A4), by = 2)) {
+  status        <- data_status_A4[i, 15]
+  relinc        <- data_status_A4[i, 14]
+  stakes        <- data_status_A4[i,  3]
+  decider       <- data_status_A4[i,  1]
+  estimate      <- ((data_status_A4[i, 4] - data_status_A4[i + 1, 4]) / 
+                      sqrt(data_status_A4[i, 5]^2 + data_status_A4[i + 1, 5]^2))
   p             <- round(2*pnorm(-abs(as.numeric(estimate))), digits = 3)
-  output_status_S4 <- rbind(output_status_S4, 
+  output_status_A4 <- rbind(output_status_A4, 
                             data.frame(status, relinc, stakes, decider, estimate, p))
 }
 
-output_status_S4 <- output_status_S4 %>%
+output_status_A4 <- output_status_A4 %>%
   mutate(sig = case_when(
     p   < .001   ~ "***",
     p   < .01    ~ "**",
@@ -833,7 +833,7 @@ output_status_S4 <- output_status_S4 %>%
     TRUE         ~ NA_character_))
 
 # show only statistically sig. status differences
-output_status_S4[!(is.na(output_status_S4$sig)), ] 
+output_status_A4[!(is.na(output_status_A4$sig)), ] 
 
 
 ## Create list for 3 panels
@@ -853,7 +853,7 @@ coef_map <- c(
   "per.1"    = "High Stakes",
   "per.2"    = "Low Stakes")
 
-## Produce Table S4
+## Produce Table A4
 tabA4 <- modelsummary(
   panels_A4,
   shape = "rbind",
@@ -921,7 +921,7 @@ data_figA1$type[data_figA1$type == "low"] <-"Low\nstakes"
 data_figA1$type <- factor(data_figA1$type, 
                           levels  = c("High\nstakes", "Low\nstakes"), 
                           ordered = FALSE)
-
+### Fairness evaluation for high and low stake decisions
 figA1 <- data_figA1 %>%
   ggplot(aes(x = category, y = pct, fill = fct_rev(fairness))) +
   geom_col(position = "fill",
@@ -958,8 +958,7 @@ figA1 <- data_figA1 %>%
   labs( x        = " ", 
         y        = " ", 
         fill     = " ",
-        title    = "Fairness evaluation for high and low stake decisions",
-        subtitle = "How fair do you think the decision was?")
+        title    = "How fair do you think the decision was?")
 
 figA1   
 
